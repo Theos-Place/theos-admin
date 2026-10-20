@@ -24,8 +24,33 @@
 import { isCapacitacion } from '@/lib/studies/bloques'
 import { STUDY_GROUPS } from '@/lib/studies/study-grouping'
 
-/** Desde cuántas personas un clúster se destaca como «se puede abrir». */
-export const UMBRAL_ACCIONABLE = 3
+/**
+ * Las tres etapas de un clúster (Floriana, 2026-10-20):
+ *  · «Listos para abrir»: 5 o más personas.
+ *  · «Potencialmente»: de 2 a 4 — todavía no alcanza, pero va camino.
+ *  · «Aún no»: 1 persona sola.
+ * Antes había un solo corte, en 3.
+ */
+export const UMBRAL_ACCIONABLE = 5
+export const UMBRAL_POTENCIAL = 2
+
+export type EtapaDelCluster = 'listo' | 'potencial' | 'aun_no'
+
+export const ETIQUETA_ETAPA: Record<EtapaDelCluster, string> = {
+  listo: 'Listos para abrir',
+  potencial: 'Potencialmente',
+  aun_no: 'Aún no',
+}
+
+/**
+ * En qué etapa está un clúster. «Otra zona» nunca es «listo» aunque junte
+ * cinco: no se sabe dónde abrir (la misma regla que `accionable`).
+ */
+export function etapaDelCluster(c: Pick<Cluster, 'personas' | 'zona'>, umbral = UMBRAL_ACCIONABLE): EtapaDelCluster {
+  const n = c.personas.length
+  if (n >= umbral && c.zona !== SIN_ZONA) return 'listo'
+  return n >= UMBRAL_POTENCIAL ? 'potencial' : 'aun_no'
+}
 
 export const SIN_ZONA = '__otra__'
 export const CUALQUIER_ZONA = '__cualquiera__'

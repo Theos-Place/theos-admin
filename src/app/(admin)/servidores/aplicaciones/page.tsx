@@ -11,7 +11,13 @@ import { Modal } from '@/components/shared/Modal'
 import type { DbApplication } from '@/lib/supabase/queries/servers'
 import { toDomainApplication } from '@/lib/servers/adapter'
 import { cn } from '@/lib/utils'
-import { Search, ChevronRight, ClipboardList, Check, Loader2, Printer } from 'lucide-react'
+import { ChevronRight, ClipboardList, Check, Loader2, Printer, Download } from 'lucide-react'
+import { RangoDeFechas, Buscador, SelectRotulado } from '@/components/finance/BarraDeReporte'
+import {
+  BARRA, BARRA_IZQ, BARRA_DER, BOTON_PRIMARIO,
+  TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel } from '@/lib/finance/descargar-excel'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { PanelDeAplicacion } from '@/components/servers/PanelDeAplicacion'
@@ -85,11 +91,15 @@ export default function AplicacionesPage() {
   }, [search])
   const [statusFilter, setStatusFilter] = useState<ApplicationStatus | 'all'>('all')
   const [committeeFilter, setCommitteeFilter] = useState('all')
+  // Rango por fecha de aplicación (orden de los reportes, 2026-10-20). Se
+  // filtra en el SERVIDOR, como el resto: la lista está paginada.
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
   const hayFiltros = search !== '' || statusFilter !== 'all' || committeeFilter !== 'all'
-    || ubicacionFiltro !== 'all' || sedeFiltro !== 'all'
+    || ubicacionFiltro !== 'all' || sedeFiltro !== 'all' || desde !== '' || hasta !== ''
   const limpiarFiltros = () => {
     setSearch(''); setDebouncedSearch(''); setStatusFilter('all'); setCommitteeFilter('all')
-    setUbicacionFiltro('all'); setSedeFiltro('all')
+    setUbicacionFiltro('all'); setSedeFiltro('all'); setDesde(''); setHasta('')
   }
 
   // Comités para el dropdown (solo id + nombre).
@@ -117,16 +127,47 @@ export default function AplicacionesPage() {
   const { pending, reviewing } = counts
 
   // Listado paginado server-side (búsqueda + estado + comité al servidor).
-  const buildUrl = (page: number) => {
+  const filtrosDeUrl = () => {
     const u = new URLSearchParams()
     if (debouncedSearch.trim()) u.set('search', debouncedSearch.trim())
     if (statusFilter !== 'all') u.set('status', statusFilter)
     if (committeeFilter !== 'all') u.set('committee', committeeFilter)
     if (ubicacionFiltro !== 'all') u.set('location', ubicacionFiltro)
     if (sedeFiltro !== 'all') u.set('sede', sedeFiltro)
+    if (desde) u.set('desde', desde)
+    if (hasta) u.set('hasta', hasta)
+    return u
+  }
+  const buildUrl = (page: number) => {
+    const u = filtrosDeUrl()
     u.set('page', String(page))
     u.set('pageSize', '25')
     return `/api/servers/applications?${u.toString()}`
+  }
+
+  /** El Excel trae TODO lo que cumple los filtros, no solo lo cargado: se
+   *  piden las páginas de 200 hasta completar el total. */
+  const [exportando, setExportando] = useState(false)
+  async function exportar() {
+    setExportando(true)
+    try {
+      const todas: Application[] = []
+      for (let page = 1; ; page++) {
+        const u = filtrosDeUrl(); u.set('page', String(page)); u.set('pageSize', '200')
+        const r = await fetch(`/api/servers/applications?${u.toString()}`)
+        if (!r.ok) throw new Error()
+        const d = await r.json() as { applications: DbApplication[]; total: number }
+        todas.push(...(d.applications ?? []).map(toDomainApplication))
+        if (todas.length >= d.total || (d.applications ?? []).length === 0) break
+      }
+      await descargarExcel('aplicaciones-de-servicio', ['Aplicante', 'Sede', 'Puesto', 'Comité', 'Área', 'Fecha', 'Estado'],
+        todas.map(a => [a.applicant_name, a.applicant_sede ?? '', a.vacancy_title, a.committee_name, a.area, formatDate(a.applied_at),
+          APPLICATION_STATE_LABEL[a.status as keyof typeof APPLICATION_STATE_LABEL] ?? a.status]))
+    } catch {
+      toast('No se pudo exportar. Intentá de nuevo.', 'error')
+    } finally {
+      setExportando(false)
+    }
   }
   const {
     items: filtered, total, loading, hasMore, loadMore, reload,
@@ -178,7 +219,7 @@ export default function AplicacionesPage() {
         <div>
           <h1 className="text-2xl text-white font-display font-extrabold tracking-[-0.02em]">Aplicaciones de Servicio</h1>
           <p className="mt-1 text-sm text-white/80 font-body">
-            {pending} pendiente{pending !== 1 ? 's' : ''} · {reviewing} en revisión
+            Las personas que aplicaron a un puesto de servicio.
           </p>
         </div>
       </div>
@@ -189,78 +230,51 @@ export default function AplicacionesPage() {
         </p>
       )}
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row sm:items-center gap-3">
-        <div className="relative flex-1 sm:min-w-48 w-full">
-          <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-navy-light/80" />
-          <input
-            className="w-full rounded-xl bg-surface-low pl-8 pr-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-            placeholder="Buscar por nombre o puesto..."
-            aria-label="Buscar por nombre o puesto"
-            value={search}
-            onChange={e => setSearch(e.target.value)}
-          />
+      {/* Orden de los reportes de finanzas (2026-10-20): rango + Excel,
+          totales, y la búsqueda con los filtros a su derecha. */}
+      <div className={BARRA}>
+        <div className={BARRA_IZQ}>
+          <RangoDeFechas id="aplicacion" etiqueta="Aplicó desde" desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
         </div>
-        <select
-          className="w-full sm:w-auto rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-          value={committeeFilter}
-          onChange={e => setCommitteeFilter(e.target.value)}
-          aria-label="Filtrar por comité"
-        >
-          <option value="all">Todos los comités</option>
-          {committees.map(c => (
-            <option key={c.id} value={c.id}>{c.name}</option>
-          ))}
-        </select>
-        {/* SRV-14 · Por ubicación del puesto. Se filtra en el SERVIDOR, igual
-            que el comité: la lista está paginada, y filtrar en pantalla solo
-            recortaría la página cargada — el total diría otra cosa. */}
-        {ubicaciones.length > 0 && (
-          <select
-            className="w-full sm:w-auto rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-            value={ubicacionFiltro}
-            onChange={e => setUbicacionFiltro(e.target.value)}
-            aria-label="Filtrar por ubicación"
-          >
-            <option value="all">Todas las ubicaciones</option>
-            {ubicaciones.map(u => <option key={u} value={u}>{u}</option>)}
-          </select>
-        )}
-        {/* SRV-19 · Por sede del aplicante. También server-side. */}
-        <select
-          className="w-full sm:w-auto rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-          value={sedeFiltro}
-          onChange={e => setSedeFiltro(e.target.value)}
-          aria-label="Filtrar por sede del aplicante"
-        >
-          <option value="all">Todas las sedes</option>
-          {activeSedes.filter(s => s.sede_id).map(s => (
-            <option key={s.sede_id} value={s.sede_id!}>{s.name}</option>
-          ))}
-        </select>
+        <div className={BARRA_DER}>
+          <button type="button" onClick={exportar} disabled={exportando || total === 0} className={BOTON_PRIMARIO}>
+            <Download size={14} aria-hidden /> {exportando ? 'Exportando…' : 'Descargar Excel'}
+          </button>
+        </div>
       </div>
 
-      {/* Status chips */}
-      <div className="flex gap-1.5 flex-wrap">
-        {STATUS_FILTERS.map(f => (
-          <button
-            key={f.key}
-            onClick={() => setStatusFilter(f.key)}
-            className={cn(
-              'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all duration-150 font-display',
-              statusFilter === f.key
-                ? 'bg-navy text-white border-navy'
-                : 'text-navy-light/80 hover:text-navy hover:bg-surface-low border-transparent'
-            )}
-          >
-            {f.label}
-            {f.key === 'pending' && pending > 0 && (
-              <span className="ml-1.5 rounded-full bg-amber-500 text-white text-[11px] px-1.5 py-0.5 font-display">
-                {pending}
-              </span>
-            )}
-          </button>
-        ))}
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+        <div className={TARJETA}>
+          <p className={TARJETA_ETIQUETA}>Pendientes</p>
+          <p className={cn(TARJETA_VALOR, VALOR_PENDIENTE)}>{pending}</p>
+        </div>
+        <div className={TARJETA}>
+          <p className={TARJETA_ETIQUETA}>En revisión</p>
+          <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{reviewing}</p>
+        </div>
+        <div className={TARJETA}>
+          <p className={TARJETA_ETIQUETA}>Con estos filtros</p>
+          <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{total}</p>
+        </div>
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Buscador valor={search} onCambio={setSearch} placeholder="Buscar por nombre o puesto…" />
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <SelectRotulado id="aplicacion-estado" etiqueta="Estado" valor={statusFilter} onCambio={v => setStatusFilter(v as ApplicationStatus | 'all')}
+            opciones={STATUS_FILTERS.map(f => ({ value: f.key, label: f.key === 'pending' && pending > 0 ? `${f.label} (${pending})` : f.label }))} />
+          <SelectRotulado id="aplicacion-comite" etiqueta="Comité" valor={committeeFilter} onCambio={setCommitteeFilter}
+            opciones={[{ value: 'all', label: 'Todos' }, ...committees.map(c => ({ value: c.id, label: c.name }))]} />
+          {/* SRV-14 · Por ubicación del puesto. Se filtra en el SERVIDOR, igual
+              que el comité: la lista está paginada. */}
+          {ubicaciones.length > 0 && (
+            <SelectRotulado id="aplicacion-ubicacion" etiqueta="Ubicación" valor={ubicacionFiltro} onCambio={setUbicacionFiltro}
+              opciones={[{ value: 'all', label: 'Todas' }, ...ubicaciones.map(u => ({ value: u, label: u }))]} />
+          )}
+          {/* SRV-19 · Por sede del aplicante. También server-side. */}
+          <SelectRotulado id="aplicacion-sede" etiqueta="Sede" valor={sedeFiltro} onCambio={setSedeFiltro}
+            opciones={[{ value: 'all', label: 'Todas' }, ...activeSedes.filter(x => x.sede_id).map(x => ({ value: x.sede_id!, label: x.name }))]} />
+        </div>
       </div>
 
       {/* Bulk bar */}

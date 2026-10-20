@@ -2,7 +2,7 @@ import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
   zonasDeSolicitud, agruparDemanda, dirigentesParaCluster, puedeDarPlan, tendenciaSemanal, lunesDe,
-  etiquetaDeZona, SIN_ZONA, CUALQUIER_ZONA, UMBRAL_ACCIONABLE, type Solicitud, type DirigenteParaDemanda,
+  etiquetaDeZona, etapaDelCluster, SIN_ZONA, CUALQUIER_ZONA, UMBRAL_ACCIONABLE, type Solicitud, type DirigenteParaDemanda,
 } from './demanda-declarada'
 import { prellenadoDesdeDemanda, urlDeNuevoGrupo, diaComoLetra } from './grupo-desde-demanda'
 
@@ -55,9 +55,21 @@ describe('EST-29 · los clústeres', () => {
   })
 
   it(`el umbral (${UMBRAL_ACCIONABLE}+) marca los que se pueden abrir`, () => {
-    expect(agruparDemanda([sol(), sol()])[0].accionable).toBe(false)
-    expect(agruparDemanda([sol(), sol(), sol()])[0].accionable).toBe(true)
-    expect(agruparDemanda([sol(), sol()], 2)[0].accionable).toBe(true)
+    const n = (k: number) => Array.from({ length: k }, () => sol())
+    expect(UMBRAL_ACCIONABLE).toBe(5)
+    expect(agruparDemanda(n(4))[0].accionable).toBe(false)
+    expect(agruparDemanda(n(5))[0].accionable).toBe(true)
+    expect(agruparDemanda(n(2), 2)[0].accionable).toBe(true)
+  })
+
+  it('tres etapas: 5+ listos, de 2 a 4 potencialmente, 1 aún no (2026-10-20)', () => {
+    const n = (k: number, o: Partial<Solicitud> = {}) => Array.from({ length: k }, () => sol(o))
+    expect(etapaDelCluster(agruparDemanda(n(1))[0])).toBe('aun_no')
+    expect(etapaDelCluster(agruparDemanda(n(2))[0])).toBe('potencial')
+    expect(etapaDelCluster(agruparDemanda(n(4))[0])).toBe('potencial')
+    expect(etapaDelCluster(agruparDemanda(n(5))[0])).toBe('listo')
+    // «Otra zona» con cinco no se puede abrir: no se sabe dónde.
+    expect(etapaDelCluster(agruparDemanda(n(5, { zonas: [], zonaTexto: 'Grecia' }))[0])).toBe('potencial')
   })
 
   it('«Otra zona» nunca es accionable: no se sabe dónde abrir', () => {
@@ -163,8 +175,15 @@ describe('EST-29 · solo el equipo de estudios', () => {
     }
   })
 
-  it('la pantalla y el menú usan el mismo gate', () => {
-    expect(readFileSync('src/app/(admin)/estudios/demanda/page.tsx', 'utf8')).toContain('(STUDY_ADMIN_ROLES as string[]).includes(r)')
-    expect(readFileSync('src/components/layout/Sidebar.tsx', 'utf8')).toContain("{ href: '/estudios/demanda', label: 'Demanda declarada'")
+  it('el panel y la pestaña de Solicitudes usan el mismo gate', () => {
+    expect(readFileSync('src/components/studies/DemandaDeclaradaPanel.tsx', 'utf8')).toContain('(STUDY_ADMIN_ROLES as string[]).includes(r)')
+    const solicitudes = readFileSync('src/app/(admin)/estudios/solicitudes/page.tsx', 'utf8')
+    expect(solicitudes).toContain('(STUDY_ADMIN_ROLES as string[]).includes(r)')
+    expect(solicitudes).toContain("{ key: 'demanda', label: 'Análisis de demanda' }")
+  })
+
+  it('la ruta vieja redirige a la pestaña y ya no está en el menú (2026-10-20)', () => {
+    expect(readFileSync('src/app/(admin)/estudios/demanda/page.tsx', 'utf8')).toContain("redirect('/estudios/solicitudes?tab=demanda')")
+    expect(readFileSync('src/components/layout/Sidebar.tsx', 'utf8')).not.toContain("href: '/estudios/demanda'")
   })
 })

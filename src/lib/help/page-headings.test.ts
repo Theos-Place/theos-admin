@@ -16,6 +16,7 @@ import { execSync } from 'node:child_process'
 const EXENTAS: Record<string, string> = {
   'pagos/revision': 'es un redirect() a /finanzas/pagos, no renderiza nada',
   'finanzas/donaciones': 'DON-4: es un redirect() a /finanzas/reportes, la gestión vive en la primera pestaña',
+  'estudios/demanda': 'EST-29: es un redirect() a la pestaña «Análisis de demanda» de /estudios/solicitudes',
 }
 
 function resolver(imp: string, desde: string): string | null {

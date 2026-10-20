@@ -1,4 +1,5 @@
 import type { ApplicationState } from '@/lib/servers/application-states'
+import { rangoDePago } from '@/lib/finance/rango-de-pagos'
 import { ESTADO_INICIAL, type VacancyState } from '@/lib/servers/vacancy-states'
 import { motivoQueImpideCambiar } from '@/lib/servers/cambio-de-estado-de-solicitud'
 import { ESTADO_PUBLICADO, ESTADO_DESACTIVADO } from '@/lib/servers/publicacion-mensual'
@@ -414,6 +415,9 @@ export type ApplicationFilters = {
   /** SRV-19 · La SEDE del APLICANTE (id). No es lo mismo que `location`, que
    *  es dónde se sirve el puesto: alguien de Lindora puede aplicar a Escazú. */
   sedeId?: string
+  /** Rango de `applied_at` en días de Costa Rica (YYYY-MM-DD), 2026-10-20. */
+  desde?: string
+  hasta?: string
   page?: number
   pageSize?: number
 }
@@ -482,6 +486,11 @@ export async function getApplicationsPage(filters: ApplicationFilters = {}): Pro
   if (committeeVacancyIds) q = q.in('vacancy_id', committeeVacancyIds)
   if (searchOr) q = q.or(searchOr)
   if (filters.sedeId) q = q.eq('applicant.sede_id', filters.sedeId)
+  // Días de Costa Rica, no UTC: una aplicación de las 7 p.m. cae en el día
+  // siguiente en UTC (la misma regla que el rango de pagos).
+  const { desdeIso, hastaIso } = rangoDePago(filters.desde, filters.hasta)
+  if (desdeIso) q = q.gte('applied_at', desdeIso)
+  if (hastaIso) q = q.lte('applied_at', hastaIso)
 
   const { data, error, count } = await q
   if (error) throw error

@@ -1,12 +1,12 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { STUDY_ADMIN_ROLES, ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
+import { ACCESOS_SCREEN_ROLES } from '@/lib/auth/roles'
 import Link from 'next/link'
 import { usePathname, useRouter } from 'next/navigation'
 import Image from 'next/image'
 import { puedeEntrarAViaticos } from '@/lib/travel/estados-del-viaje'
-import { MapPinned, FolderOpen,
+import { FolderOpen,
   LayoutDashboard,
   Users,
   Calendar,
@@ -208,9 +208,8 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     : studiesBeyondOwn
     ? [
       ...ESTUDIOS_SUB.map(s => s.href === '/estudios/solicitudes' ? { ...s, badge: openRequests } : s),
-      // EST-29 · Demanda declarada: el MISMO gate que su endpoint (STUDY_ADMIN_ROLES).
-      ...(userRoles.some(r => (STUDY_ADMIN_ROLES as string[]).includes(r))
-        ? [{ href: '/estudios/demanda', label: 'Demanda declarada', icon: MapPinned }] : []),
+      // EST-29 · La demanda declarada ya no va acá: es la pestaña «Análisis de
+      // demanda» de Solicitudes (2026-10-20).
       // Bloques de capacitación: solo coordinador de estudios y admin.
       ...(userRoles.some(r => ['coordinador_estudios', 'admin'].includes(r))
         ? [{ href: '/estudios/bloques', label: 'Bloques', icon: CalendarRange }] : []),
@@ -243,6 +242,10 @@ export function Sidebar({ open, onClose }: SidebarProps) {
   if (userRoles.some(r => (EVALUATION_ROLES as string[]).includes(r))) {
     estudiosSub.push({ href: '/estudios/evaluaciones', label: 'Evaluaciones', icon: ClipboardCheck })
   }
+  // Orden alfabético, igual que Finanzas (Floriana, 2026-10-20). «Resumen» no
+  // está acá: lo pinta el menú primero. Se ordena al final porque varias
+  // entradas se agregan aparte según el rol y quedaban donde cayeran.
+  estudiosSub.sort((a, b) => a.label.localeCompare(b.label, 'es'))
 
   // FIN-11 · Un empleado sin el módulo ve SOLO Viáticos adentro de Empleados;
   // quien tiene el módulo ve todo. `es_empleado` lo calcula el servidor.

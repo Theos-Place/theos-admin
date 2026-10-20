@@ -57,7 +57,7 @@ export function SelectRotulado({ id, etiqueta, valor, onCambio, opciones }: {
   return (
     <div className={GRUPO_FILTRO}>
       <label htmlFor={id} className={ETIQUETA_FILTRO}>{etiqueta}</label>
-      <select id={id} value={valor} onChange={e => onCambio(e.target.value)} className={CAMPO}>
+      <select id={id} value={valor} onChange={e => onCambio(e.target.value)} className={`${CAMPO} max-w-[200px]`}>
         {opciones.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}
       </select>
     </div>

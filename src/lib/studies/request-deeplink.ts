@@ -14,9 +14,11 @@
 // mezcla los dos tipos.
 import type { StudyRequestType } from '@/types/study'
 
-export type RequestSection = 'prematrimonial' | 'relocation' | 'study_interest'
+// 'demanda' · EST-29: el análisis de demanda, que dejó de ser su propia
+// pantalla el 2026-10-20. No es un tipo de solicitud: es una vista sobre ellas.
+export type RequestSection = 'prematrimonial' | 'relocation' | 'study_interest' | 'demanda'
 
-const SECTIONS: RequestSection[] = ['prematrimonial', 'relocation', 'study_interest']
+const SECTIONS: RequestSection[] = ['prematrimonial', 'relocation', 'study_interest', 'demanda']
 
 export function isRequestSection(v: unknown): v is RequestSection {
   return typeof v === 'string' && (SECTIONS as string[]).includes(v)

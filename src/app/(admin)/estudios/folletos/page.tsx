@@ -12,7 +12,14 @@ import { Modal } from '@/components/shared/Modal'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { cn } from '@/lib/utils'
-import { FileText, Loader2, Check, ChevronRight, MapPin } from 'lucide-react'
+import { FileText, Loader2, Check, ChevronRight, MapPin, Download } from 'lucide-react'
+import { RangoDeFechas, Buscador, SelectRotulado } from '@/components/finance/BarraDeReporte'
+import {
+  PESTANA, BARRA, BARRA_IZQ, BARRA_DER, BOTON_PRIMARIO,
+  TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel, enRango } from '@/lib/finance/descargar-excel'
+import { formatDate } from '@/lib/format'
 import type { DbFolletoRequest } from '@/lib/supabase/queries/folletos'
 import { nombreConDirigente,
   FOLLETO_STATES, FOLLETO_STATE_LABEL, FOLLETO_STATE_BADGE, nextFolletoState,
@@ -48,6 +55,11 @@ export default function FolletosPage() {
   const [sedeFilter, setSedeFilter] = useState('all')
   const [statusFilter, setStatusFilter] = useState<FolletoState | 'all'>('all')
   const [tipoFilter, setTipoFilter] = useState<FolletoTipo | 'all'>('all')
+  // Rango por la fecha en que se creó el tiquete y búsqueda: el orden de los
+  // reportes de finanzas (2026-10-20).
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
+  const [busqueda, setBusqueda] = useState('')
   const [busy, setBusy] = useState(false)
   const [msg, setMsg] = useState<string | null>(null)
   /** FOL-2 · Los que NO se movieron, con el motivo de cada uno. */
@@ -64,13 +76,25 @@ export default function FolletosPage() {
     () => Array.from(new Set(rows.map(r => r.sede).filter((s): s is string => !!s))).sort((a, b) => a.localeCompare(b)),
     [rows],
   )
-  const filtered = useMemo(() => rows.filter(r =>
-    (sedeFilter === 'all' || r.sede === sedeFilter) &&
-    (statusFilter === 'all' || r.status === statusFilter) &&
-    (tipoFilter === 'all' || r.tipo === tipoFilter),
-  ), [rows, sedeFilter, statusFilter, tipoFilter])
-  const hayFiltros = sedeFilter !== 'all' || statusFilter !== 'all' || tipoFilter !== 'all'
-  const limpiarFiltros = () => { setSedeFilter('all'); setStatusFilter('all'); setTipoFilter('all') }
+  /** El origen en texto: lo que se ve en la columna, para buscar y exportar. */
+  const origenDe = (r: DbFolletoRequest) => r.tipo === 'cierre'
+    ? nombreConDirigente(r.source_group?.name, r.source_group?.dirigente)
+    : r.tipo === 'manual'
+      ? [etiquetaDeFolletos(r.source_plan_code, modalidadDe(r.source_group?.modalidad)) || (r.target_level_code ? levelLabel(r.target_level_code) : ''),
+         r.target_leader_name || (r.target_leader ? [r.target_leader.first_name, r.target_leader.last_name].filter(Boolean).join(' ') : '')].filter(Boolean).join(' · ')
+      : (r.bloque?.nombre ?? '')
+  // Rango, búsqueda, sede y tipo, SIN el estado: de acá salen las tarjetas.
+  const sinEstado = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    return rows.filter(r =>
+      enRango(r.created_at, desde, hasta) &&
+      (!q || origenDe(r).toLowerCase().includes(q) || (r.sede ?? '').toLowerCase().includes(q)) &&
+      (sedeFilter === 'all' || r.sede === sedeFilter) &&
+      (tipoFilter === 'all' || r.tipo === tipoFilter))
+  }, [rows, sedeFilter, tipoFilter, desde, hasta, busqueda])
+  const filtered = useMemo(() => sinEstado.filter(r => statusFilter === 'all' || r.status === statusFilter), [sinEstado, statusFilter])
+  const hayFiltros = sedeFilter !== 'all' || statusFilter !== 'all' || tipoFilter !== 'all' || desde !== '' || hasta !== '' || busqueda !== ''
+  const limpiarFiltros = () => { setSedeFilter('all'); setStatusFilter('all'); setTipoFilter('all'); setDesde(''); setHasta(''); setBusqueda('') }
 
   const sel = useRowSelection(filtered.map(r => r.id))
 
@@ -99,7 +123,7 @@ export default function FolletosPage() {
   if (loaded && !canView) return <AccessDenied />
 
   return (
-    <div className="space-y-4">
+    <div className={PESTANA}>
       <div className="rounded-2xl bg-navy px-5 sm:px-6 py-5 shadow-[var(--shadow-md)]">
         <div className="flex items-center justify-between gap-3 flex-wrap">
           <div className="flex items-center gap-3">
@@ -111,7 +135,6 @@ export default function FolletosPage() {
               <p className="mt-0.5 text-sm text-white/80 font-body">{filtered.length} solicitud{filtered.length !== 1 ? 'es' : ''}</p>
             </div>
           </div>
-          {canEdit && <ManualFolletoRequestButton onCreated={refetch} />}
         </div>
       </div>
 
@@ -140,38 +163,42 @@ export default function FolletosPage() {
         </div>
       )}
 
-      {/* Filtros */}
-      <div className="flex flex-col sm:flex-row gap-3">
-        <select
-          value={sedeFilter}
-          onChange={e => setSedeFilter(e.target.value)}
-          aria-label="Filtrar por sede"
-          className="w-full sm:w-auto rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
-        >
-          <option value="all">Todas las sedes</option>
-          {sedeOptions.map(s => <option key={s} value={s}>{s}</option>)}
-        </select>
-        <select
-          value={tipoFilter}
-          onChange={e => setTipoFilter(e.target.value as FolletoTipo | 'all')}
-          aria-label="Filtrar por tipo"
-          className="w-full sm:w-auto rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 shadow-[var(--shadow-sm)] font-body"
-        >
-          {TIPO_FILTERS.map(t => <option key={t.key} value={t.key}>{t.label}</option>)}
-        </select>
-        <div className="flex gap-1.5 flex-wrap">
-          {STATUS_FILTERS.map(f => (
-            <button
-              key={f.key}
-              onClick={() => setStatusFilter(f.key)}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all duration-150 font-display',
-                statusFilter === f.key ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy hover:bg-surface-low border-transparent',
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
+      {/* Orden de los reportes de finanzas (2026-10-20). */}
+      <div className={BARRA}>
+        <div className={BARRA_IZQ}>
+          <RangoDeFechas id="folleto" etiqueta="Creado desde" desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
+        </div>
+        <div className={BARRA_DER}>
+          {canEdit && <ManualFolletoRequestButton onCreated={refetch} />}
+          <button type="button" disabled={filtered.length === 0} className={BOTON_PRIMARIO}
+            onClick={() => void descargarExcel('folletos', ['Tipo', 'Origen', 'Total a imprimir', 'Desglose', 'Entrega en', 'Estado', 'Creado'],
+              filtered.map(r => [FOLLETO_TIPO_LABEL[r.tipo as FolletoTipo] ?? r.tipo, origenDe(r), r.desglose.total, textoDesgloseCorto(r.desglose),
+                r.sede ?? '', FOLLETO_STATE_LABEL[r.status as FolletoState] ?? r.status, formatDate(r.created_at)]))}>
+            <Download size={14} aria-hidden /> Descargar Excel
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {FOLLETO_STATES.map((st, i) => (
+          <div key={st} className={TARJETA}>
+            <p className={TARJETA_ETIQUETA}>{FOLLETO_STATE_LABEL[st]}</p>
+            <p className={cn(TARJETA_VALOR, [VALOR_PENDIENTE, VALOR_NEUTRO, VALOR_DINERO, VALOR_NEUTRO][i])}>
+              {sinEstado.filter(r => r.status === st).length}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Buscar por grupo, dirigente o sede…" />
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <SelectRotulado id="folleto-sede" etiqueta="Sede" valor={sedeFilter} onCambio={setSedeFilter}
+            opciones={[{ value: 'all', label: 'Todas' }, ...sedeOptions.map(x => ({ value: x, label: x }))]} />
+          <SelectRotulado id="folleto-tipo" etiqueta="Tipo" valor={tipoFilter} onCambio={v => setTipoFilter(v as FolletoTipo | 'all')}
+            opciones={TIPO_FILTERS.map(t => ({ value: t.key, label: t.key === 'all' ? 'Todos' : t.label }))} />
+          <SelectRotulado id="folleto-estado" etiqueta="Estado" valor={statusFilter} onCambio={v => setStatusFilter(v as FolletoState | 'all')}
+            opciones={STATUS_FILTERS.map(f => ({ value: f.key, label: f.label }))} />
         </div>
       </div>
 

@@ -14,12 +14,19 @@ import { useUbicacionDeEntrada } from '@/hooks/useUbicacionDeEntrada'
 import { usePrecarga } from '@/hooks/usePrecarga'
 import Link from 'next/link'
 import {
-  Inbox, Loader2, ChevronDown, ChevronUp, X, ArrowUpDown, ArrowUp, History, Search, UserPlus, Clock,
+  Inbox, Loader2, ChevronDown, ChevronUp, ArrowUpDown, ArrowUp, History, Search, UserPlus, Clock,
 } from 'lucide-react'
 import { useToast } from '@/components/shared/Toast'
 import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { RequestTabs } from '@/components/shared/RequestTabs'
+import { RangoDeFechas, Buscador, SelectRotulado } from '@/components/finance/BarraDeReporte'
+import {
+  BARRA, BARRA_IZQ, BARRA_DER, BOTON_SECUNDARIO, BOTON_PRIMARIO,
+  TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel, enRango } from '@/lib/finance/descargar-excel'
+import { Download } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { formatDate, formatDateNumeric, getInitials } from '@/lib/format'
 
@@ -189,6 +196,8 @@ export function RequestBoard<R extends BaseRequest>({
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
   const [sortDesc, setSortDesc] = useState(true)
+  // Búsqueda por persona o motivo (orden de los reportes de finanzas, 2026-10-20).
+  const [busqueda, setBusqueda] = useState('')
   const [expandedYears, setExpandedYears] = useState<Set<number>>(new Set([new Date().getFullYear()]))
   const [expandedRequest, setExpandedRequest] = useState<string | null>(null)
   const [actionTarget, setActionTarget] = useState<{ req: R; action: 'resolve' | 'reject' } | null>(null)
@@ -248,11 +257,19 @@ export function RequestBoard<R extends BaseRequest>({
     return () => clearTimeout(t)
   }, [idEnUrl, expandedRequest])
 
-  const visible = useMemo(() => {
-    const fromTs = dateFrom ? new Date(dateFrom + 'T00:00:00').getTime() : null
-    const toTs = dateTo ? new Date(dateTo + 'T23:59:59').getTime() : null
+  /** Lo del tab que cae en el rango y la búsqueda, SIN el filtro de estado ni
+   *  de asignado: de acá salen las tarjetas, que si dependieran del estado
+   *  elegido mostrarían cero en las demás. */
+  const enRangoDelTab = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
     return requests
       .filter(r => r.request_type === tab)
+      .filter(r => enRango(r.created_at, dateFrom, dateTo))
+      .filter(r => !q || r.member_name.toLowerCase().includes(q) || (r.reason ?? '').toLowerCase().includes(q))
+  }, [requests, tab, dateFrom, dateTo, busqueda])
+
+  const visible = useMemo(() => {
+    return enRangoDelTab
       // REU-2: las dormidas van en su propia sección colapsada. Dejarlas acá
       // sería no haberle limpiado la cola a nadie, que es el punto de pausar.
       .filter(r => !espera || r.status !== 'en_espera')
@@ -262,19 +279,25 @@ export function RequestBoard<R extends BaseRequest>({
         if (assignedFilter === 'none') return !r.reviewed_by || r.status === 'open'
         return r.reviewed_by === assignedFilter
       })
-      .filter(r => {
-        const ts = new Date(r.created_at).getTime()
-        if (fromTs && ts < fromTs) return false
-        if (toTs && ts > toTs) return false
-        return true
-      })
       .sort((a, b) => sortDesc
         ? b.created_at.localeCompare(a.created_at)
         : a.created_at.localeCompare(b.created_at))
-  }, [requests, tab, statusFilter, assignedFilter, dateFrom, dateTo, sortDesc, espera])
+  }, [enRangoDelTab, statusFilter, assignedFilter, sortDesc, espera])
+
+  const porEstado = useMemo(() => {
+    const m: Partial<Record<RequestStatus, number>> = {}
+    for (const r of enRangoDelTab) m[r.status] = (m[r.status] ?? 0) + 1
+    return m
+  }, [enRangoDelTab])
+
+  function exportar() {
+    void descargarExcel('solicitudes', ['Tipo', 'Persona', 'Motivo', 'Estado', 'Asignada a', 'Creada', 'Notas'],
+      visible.map(r => [typeLabel[r.request_type] ?? r.request_type, r.member_name, r.reason ?? '', statusLabel(r.status),
+        r.reviewed_by_name ?? '', formatDate(r.created_at), r.review_notes ?? '']))
+  }
   // El tab es el tipo de solicitud (otro conjunto de datos), no un filtro: no se toca.
-  const hayFiltros = statusFilter !== 'open' || assignedFilter !== 'all' || dateFrom !== '' || dateTo !== ''
-  const limpiarFiltros = () => { setStatusFilter('open'); setAssignedFilter('all'); setDateFrom(''); setDateTo('') }
+  const hayFiltros = statusFilter !== 'open' || assignedFilter !== 'all' || dateFrom !== '' || dateTo !== '' || busqueda !== ''
+  const limpiarFiltros = () => { setStatusFilter('open'); setAssignedFilter('all'); setDateFrom(''); setDateTo(''); setBusqueda('') }
 
   /** REU-2 · Las que están durmiendo, de la más próxima a despertar a la más
    *  lejana: la primera de la lista es la que hay que volver a mirar antes. */
@@ -404,73 +427,41 @@ export function RequestBoard<R extends BaseRequest>({
           lo controla la página, ej. solicitudes de estudio con tabs planos). */}
       {tabs.length > 1 && <RequestTabs tabs={tabs} active={tab} counts={countByTab} onChange={setTab} />}
 
-      {/* Filtros: estado + rango de fechas + orden */}
-      <div className="flex items-center gap-2 flex-wrap">
-        <div className="flex gap-1.5 flex-wrap">
-          {statusFiltersFor(allowEscalate, allowPorModificar).map(f => (
-            <button
-              key={f.key}
-              onClick={() => setStatusFilter(f.key)}
-              className={cn(
-                'rounded-full px-3 py-1.5 text-[13px] font-body border transition-all',
-                statusFilter === f.key
-                  ? 'bg-navy text-white border-navy'
-                  : 'bg-transparent text-navy/80 border-outline hover:text-navy',
-              )}
-            >
-              {f.label}
-            </button>
-          ))}
+      {/* Orden de los reportes de finanzas (2026-10-20): rango + acciones,
+          totales por estado, y la búsqueda con los filtros a su derecha. */}
+      <div className={BARRA}>
+        <div className={BARRA_IZQ}>
+          <RangoDeFechas id="req" etiqueta="Creada desde" desde={dateFrom} hasta={dateTo} onDesde={setDateFrom} onHasta={setDateTo} />
         </div>
-        {assigneesUrl && (
-          <div className="flex items-center gap-1.5">
-            <label htmlFor="req-assigned-filter" className="text-[13px] text-navy-light/80 font-body">Asignado a</label>
-            <select
-              id="req-assigned-filter"
-              value={assignedFilter}
-              onChange={e => setAssignedFilter(e.target.value)}
-              className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
-            >
-              <option value="all">Todas</option>
-              <option value="none">Sin asignar</option>
-              {assignedOptions.map(o => <option key={o.id} value={o.id}>{o.name}</option>)}
-            </select>
-          </div>
-        )}
-        <div className="flex items-center gap-1.5 ml-auto flex-wrap">
-          <label htmlFor="req-date-from" className="text-[13px] text-navy-light/80 font-body">Desde</label>
-          <input
-            id="req-date-from"
-            type="date"
-            value={dateFrom}
-            onChange={e => setDateFrom(e.target.value)}
-            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
-          />
-          <label htmlFor="req-date-to" className="text-[13px] text-navy-light/80 font-body">Hasta</label>
-          <input
-            id="req-date-to"
-            type="date"
-            value={dateTo}
-            onChange={e => setDateTo(e.target.value)}
-            className="rounded-lg border border-outline bg-surface-card px-2 py-1 text-[13px] text-navy font-body outline-none focus:ring-1 focus:ring-coral/30"
-          />
-          {(dateFrom || dateTo) && (
-            <button
-              onClick={() => { setDateFrom(''); setDateTo('') }}
-              aria-label="Limpiar fechas"
-              className="rounded-lg p-1 text-navy-light/80 hover:text-coral-deep transition-colors"
-            >
-              <X size={13} />
-            </button>
-          )}
-          <button
-            onClick={() => setSortDesc(v => !v)}
-            className="inline-flex items-center gap-1 rounded-lg border border-outline px-2 py-1 text-[13px] text-navy-light/80 font-body hover:text-navy transition-colors"
-            title={sortDesc ? 'Más recientes primero' : 'Más antiguas primero'}
-          >
-            <ArrowUpDown size={12} />
-            {sortDesc ? 'Recientes' : 'Antiguas'}
+        <div className={BARRA_DER}>
+          <button type="button" onClick={() => setSortDesc(v => !v)} className={BOTON_SECUNDARIO}
+            title={sortDesc ? 'Más recientes primero' : 'Más antiguas primero'}>
+            <ArrowUpDown size={14} aria-hidden /> {sortDesc ? 'Recientes primero' : 'Antiguas primero'}
           </button>
+          <button type="button" onClick={exportar} disabled={visible.length === 0} className={BOTON_PRIMARIO}>
+            <Download size={14} aria-hidden /> Descargar Excel
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {([['open', 'Abiertas', VALOR_PENDIENTE], ['in_review', 'En revisión', VALOR_NEUTRO], ['resolved', 'Resueltas', VALOR_DINERO], ['rejected', 'Rechazadas', VALOR_NEUTRO]] as const).map(([st, label, color]) => (
+          <div key={st} className={TARJETA}>
+            <p className={TARJETA_ETIQUETA}>{label}</p>
+            <p className={cn(TARJETA_VALOR, color)}>{porEstado[st] ?? 0}</p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Buscar por persona o motivo…" />
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <SelectRotulado id="req-estado" etiqueta="Estado" valor={statusFilter} onCambio={v => setStatusFilter(v as RequestStatus | 'all')}
+            opciones={statusFiltersFor(allowEscalate, allowPorModificar).map(f => ({ value: f.key, label: f.label }))} />
+          {assigneesUrl && (
+            <SelectRotulado id="req-assigned-filter" etiqueta="Asignado a" valor={assignedFilter} onCambio={setAssignedFilter}
+              opciones={[{ value: 'all', label: 'Todas' }, { value: 'none', label: 'Sin asignar' }, ...assignedOptions.map(o => ({ value: o.id, label: o.name }))]} />
+          )}
         </div>
       </div>
 

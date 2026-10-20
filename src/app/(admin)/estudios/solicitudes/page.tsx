@@ -29,6 +29,8 @@ import { getInitials } from '@/lib/format'
 import { useSedes } from '@/lib/sedes'
 import { requestQueueScope } from '@/lib/studies/request-assignment'
 import { resolveRequestSection, type RequestSection } from '@/lib/studies/request-deeplink'
+import { DemandaDeclaradaPanel } from '@/components/studies/DemandaDeclaradaPanel'
+import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 
 const TABS = [
   { key: 'relocation', label: 'Reubicaciones' },
@@ -80,7 +82,11 @@ export default function SolicitudesPage() {
   const fullQueue = scope === 'all'
   // El comité solo tiene el tab de reubicaciones: sin esto, el default
   // ('prematrimonial') le abriría una cola que no le corresponde.
-  const section = fullQueue ? sectionState : 'relocation'
+  // EST-29 · El análisis de demanda: el MISMO gate que su endpoint.
+  const veDemanda = fullQueue && !!user?.roles?.some(r => (STUDY_ADMIN_ROLES as string[]).includes(r))
+  const section = !fullQueue ? 'relocation'
+    : sectionState === 'demanda' && !veDemanda ? 'prematrimonial'
+    : sectionState
 
   useEffect(() => {
     if (!allowed) return
@@ -167,7 +173,7 @@ export default function SolicitudesPage() {
               : 'Las solicitudes que te asignaron'}
           </p>
         </div>
-        {section !== 'prematrimonial' && fullQueue && (
+        {section !== 'prematrimonial' && section !== 'demanda' && fullQueue && (
           <button
             onClick={() => { setCreateFor(null); setCreateOpen(true) }}
             className="inline-flex items-center gap-1.5 rounded-full bg-coral px-4 py-2 text-sm text-white font-body hover:bg-coral-deep transition-colors shrink-0"
@@ -185,6 +191,7 @@ export default function SolicitudesPage() {
           { key: 'prematrimonial', label: 'Prematrimonial' },
           { key: 'relocation', label: 'Reubicaciones' },
           { key: 'study_interest', label: 'Intereses de estudio' },
+          ...(veDemanda ? [{ key: 'demanda', label: 'Análisis de demanda' }] : []),
         ] : [
           // El comité solo trabaja reubicaciones asignadas: prematrimonial es
           // otro flujo y los intereses son datos de demanda.
@@ -194,7 +201,7 @@ export default function SolicitudesPage() {
         onChange={k => setSection(k as RequestSection)}
       />
 
-      {section === 'prematrimonial' ? <PrematrimonialQueue /> : (
+      {section === 'demanda' ? <DemandaDeclaradaPanel /> : section === 'prematrimonial' ? <PrematrimonialQueue /> : (
       <RequestBoard
         key={section}
         requests={requests}
