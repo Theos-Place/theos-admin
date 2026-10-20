@@ -239,7 +239,7 @@ function Contenido() {
 
 export default function ReporteDeDonantesPage() {
   return (
-    <FinanceGuard>
+    <FinanceGuard reportes>
       <Suspense fallback={<div className="py-16 text-center text-sm text-navy-light/80 font-body">Cargando…</div>}>
         <Contenido />
       </Suspense>

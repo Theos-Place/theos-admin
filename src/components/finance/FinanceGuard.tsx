@@ -2,8 +2,13 @@
 import { Lock } from 'lucide-react'
 import { useAuth } from '@/hooks/useAuth'
 
-export function FinanceGuard({ children }: { children: React.ReactNode }) {
-  const { loaded, hasRole } = useAuth()
+/**
+ * `reportes`: la pantalla es un REPORTE, y un puesto de dirección (Director
+ * de Área o comité Directores) también entra — solo a mirar (REP-13,
+ * 2026-10-20). Los endpoints lo vuelven a comprobar con requireVistaFinanciera.
+ */
+export function FinanceGuard({ children, reportes }: { children: React.ReactNode; reportes?: boolean }) {
+  const { loaded, hasRole, user } = useAuth()
 
   // Mientras cargan los roles: spinner en vez de pantalla en blanco.
   if (!loaded) {
@@ -15,7 +20,7 @@ export function FinanceGuard({ children }: { children: React.ReactNode }) {
     )
   }
 
-  if (!hasRole('finanzas', 'admin', 'direccion')) {
+  if (!hasRole('finanzas', 'admin', 'direccion') && !(reportes && user?.direccion_por_puesto === true)) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[60vh] gap-4">
         <div className="w-14 h-14 rounded-2xl flex items-center justify-center bg-[rgba(214,62,61,0.10)]">

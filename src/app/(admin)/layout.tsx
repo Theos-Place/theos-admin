@@ -209,6 +209,11 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   if (user.direccion_por_puesto && (pathname === '/reportes' || pathname.startsWith('/reportes/'))) {
     return <>{children}</>
   }
+  // Y los reportes de FINANZAS (solo lectura; los endpoints usan
+  // requireVistaFinanciera): el índice con sus pestañas y el de donantes.
+  if (user.direccion_por_puesto && ['/finanzas/reportes', '/finanzas/donaciones/reporte'].includes(pathname)) {
+    return <>{children}</>
+  }
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />
   // El rol acotado de grupos (editor_grupos_estudio) tiene el módulo estudios
   // con alcance 'all' pero SOLO para grupos: nada de resumen, plan, bloques,

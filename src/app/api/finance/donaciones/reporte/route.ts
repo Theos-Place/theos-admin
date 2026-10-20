@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { ROLES_QUE_VEN_MONTOS_DE_DONACION } from '@/lib/finance/quien-ve-montos'
 import ExcelJS from 'exceljs'
-import { requireRoles } from '@/lib/auth/guard'
+import { requireRoles, requireVistaFinanciera } from '@/lib/auth/guard'
 import { getDonacionesParaReporte } from '@/lib/supabase/queries/finance'
 import {
   construirReporteDeDonantes, totalesEnTexto, SIN_SEDE,
@@ -28,7 +28,9 @@ const YMD = /^\d{4}-\d{2}-\d{2}$/
 
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireRoles(...ROLES)
+    // REP-13: los roles que ven montos, o un puesto de dirección (2026-10-20).
+    const porRol = await requireRoles(...ROLES)
+    const auth = porRol.res ? await requireVistaFinanciera(null) : porRol
     if (auth.res) return auth.res
 
     const sp = req.nextUrl.searchParams

@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { veMontosDeDonacion } from '@/lib/finance/quien-ve-montos'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireRoles, requireVistaFinanciera } from '@/lib/auth/guard'
 import {
   getDonations, getDonationStats, getDonationsFilteredSum, crearDonacionAMano,
   miembroActivoExiste, type DonationFilters,
@@ -15,10 +15,11 @@ import { reportarError } from '@/lib/observabilidad'
 //  filas y totales de monto en null.
 export async function GET(req: NextRequest) {
   try {
-    const auth = await requireModuleView('finanzas')
+    // REP-13: también un puesto de dirección, y ve los montos (2026-10-20).
+    const auth = await requireVistaFinanciera('finanzas')
     if (auth.res) return auth.res
     // Misma regla que el reporte de donantes (quien-ve-montos.ts).
-    const stripAmounts = !veMontosDeDonacion(auth.ctx.roles)
+    const stripAmounts = !veMontosDeDonacion(auth.ctx.roles) && !auth.direccionPorPuesto
     const { searchParams } = req.nextUrl
 
     if (searchParams.get('stats') === '1') {

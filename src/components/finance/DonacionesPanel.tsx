@@ -18,6 +18,7 @@ import { FilterChips } from '@/components/shared/FilterChips'
 import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
 import { toCurrency, type MoneyTotals } from '@/lib/money'
 import { useDonations, urlDeDonaciones } from '@/hooks/useDonations'
+import { usePermissions } from '@/hooks/usePermissions'
 import { toDomainDonation } from '@/lib/finance/adapter'
 import type { Donation } from '@/types/finance'
 import type { DbDonation } from '@/lib/supabase/queries/finance'
@@ -39,6 +40,9 @@ type StatusFilter = 'all' | 'identified' | 'unidentified'
  * manual, importar, el reporte de donantes y el CSV del resultado filtrado.
  */
 export function DonacionesPanel() {
+  // REP-13 · Un director entra a MIRAR: sin alta, importación ni vínculos.
+  const { can } = usePermissions()
+  const gestiona = can('finanzas', 'edit')
   const [revealAll, setRevealAll] = useState(false)
   const [dateFrom, setDateFrom] = useState('')
   const [dateTo, setDateTo] = useState('')
@@ -151,12 +155,16 @@ export function DonacionesPanel() {
               <span className={ETIQUETA_FILTRO}>Hasta</span>
               <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} aria-label="Donaciones hasta" className={CAMPO_FECHA} />
             </label>
-            <button type="button" onClick={() => setAgregando(true)} className={BOTON_SECUNDARIO}>
-              <Plus size={14} aria-hidden /> Agregar donación
-            </button>
-            <Link href="/finanzas/donaciones/importar" className={BOTON_ACENTO}>
-              <Upload size={14} aria-hidden /> Importar donaciones
-            </Link>
+            {gestiona && (
+              <>
+                <button type="button" onClick={() => setAgregando(true)} className={BOTON_SECUNDARIO}>
+                  <Plus size={14} aria-hidden /> Agregar donación
+                </button>
+                <Link href="/finanzas/donaciones/importar" className={BOTON_ACENTO}>
+                  <Upload size={14} aria-hidden /> Importar donaciones
+                </Link>
+              </>
+            )}
           </div>
           <div className={BARRA_DER}>
             {/* DON-3B · El reporte de donantes y montos. */}
@@ -210,12 +218,12 @@ export function DonacionesPanel() {
                 </p>
               </div>
             </div>
-            <button
+            {gestiona && <button
               onClick={() => setShowUnidentifiedModal(true)}
               className="shrink-0 rounded-full px-4 py-2 text-[13px] font-medium transition-all bg-[rgba(233,185,73,0.20)] text-[#9B7200] font-body border border-[rgba(233,185,73,0.30)]"
             >
               Resolver manualmente →
-            </button>
+            </button>}
           </div>
         )}
 

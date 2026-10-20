@@ -132,6 +132,29 @@ export async function requireModuleView(
 }
 
 /**
+ * REP-13 · Ver los REPORTES de Finanzas (donaciones, pagos por entidad,
+ * transparencia, donantes): el módulo finanzas, o un puesto de dirección
+ * (Director de Área o comité Directores). Solo para LEER: las escrituras de
+ * finanzas siguen con su `requireRoles`. `direccionPorPuesto` le dice al
+ * endpoint que muestre los montos (quien-ve-montos no lo sabe: va por rol).
+ */
+export async function requireVistaFinanciera(
+  /** null = no hay módulo que alcance: solo el puesto (el reporte de donantes
+   *  va por roles, y esos ya los mira el endpoint antes de llamar acá). */
+  module: string | string[] | null = 'finanzas',
+): Promise<{ ctx: AuthContext; direccionPorPuesto: boolean; res?: undefined } | { ctx?: undefined; direccionPorPuesto?: undefined; res: NextResponse }> {
+  const ctx = await getAuthContext()
+  if (!ctx) return { res: NextResponse.json({ error: 'No autenticado' }, { status: 401 }) }
+  const { hasModulePermission } = await import('@/lib/auth/roles')
+  if (module !== null && hasModulePermission(ctx.roles, module, 'view')) return { ctx, direccionPorPuesto: false }
+  if (ctx.memberId) {
+    const { tienePuestoDeDireccion } = await import('@/lib/supabase/queries/servers')
+    if (await tienePuestoDeDireccion(ctx.memberId)) return { ctx, direccionPorPuesto: true }
+  }
+  return { res: NextResponse.json({ error: 'No autorizado' }, { status: 403 }) }
+}
+
+/**
  * REP-11 · El guard de un reporte. Una llamada por endpoint, y la regla vive
  * en `lib/reports/acceso-por-reporte` — no acá.
  *

@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { tienePuestoDeDireccion } from '@/lib/supabase/queries/servers'
 import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { hasModulePermission, moduleScope } from '@/lib/auth/roles'
 import { getSeriePersonasNuevas, getPersonasNuevas } from '@/lib/supabase/queries/reports'
@@ -37,8 +38,10 @@ export async function GET(req: NextRequest) {
     // Día 0 del mes siguiente = último día de este. Sirve también en diciembre.
     const hasta = new Date(Date.UTC(anio, numMes, 0)).toISOString().slice(0, 10)
 
-    const puedeVerContacto = hasModulePermission(auth.ctx.roles, 'miembros', 'view')
-      && moduleScope(auth.ctx.roles, 'miembros') === 'all'
+    // REP-13: un puesto de dirección también ve el contacto (2026-10-20).
+    const puedeVerContacto = (hasModulePermission(auth.ctx.roles, 'miembros', 'view')
+      && moduleScope(auth.ctx.roles, 'miembros') === 'all')
+      || (!!auth.ctx.memberId && await tienePuestoDeDireccion(auth.ctx.memberId))
 
     const personas = await getPersonasNuevas(desde, hasta)
     return NextResponse.json({

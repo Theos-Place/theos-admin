@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
-import { requireRoles, requireModuleView } from '@/lib/auth/guard'
+import { requireRoles, requireVistaFinanciera } from '@/lib/auth/guard'
 import {
   getPayments, getPaymentsPage, getPaymentStats, createPayment, getEnrollmentForPayment,
 } from '@/lib/supabase/queries/finance'
@@ -46,7 +46,8 @@ export async function GET(req: NextRequest) {
     // módulo finanzas como los roles de revisión (revision_pagos, folletos,
     // coordinadores). Las escrituras siguen acotadas (POST abajo; acciones de
     // revisión en /api/payments/[id]/review con revision_pagos:edit).
-    const auth = await requireModuleView(['finanzas', 'revision_pagos'])
+    // REP-13: también un puesto de dirección (lo pide «Pagos por entidad»).
+    const auth = await requireVistaFinanciera(['finanzas', 'revision_pagos'])
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
 

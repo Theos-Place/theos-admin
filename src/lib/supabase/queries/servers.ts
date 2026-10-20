@@ -306,9 +306,9 @@ export async function abreReportesPorPuesto(memberId: string): Promise<boolean> 
 }
 
 /**
- * REP-13 · ¿Ocupa algún puesto de DIRECCIÓN (`esPuestoDeDireccion`)? Abre los
- * nueve reportes. Mira áreas y comités: el Director de Área está en un área,
- * Directores y Consejo Dirección son comités.
+ * REP-13 · ¿Ocupa algún puesto de DIRECCIÓN (`esPuestoDeDireccion`: hoy, el
+ * Director de Área)? Abre los nueve reportes, los de Finanzas y el contacto
+ * de Personas nuevas.
  */
 export async function tienePuestoDeDireccion(memberId: string): Promise<boolean> {
   const supabase = createAdminClient()

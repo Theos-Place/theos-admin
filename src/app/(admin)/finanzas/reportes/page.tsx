@@ -186,7 +186,7 @@ export default function ReportesPage() {
   }
 
   return (
-    <FinanceGuard>
+    <FinanceGuard reportes>
       <div className="space-y-6">
 
         {/* Header */}

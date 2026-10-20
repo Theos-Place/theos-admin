@@ -8,13 +8,14 @@ const p = (title: string, areaName: string, areaType: 'area' | 'committee'): Pos
   ({ title, areaName, areaType, parentAreaName: null })
 
 describe('REP-13 · los puestos de dirección ven todos los reportes (2026-10-20)', () => {
-  it('Director de Área, Directores y Consejo Dirección son de dirección', () => {
+  it('Director de Área y cualquier puesto del comité Directores', () => {
     expect(esPuestoDeDireccion(p('Director de Área', 'Area Finanzas', 'area'))).toBe(true)
     expect(esPuestoDeDireccion(p('Director Ejecutivo', 'Directores', 'committee'))).toBe(true)
-    expect(esPuestoDeDireccion(p('Miembro Consejo Dirección', 'Consejo Dirección', 'committee'))).toBe(true)
+    expect(esPuestoDeDireccion(p('Director General', 'Directores', 'committee'))).toBe(true)
   })
 
-  it('otros puestos no, aunque digan «director» o estén cerca', () => {
+  it('el Consejo Dirección no (aclaración 2026-10-20), ni otros puestos', () => {
+    expect(esPuestoDeDireccion(p('Miembro Consejo Dirección', 'Consejo Dirección', 'committee'))).toBe(false)
     expect(esPuestoDeDireccion(p('Encargado Comité', 'Comité Finanzas', 'committee'))).toBe(false)
     expect(esPuestoDeDireccion(p('Colaborador', 'Comité Planificación', 'committee'))).toBe(false)
   })
@@ -39,5 +40,18 @@ describe('REP-13 · los puestos de dirección ven todos los reportes (2026-10-20
     for (const r of ['src/app/api/reports/exalumnos-perdidos/route.ts', 'src/app/api/reports/exalumnos-perdidos/contacto/route.ts']) {
       expect(readFileSync(r, 'utf8'), r).toContain('tienePuestoDeDireccion')
     }
+  })
+
+  it('también los reportes de Finanzas (solo lectura, con montos) y el contacto de Personas nuevas', () => {
+    expect(readFileSync('src/app/api/finance/donations/route.ts', 'utf8')).toContain("!veMontosDeDonacion(auth.ctx.roles) && !auth.direccionPorPuesto")
+    expect(readFileSync('src/app/api/finance/payments/route.ts', 'utf8')).toContain("requireVistaFinanciera(['finanzas', 'revision_pagos'])")
+    expect(readFileSync('src/app/api/finance/donaciones/reporte/route.ts', 'utf8')).toContain('requireVistaFinanciera(null)')
+    expect(readFileSync('src/app/api/reports/personas-nuevas/route.ts', 'utf8')).toContain('await tienePuestoDeDireccion(auth.ctx.memberId)')
+    for (const p of ['src/app/(admin)/finanzas/reportes/page.tsx', 'src/app/(admin)/finanzas/donaciones/reporte/page.tsx']) {
+      expect(readFileSync(p, 'utf8'), p).toContain('<FinanceGuard reportes>')
+    }
+    // Entra a mirar: las escrituras siguen por rol, y el panel esconde la gestión.
+    expect(readFileSync('src/app/api/finance/donations/route.ts', 'utf8')).toContain("requireRoles('finanzas', 'direccion')")
+    expect(readFileSync('src/components/finance/DonacionesPanel.tsx', 'utf8')).toContain("const gestiona = can('finanzas', 'edit')")
   })
 })
