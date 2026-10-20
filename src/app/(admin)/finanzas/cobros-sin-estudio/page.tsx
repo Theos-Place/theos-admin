@@ -1,13 +1,22 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Unlink, Loader2 } from 'lucide-react'
+import { Unlink, Loader2, Download } from 'lucide-react'
+import { RangoDeFechas, Buscador } from '@/components/finance/BarraDeReporte'
+import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
+import { AmountDisplay } from '@/components/finance/AmountDisplay'
+import {
+  BARRA, BARRA_IZQ, BARRA_DER, BOTON_PRIMARIO,
+  TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel, enRango } from '@/lib/finance/descargar-excel'
+import { cn } from '@/lib/utils'
 import { AccessDenied } from '@/components/shared/AccessDenied'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useAuth } from '@/hooks/useAuth'
 import { hasModulePermission } from '@/lib/auth/roles'
-import { formatMoney, formatDate } from '@/lib/format'
+import { formatDate } from '@/lib/format'
 import {
   gravedadDe, queHacerCon, pideAccion, type CobroHuerfano, type Gravedad,
 } from '@/lib/finance/cobros-huerfanos'
@@ -44,6 +53,17 @@ export default function CobrosSinEstudioPage() {
   const [items, setItems] = useState<CobroHuerfano[]>([])
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  // Rango por la fecha en que el cobro quedó SUELTO, búsqueda y montos
+  // ocultables: el orden de los reportes de finanzas (2026-10-19).
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
+  const [busqueda, setBusqueda] = useState('')
+  const [revealAll, setRevealAll] = useState(false)
+  const visibles = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    return items.filter(c => enRango(c.huerfanoDesde, desde, hasta)
+      && (!q || (c.persona ?? '').toLowerCase().includes(q) || (c.concepto ?? '').toLowerCase().includes(q)))
+  }, [items, desde, hasta, busqueda])
 
   useEffect(() => {
     if (!puede) return
@@ -59,7 +79,7 @@ export default function CobrosSinEstudioPage() {
   if (!loaded) return null
   if (!puede) return <AccessDenied />
 
-  const porResolver = items.filter(pideAccion)
+  const porResolver = visibles.filter(pideAccion)
 
   return (
     <div className="space-y-6">
@@ -72,18 +92,37 @@ export default function CobrosSinEstudioPage() {
         </p>
       </div>
 
-      {!cargando && items.length > 0 && (
-        <div className="rounded-2xl bg-surface-card px-5 py-4 shadow-[var(--shadow-md)] inline-block">
-          <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
-            Piden acción
-          </p>
-          <p className="text-2xl font-extrabold text-navy font-display mt-0.5">
-            {porResolver.length} de {items.length}
-          </p>
-          <p className="text-[13px] text-navy-light/80 font-body">
-            El resto está anulado o ya se resolvió con un crédito.
-          </p>
+      <div className={BARRA}>
+        <div className={BARRA_IZQ}>
+          <RangoDeFechas id="suelto" etiqueta="Suelto desde" desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
         </div>
+        <div className={BARRA_DER}>
+          <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
+          <button type="button" disabled={visibles.length === 0} className={BOTON_PRIMARIO}
+            onClick={() => void descargarExcel('cobros-sin-estudio', ['Estado', 'Persona', 'Monto', 'Moneda', 'Concepto', 'Suelto desde', 'Qué hacer'],
+              visibles.map(c => [ETIQUETA[gravedadDe(c)].texto, c.persona ?? '', c.monto, c.currency ?? 'CRC', c.concepto ?? '',
+                c.huerfanoDesde ? formatDate(c.huerfanoDesde) : '', queHacerCon(c)]))}>
+            <Download size={14} aria-hidden /> Descargar Excel
+          </button>
+        </div>
+      </div>
+
+      {!cargando && items.length > 0 && (
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div className={TARJETA}>
+            <p className={TARJETA_ETIQUETA}>Piden acción</p>
+            <p className={cn(TARJETA_VALOR, VALOR_PENDIENTE)}>{porResolver.length}</p>
+          </div>
+          <div className={TARJETA}>
+            <p className={TARJETA_ETIQUETA}>Cobros sueltos</p>
+            <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{visibles.length}</p>
+            <p className="text-[13px] text-navy-light/80 font-body">El resto está anulado o ya se resolvió con un crédito.</p>
+          </div>
+        </div>
+      )}
+
+      {!cargando && items.length > 0 && (
+        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Buscar por persona o concepto…" />
       )}
 
       {cargando ? (
@@ -112,7 +151,7 @@ export default function CobrosSinEstudioPage() {
               </tr>
             </thead>
             <tbody>
-              {items.map(c => {
+              {visibles.map(c => {
                 const g = gravedadDe(c)
                 return (
                   <tr key={c.id} className="border-b border-[var(--outline-variant)] hover:bg-surface-low transition-colors">
@@ -125,7 +164,7 @@ export default function CobrosSinEstudioPage() {
                       </span>
                     </td>
                     <td className="px-4 py-3 text-[13px] font-bold text-navy font-body whitespace-nowrap">
-                      {formatMoney(c.monto, c.currency)}
+                      <AmountDisplay amount={c.monto} currency={c.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} />
                     </td>
                     <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{c.concepto ?? '—'}</td>
                     <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">
@@ -137,6 +176,9 @@ export default function CobrosSinEstudioPage() {
                   </tr>
                 )
               })}
+              {visibles.length === 0 && (
+                <tr><td colSpan={5} className="px-4 py-6 text-[13px] text-navy-light/80 font-body">Ningún cobro con esos filtros.</td></tr>
+              )}
             </tbody>
           </table>
         </div>

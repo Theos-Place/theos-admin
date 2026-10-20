@@ -13,7 +13,13 @@
 
 import { useState, useMemo } from 'react'
 import { useCargaRemota, json } from '@/hooks/useCargaRemota'
-import { GraduationCap, Loader2, ArrowRightLeft, Search, X, Ban } from 'lucide-react'
+import { GraduationCap, Loader2, ArrowRightLeft, Search, X, Ban, Download } from 'lucide-react'
+import { RangoDeFechas, Buscador, SelectRotulado } from '@/components/finance/BarraDeReporte'
+import {
+  PESTANA, BARRA, BARRA_IZQ, BARRA_DER, BOTON_PRIMARIO,
+  TARJETAS, TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel, enRango } from '@/lib/finance/descargar-excel'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { Modal } from '@/components/shared/Modal'
 import { CancelarBecaModal } from '@/components/finance/CancelarBecaModal'
@@ -77,7 +83,16 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
     () => json<{ items?: BecaAsignada[] }>('/api/scholarships/coupons?kind=asignada', 'No se pudieron cargar las becas.')
       .then(d => d.items ?? []),
   )
-  const becas = datos ?? SIN_DATOS
+  const todasLasBecas = datos ?? SIN_DATOS
+  // Rango por fecha de APROBACIÓN y búsqueda (orden de los reportes, 2026-10-19).
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
+  const [busqueda, setBusqueda] = useState('')
+  const becas = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    return todasLasBecas.filter(b => enRango(b.created_at, desde, hasta)
+      && (!q || (b.member_name ?? '').toLowerCase().includes(q) || b.entity_name.toLowerCase().includes(q)))
+  }, [todasLasBecas, desde, hasta, busqueda])
 
   // Los conteos se cuentan sobre la lista COMPLETA: si dependieran del filtro
   // activo, las otras pastillas mostrarían cero.
@@ -97,48 +112,44 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
   const [cancelar, setCancelar] = useState<BecaAsignada | null>(null)
 
   return (
-    <>
-      <div className="flex items-center gap-2 flex-wrap">
-        {FILTROS_USO.map(f => (
-          <button
-            key={f.id}
-            onClick={() => setFiltro(f.id)}
-            aria-pressed={filtro === f.id}
-            className={cn(
-              'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
-              filtro === f.id ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
-            )}
-          >
-            {f.label}
-            <span className={cn('ml-1.5', filtro === f.id ? 'text-white/80' : 'text-navy-light/80')}>{conteo[f.id]}</span>
+    <div className={PESTANA}>
+      <div className={BARRA}>
+        <div className={BARRA_IZQ}>
+          <RangoDeFechas id="asignada" etiqueta="Aprobada desde" desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
+        </div>
+        <div className={BARRA_DER}>
+          <button type="button" disabled={visibles.length === 0} className={BOTON_PRIMARIO}
+            onClick={() => void descargarExcel('becas-asignadas', ['Persona', 'Destino', 'Descuento', 'Estado', 'Cupo', 'Aprobada'],
+              visibles.map(b => [b.member_name ?? '', b.entity_name, formatDiscount(b.discount_type, b.discount_value, b.currency),
+                ETIQUETA_USO[usoDeLaBeca(b)], b.cupo === 'no_aplica' ? '' : ETIQUETA_CUPO[b.cupo], formatDate(b.created_at)]))}>
+            <Download size={14} aria-hidden /> Descargar Excel
           </button>
+        </div>
+      </div>
+
+      <div className={TARJETAS}>
+        {([['sin_usar', VALOR_PENDIENTE], ['usada', VALOR_DINERO], ['revocada', VALOR_NEUTRO]] as const).map(([id, color]) => (
+          <div key={id} className={TARJETA}>
+            <p className={TARJETA_ETIQUETA}>{FILTROS_USO.find(f => f.id === id)?.label}</p>
+            <p className={cn(TARJETA_VALOR, color)}>{conteo[id]}</p>
+          </div>
         ))}
       </div>
 
-      {/* BEC-2 · Cola de las que no se pueden usar. Solo aparece si hay alguna:
-          una fila de filtros en cero es ruido permanente. */}
-      {conteoCupo.lleno + conteoCupo.sin_grupos > 0 && (
-        <div className="flex items-center gap-2 flex-wrap mt-2">
-          <span className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Cupo del destino</span>
-          {FILTROS_CUPO.map(f => (
-            <button
-              key={f.id}
-              onClick={() => setCupo(f.id)}
-              aria-pressed={cupo === f.id}
-              title={f.id === 'todas' ? undefined : AYUDA_CUPO[f.id]}
-              className={cn(
-                'rounded-full px-3 py-1 text-[13px] font-medium border transition-all font-display',
-                cupo === f.id ? 'bg-coral text-white border-coral' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
-              )}
-            >
-              {f.label}
-              <span className={cn('ml-1.5', cupo === f.id ? 'text-white/80' : 'text-navy-light/80')}>{conteoCupo[f.id]}</span>
-            </button>
-          ))}
+      <div className="flex flex-wrap items-center gap-3">
+        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Buscar por persona o destino…" />
+        <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+          <SelectRotulado id="asignada-uso" etiqueta="Estado" valor={filtro} onCambio={v => setFiltro(v as FiltroUso)}
+            opciones={FILTROS_USO.map(f => ({ value: f.id, label: `${f.label} (${conteo[f.id]})` }))} />
+          {/* BEC-2 · Solo si hay alguna sin cupo: un filtro en cero es ruido. */}
+          {conteoCupo.lleno + conteoCupo.sin_grupos > 0 && (
+            <SelectRotulado id="asignada-cupo" etiqueta="Cupo del destino" valor={cupo} onCambio={v => setCupo(v as FiltroCupo)}
+              opciones={FILTROS_CUPO.map(f => ({ value: f.id, label: `${f.label} (${conteoCupo[f.id]})` }))} />
+          )}
         </div>
-      )}
+      </div>
 
-      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)] mt-4">
+      <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         {cargando ? (
           <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body inline-flex items-center gap-2 justify-center w-full">
             <Loader2 size={15} className="animate-spin" /> Cargando…
@@ -252,7 +263,7 @@ export function BecasAsignadasTab({ canEdit }: { canEdit: boolean }) {
           onError={(msg) => toast(msg, 'error')}
         />
       )}
-    </>
+    </div>
   )
 }
 

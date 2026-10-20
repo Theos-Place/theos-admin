@@ -5,7 +5,14 @@ import { useUbicacionDeEntrada } from '@/hooks/useUbicacionDeEntrada'
 import { usePrecarga } from '@/hooks/usePrecarga'
 import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import Link from 'next/link'
-import { GraduationCap, Plus, Loader2, AlertTriangle } from 'lucide-react'
+import { GraduationCap, Plus, Loader2, AlertTriangle, Download } from 'lucide-react'
+import { Tabs } from '@/components/shared/Tabs'
+import { RangoDeFechas, Buscador, SelectRotulado } from '@/components/finance/BarraDeReporte'
+import {
+  PESTANA, BARRA, BARRA_IZQ, BARRA_DER, BOTON_PRIMARIO, BOTON_ACENTO,
+  TARJETAS, TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel, enRango } from '@/lib/finance/descargar-excel'
 import { ETIQUETA_ESTADO_BECA } from '@/lib/finance/uso-de-beca'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useAuth } from '@/hooks/useAuth'
@@ -89,9 +96,20 @@ export default function BecasPage() {
   )
   const coupons = cuponesCargados ?? SIN_CUPONES
 
+  // Rango (por fecha de creación) y búsqueda: el orden de los reportes de
+  // finanzas (2026-10-19). Los totales se cuentan sobre el rango, sin el filtro
+  // de estado: si no, las otras tarjetas quedarían en cero.
+  const [cDesde, setCDesde] = useState('')
+  const [cHasta, setCHasta] = useState('')
+  const [cBusqueda, setCBusqueda] = useState('')
+  const cuponesEnRango = useMemo(() => {
+    const q = cBusqueda.trim().toLowerCase()
+    return coupons.filter(c => enRango(c.created_at, cDesde, cHasta)
+      && (!q || (c.code ?? '').toLowerCase().includes(q) || c.entity_name.toLowerCase().includes(q)))
+  }, [coupons, cDesde, cHasta, cBusqueda])
   const filteredCoupons = useMemo(
-    () => (statusFilter === 'all' ? coupons : coupons.filter(c => c.status === statusFilter)),
-    [coupons, statusFilter],
+    () => (statusFilter === 'all' ? cuponesEnRango : cuponesEnRango.filter(c => c.status === statusFilter)),
+    [cuponesEnRango, statusFilter],
   )
   const sel = useRowSelection(filteredCoupons.filter(c => c.status === 'active').map(c => c.id))
 
@@ -186,10 +204,18 @@ export default function BecasPage() {
    */
   const [filtroElegido, setFiltroElegido] = useState<FiltroSolicitud | null>(null)
   const filtroSolicitudes = filtroElegido ?? filtroInicial(requests)
-  const conteoSolicitudes = useMemo(() => conteos(requests), [requests])
+    const [sDesde, setSDesde] = useState('')
+  const [sHasta, setSHasta] = useState('')
+  const [sBusqueda, setSBusqueda] = useState('')
+  const solicitudesEnRango = useMemo(() => {
+    const q = sBusqueda.trim().toLowerCase()
+    return requests.filter(r => enRango(r.created_at, sDesde, sHasta)
+      && (!q || r.member_name.toLowerCase().includes(q) || (r.entity_name ?? '').toLowerCase().includes(q)))
+  }, [requests, sDesde, sHasta, sBusqueda])
+  const conteoEnRango = useMemo(() => conteos(solicitudesEnRango), [solicitudesEnRango])
   const solicitudesVisibles = useMemo(
-    () => filtrarSolicitudes(requests, filtroSolicitudes),
-    [requests, filtroSolicitudes])
+    () => filtrarSolicitudes(solicitudesEnRango, filtroSolicitudes),
+    [solicitudesEnRango, filtroSolicitudes])
 
   if (loaded && !canView) return <AccessDenied />
 
@@ -206,47 +232,54 @@ export default function BecasPage() {
               <p className="mt-0.5 text-sm text-white/80 font-body">Cupones genéricos, becas asignadas y solicitudes</p>
             </div>
           </div>
-          {canEdit && tab === 'cupones' && (
-            <Link
-              href="/finanzas/becas/nueva"
-              className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-colors font-body"
-            >
-              <Plus size={15} /> Crear cupón
-            </Link>
-          )}
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
-        {([['cupones', 'Cupones genéricos'], ['asignadas', 'Becas asignadas'], ['solicitudes', 'Solicitudes']] as const).map(([id, label]) => (
-          <button
-            key={id}
-            onClick={() => setTab(id)}
-            className={cn(
-              'rounded-full px-4 py-2 text-[13px] font-medium border transition-all font-display',
-              tab === id ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
-            )}
-          >
-            {label}
-          </button>
-        ))}
-      </div>
+      {/* Mismas tabs que el reporte de finanzas (pedido 2026-10-19). */}
+      <Tabs
+        tabs={[
+          { key: 'cupones', label: 'Cupones genéricos' },
+          { key: 'asignadas', label: 'Becas asignadas' },
+          { key: 'solicitudes', label: 'Solicitudes' },
+        ]}
+        active={tab}
+        onChange={k => setTab(k as typeof tab)}
+      />
 
       {tab === 'cupones' && (
-        <>
-          <div className="flex items-center gap-2 flex-wrap">
-            {([['all', 'Todos'], ['active', 'Activos'], ['used', 'Usados'], ['revoked', 'Revocados']] as const).map(([id, label]) => (
-              <button
-                key={id}
-                onClick={() => setStatusFilter(id)}
-                className={cn(
-                  'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
-                  statusFilter === id ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
-                )}
-              >
-                {label}
+        <div className={PESTANA}>
+          <div className={BARRA}>
+            <div className={BARRA_IZQ}>
+              <RangoDeFechas id="cupon" etiqueta="Creado desde" desde={cDesde} hasta={cHasta} onDesde={setCDesde} onHasta={setCHasta} />
+            </div>
+            <div className={BARRA_DER}>
+              {canEdit && (
+                <Link href="/finanzas/becas/nueva" className={BOTON_ACENTO}>
+                  <Plus size={14} aria-hidden /> Crear cupón
+                </Link>
+              )}
+              <button type="button" disabled={filteredCoupons.length === 0} className={BOTON_PRIMARIO}
+                onClick={() => void descargarExcel('cupones', ['Código', 'Destino', 'Descuento', 'Vencimiento', 'Usos', 'Estado', 'Creado'],
+                  filteredCoupons.map(c => [c.code, c.entity_name, formatDiscount(c.discount_type, c.discount_value, c.currency),
+                    c.expires_at ? formatDate(c.expires_at) : '', c.used_count, STATUS_LABEL[c.status], formatDate(c.created_at)]))}>
+                <Download size={14} aria-hidden /> Descargar Excel
               </button>
+            </div>
+          </div>
+
+          <div className={TARJETAS}>
+            {([['active', 'Activos', VALOR_DINERO], ['used', 'Usados', VALOR_NEUTRO], ['revoked', 'Cancelados', VALOR_PENDIENTE]] as const).map(([st, label, color]) => (
+              <div key={st} className={TARJETA}>
+                <p className={TARJETA_ETIQUETA}>{label}</p>
+                <p className={cn(TARJETA_VALOR, color)}>{cuponesEnRango.filter(c => c.status === st).length}</p>
+              </div>
             ))}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-3">
+            <Buscador valor={cBusqueda} onCambio={setCBusqueda} placeholder="Buscar por código o destino…" />
+            <SelectRotulado id="cupon-estado" etiqueta="Estado" valor={statusFilter} onCambio={v => setStatusFilter(v as typeof statusFilter)}
+              opciones={[{ value: 'all', label: 'Todos' }, { value: 'active', label: 'Activos' }, { value: 'used', label: 'Usados' }, { value: 'revoked', label: 'Cancelados' }]} />
           </div>
 
           {canEdit && sel.count > 0 && (
@@ -326,30 +359,41 @@ export default function BecasPage() {
               </div>
             )}
           </div>
-        </>
+        </div>
       )}
 
       {tab === 'asignadas' && <BecasAsignadasTab canEdit={canEdit} />}
 
       {tab === 'solicitudes' && (
-        <>
-        <div className="flex items-center gap-2 flex-wrap">
-          {FILTROS.map(f => (
-            <button
-              key={f.id}
-              onClick={() => setFiltroElegido(f.id)}
-              aria-pressed={filtroSolicitudes === f.id}
-              className={cn(
-                'rounded-full px-3.5 py-1.5 text-[13px] font-medium border transition-all font-display',
-                filtroSolicitudes === f.id ? 'bg-navy text-white border-navy' : 'text-navy-light/80 hover:text-navy border-transparent hover:border-navy/20',
-              )}
-            >
-              {f.label}
-              <span className={cn('ml-1.5', filtroSolicitudes === f.id ? 'text-white/80' : 'text-navy-light/80')}>
-                {conteoSolicitudes[f.id]}
-              </span>
+        <div className={PESTANA}>
+        <div className={BARRA}>
+          <div className={BARRA_IZQ}>
+            <RangoDeFechas id="solicitud" etiqueta="Solicitada desde" desde={sDesde} hasta={sHasta} onDesde={setSDesde} onHasta={setSHasta} />
+          </div>
+          <div className={BARRA_DER}>
+            <button type="button" disabled={solicitudesVisibles.length === 0} className={BOTON_PRIMARIO}
+              onClick={() => void descargarExcel('solicitudes-de-beca', ['Persona', 'Destino', 'Motivo', 'Estado', 'Solicitada'],
+                solicitudesVisibles.map(r => [r.member_name, r.entity_name ?? '', r.reason,
+                  r.status === 'open' ? 'Abierta' : r.status === 'in_review' ? 'En revisión' : r.status === 'resolved' ? 'Aprobada' : 'Rechazada',
+                  formatDate(r.created_at)]))}>
+              <Download size={14} aria-hidden /> Descargar Excel
             </button>
+          </div>
+        </div>
+
+        <div className={TARJETAS}>
+          {([['pendientes', VALOR_PENDIENTE], ['resolved', VALOR_DINERO], ['rejected', VALOR_NEUTRO]] as const).map(([id, color]) => (
+            <div key={id} className={TARJETA}>
+              <p className={TARJETA_ETIQUETA}>{FILTROS.find(f => f.id === id)?.label}</p>
+              <p className={cn(TARJETA_VALOR, color)}>{conteoEnRango[id]}</p>
+            </div>
           ))}
+        </div>
+
+        <div className="flex flex-wrap items-center gap-3">
+          <Buscador valor={sBusqueda} onCambio={setSBusqueda} placeholder="Buscar por persona o destino…" />
+          <SelectRotulado id="solicitud-estado" etiqueta="Estado" valor={filtroSolicitudes} onCambio={v => setFiltroElegido(v as FiltroSolicitud)}
+            opciones={FILTROS.map(f => ({ value: f.id, label: `${f.label} (${conteoEnRango[f.id]})` }))} />
         </div>
 
         <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
@@ -414,7 +458,7 @@ export default function BecasPage() {
             </div>
           )}
         </div>
-        </>
+        </div>
       )}
 
       {confirmRevoke && (

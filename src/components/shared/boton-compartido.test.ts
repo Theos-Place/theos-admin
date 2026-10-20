@@ -22,7 +22,7 @@ import { join } from 'node:path'
 // «Pagar matrícula» y «Pagar inscripción» pasaron a ser UN componente.
 // 179 → 178: el comprobante de la inscripción a eventos usa el mismo
 // FormularioDeComprobante.
-const TECHO = 178
+const TECHO = 177
 
 const TSX = (dir: string): string[] =>
   readdirSync(dir).flatMap(n => {
