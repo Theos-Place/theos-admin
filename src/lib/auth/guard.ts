@@ -132,7 +132,7 @@ export async function requireModuleView(
 }
 
 /**
- * REP-13 · Ver los REPORTES de Finanzas (donaciones, pagos por entidad,
+ * REP-18 · Ver los REPORTES de Finanzas (donaciones, pagos por entidad,
  * transparencia, donantes): el módulo finanzas, o un puesto de dirección
  * (Director de Área o comité Directores). Solo para LEER: las escrituras de
  * finanzas siguen con su `requireRoles`. `direccionPorPuesto` le dice al
@@ -176,7 +176,7 @@ export async function requireAccesoAReporte(
   const { puedeVerReporte, ACCESO_POR_REPORTE } = await import('@/lib/reports/acceso-por-reporte')
   const base = { roles: ctx.roles, tieneModulo: hasModulePermission(ctx.roles, 'reportes', 'view') }
   if (puedeVerReporte(slug, base)) return { ctx }
-  // REP-13 · Un puesto de dirección abre los nueve (2026-10-20).
+  // REP-18 · Un puesto de dirección abre los nueve (2026-10-20).
   if (ctx.memberId) {
     const { tienePuestoDeDireccion } = await import('@/lib/supabase/queries/servers')
     if (await tienePuestoDeDireccion(ctx.memberId)) return { ctx }

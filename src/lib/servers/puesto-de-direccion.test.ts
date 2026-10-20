@@ -7,7 +7,7 @@ import type { PositionContext } from './position-roles'
 const p = (title: string, areaName: string, areaType: 'area' | 'committee'): PositionContext =>
   ({ title, areaName, areaType, parentAreaName: null })
 
-describe('REP-13 · los puestos de dirección ven todos los reportes (2026-10-20)', () => {
+describe('REP-18 · los puestos de dirección ven todos los reportes (2026-10-20)', () => {
   it('Director de Área y cualquier puesto del comité Directores', () => {
     expect(esPuestoDeDireccion(p('Director de Área', 'Area Finanzas', 'area'))).toBe(true)
     expect(esPuestoDeDireccion(p('Director Ejecutivo', 'Directores', 'committee'))).toBe(true)

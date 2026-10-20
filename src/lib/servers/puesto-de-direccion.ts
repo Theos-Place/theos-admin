@@ -1,5 +1,5 @@
 /**
- * REP-13 · ¿Este puesto es de DIRECCIÓN?
+ * REP-18 · ¿Este puesto es de DIRECCIÓN?
  *
  * Regla de Floriana (2026-10-20): «todas las personas con puestos de
  * dirección pueden y deben poder ver todos los reportes», y «cuenta como

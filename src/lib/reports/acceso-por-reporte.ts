@@ -142,7 +142,7 @@ export type QuienPregunta = {
    * es el lado seguro.
    */
   porPuesto?: boolean
-  /** REP-13 · Ocupa un puesto de dirección (`esPuestoDeDireccion`): ve todos. */
+  /** REP-18 · Ocupa un puesto de dirección (`esPuestoDeDireccion`): ve todos. */
   direccionPorPuesto?: boolean
   /**
    * DIR-7 · ¿Dirige o dirigió algún grupo? Lo resuelve el servidor. `false`
@@ -154,7 +154,7 @@ export type QuienPregunta = {
 export function puedeVerReporte(slug: SlugDeReporte, quien: QuienPregunta): boolean {
   const regla = ACCESO_POR_REPORTE[slug]
   if (!regla) return false
-  // REP-13 · Un puesto de dirección abre TODOS (ver puesto-de-direccion.ts).
+  // REP-18 · Un puesto de dirección abre TODOS (ver puesto-de-direccion.ts).
   if (quien.direccionPorPuesto === true) return true
   const roles = quien.roles ?? []
   if (regla.roles.some(r => (roles as readonly string[]).includes(r))) return true

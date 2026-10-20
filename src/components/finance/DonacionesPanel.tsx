@@ -40,7 +40,7 @@ type StatusFilter = 'all' | 'identified' | 'unidentified'
  * manual, importar, el reporte de donantes y el CSV del resultado filtrado.
  */
 export function DonacionesPanel() {
-  // REP-13 · Un director entra a MIRAR: sin alta, importación ni vínculos.
+  // REP-18 · Un director entra a MIRAR: sin alta, importación ni vínculos.
   const { can } = usePermissions()
   const gestiona = can('finanzas', 'edit')
   const [revealAll, setRevealAll] = useState(false)

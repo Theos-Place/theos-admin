@@ -172,7 +172,7 @@ export async function GET() {
         }
       })(),
 
-      // REP-13: ¿ocupa un puesto de dirección? Abre los nueve reportes.
+      // REP-18: ¿ocupa un puesto de dirección? Abre los nueve reportes.
       (async (): Promise<boolean> => {
         try {
           const { tienePuestoDeDireccion } = await import('@/lib/supabase/queries/servers')

@@ -270,7 +270,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     // FIN-12 · El Colaborador de Finanzas de una sede entra a Adelantos sin el
     // módulo finanzas: su permiso es `adelantos`, que le da el puesto.
     ...(!can('finanzas', 'view') && can('adelantos', 'view') ? [{ href: '/finanzas/adelantos', label: 'Adelantos de comida', icon: UtensilsCrossed }] : []),
-    // REP-13 · Un puesto de dirección ve los REPORTES de finanzas, sin el
+    // REP-18 · Un puesto de dirección ve los REPORTES de finanzas, sin el
     // módulo (2026-10-20). Solo esa entrada: lo demás es gestión.
     ...(!can('finanzas', 'view') && user?.direccion_por_puesto === true ? [{ href: '/finanzas/reportes', label: 'Reportes', icon: BarChart2 }] : []),
   // Orden alfabético (Floriana, 2026-10-14). «Resumen» no está en esta lista:
@@ -358,7 +358,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     { href: '/empleados',      label: 'Empleados',      icon: Briefcase,       subs: empleadosSub,       module: 'empleados', hideSummary: !can('empleados', 'view') },
 
     { href: '/finanzas',       label: 'Finanzas',       icon: DollarSign,      subs: finanzasSub,        module: 'finanzas',
-      // REP-13 · Sin el módulo, el resumen de finanzas no es para el director.
+      // REP-18 · Sin el módulo, el resumen de finanzas no es para el director.
       hideSummary: !can('finanzas', 'view') && user?.direccion_por_puesto === true },
     { href: '/comunicaciones', label: 'Comunicaciones', icon: MessageCircle,   subs: comunicacionesSub,  module: 'comunicaciones' },
     { href: '/reportes',       label: 'Reportes',       icon: BarChart2,       subs: [],                 module: 'reportes' },

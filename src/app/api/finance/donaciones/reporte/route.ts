@@ -28,7 +28,7 @@ const YMD = /^\d{4}-\d{2}-\d{2}$/
 
 export async function GET(req: NextRequest) {
   try {
-    // REP-13: los roles que ven montos, o un puesto de dirección (2026-10-20).
+    // REP-18: los roles que ven montos, o un puesto de dirección (2026-10-20).
     const porRol = await requireRoles(...ROLES)
     const auth = porRol.res ? await requireVistaFinanciera(null) : porRol
     if (auth.res) return auth.res

@@ -97,6 +97,48 @@ Todo en producción el mismo día.
  · **Accesos** — censo de quién ve montos; Sofía y Gisselle fuera, la cuenta de
    Finanzas Madrid desactivada.
 
+### [x] Jornadas del 2026-10-19 y 2026-10-20 · lo que salió de esos días
+
+Nada estaba en el plan. Casi todo en producción; lo último del 20 (zona
+virtual, conteo de reubicaciones, enlaces de la demanda) quedó en staging.
+
+ · **REP-18** — los PUESTOS de dirección ven todos los reportes: Director de
+   Área y cualquier puesto del comité «Directores» (el Consejo Dirección NO,
+   decisión de Floriana). Los nueve de Reportes, los de Finanzas (solo
+   lectura, con montos) y el contacto de Personas nuevas. Va por puesto
+   (`esPuestoDeDireccion` → `tienePuestoDeDireccion`), no por rol: el rol
+   `reportes` abre solo cuatro, que era el bug (Melissa Acón no veía
+   Estudios ni Dirigentes).
+ · **SEC-4** — tablas de `public` solo con la llave de servicio (aviso de
+   Supabase: desde el 30-oct no hay GRANT automático). Regla en AGENTS.md,
+   `permisos-de-tablas.test.ts`, y migración `20261020120000` con los
+   permisos por defecto y sin `authenticated` en las 16 tablas con RLS sin
+   políticas. El aviso «RLS Enabled No Policy» es a propósito.
+ · **Orden de los reportes en todas las pantallas de gestión** — rango
+   desde/hasta y Excel arriba, tarjetas, búsqueda con filtros a la derecha
+   (piezas en `reporte-ui` y `BarraDeReporte`): pagos, devoluciones, saldos a
+   favor (fecha = cuándo se generó el saldo, `llegadaDelPago`), becas (con
+   tabs), cobros sin estudio, soporte, solicitudes (las cuatro pestañas),
+   evaluaciones, folletos, aplicaciones de servicio (rango en el servidor) y
+   cierres del prematrimonial (sin Excel: contenido pastoral).
+ · **EST-29** — la demanda pasó a ser la pestaña «Análisis de demanda» de
+   Solicitudes, con tres etapas (5+ listos, 2–4 potencialmente, 1 aún no),
+   dirigentes detrás de un clic y «Abrir su solicitud» por persona. Zona
+   «Virtual» en el interés de estudio, con el porqué obligatorio.
+ · **Paquete de niveles (legacy)** — `study_enrollments.niveles_prepagados`:
+   un cobro legacy pendiente se registra como paquete (N2+N3+N4) y el
+   sucesor nace sin cobro. Caso Daniela Seas.
+ · **Auditoría** — `audit_log.actor_id` apunta a auth.users y varios
+   endpoints pasaban el memberId: la fila se perdía en silencio. Ahora van
+   por `logAudit` con `auth.ctx.userId` (`auditoria-actor.test.ts`); se
+   recuperaron 23 filas.
+ · **Correcciones de datos** (respaldos en `docs/correcciones/2026-10-19-*`):
+   pagos de Karol Villalobos, Kattya Abarca, Mariana Alvarado (3 reubicados
+   borrados), Mirtha Cruz, Roberto Fernández y Luz Cáceres, Daniela Seas.
+ · Otros: el grupo en la lista de pagos dice su dirigente; filtros de
+   Dirigentes en una caja; submenú de Estudios alfabético; cierre
+   prematrimonial de un grupo hecho a mano dice quién es la pareja.
+
 ### [x] Jornada del 2026-10-14 · lo que salió del día
 
 Igual que la del 13: nada estaba en el plan. Todo en producción el mismo día,
@@ -2920,3 +2962,90 @@ banderitas de golpe).
 Tests: no dona → banderita con justificación; vuelve a donar → se quita; manual no se
 toca; ambas razones listadas; idempotente. tsc/lint/vitest.
 ```
+
+## Fase 30 — Perfil S.I.R.V.E. (pedido 2026-10-20)
+
+### [ ] SRV-20 · Perfil S.I.R.V.E. en el perfil del miembro + formulario espejo + migración
+
+Pedido de estudios/servidores: lo que hoy es un formulario de CCB (lo llenan
+los estudiantes de Sirviendo como Jesús tras la oración de envío) pasa a vivir
+como DATOS DEL PERFIL de cada persona — editables por ella misma — con un
+formulario de actualización vinculado, y migrando las respuestas ya existentes.
+
+**QUÉ SE GUARDA (del formulario actual, quitando lo que el sistema ya sabe):**
+- Dones espirituales según el Test de Dones (multiselect, catálogo de 22).
+- Dones según la Oración de Envío (mismo catálogo + "no me dijeron ninguno").
+- Otros dones revelados/manifestados (texto).
+- Estilo natural de relacionarse — primario y secundario (el DISC). Catálogo
+  de 4 opciones: **Dominante · Influyente · Sólido · Concienzudo**.
+- Formación académica (grado) y a qué se dedica (profesión/oficio).
+- Habilidades vocacionales (multiselect: cocina, medicina, educación,
+  consejería, finanzas, administración, mercadeo, creatividad, música,
+  fotografía, diseño, audiovisuales, tecnología, construcción, mecánica,
+  idiomas, deportes, manejo de personal + "otras").
+- Pasión por servir (multiselect: bebés, niños, jóvenes, adultos, adultos
+  mayores, mujeres, hombres, solteros, matrimonios, padres, misiones, ayuda
+  social, oración, recreación + "otras").
+- Trayectoria de servicio en Theos (texto), motivo de dejar puestos anteriores
+  (texto), y "si no estás sirviendo, ¿qué estás esperando?" (texto).
+**QUÉ NO SE PIDE (ya lo sabe el sistema):** datos personales, comité y sede
+actuales (puestos de servicio), dirigente del curso (grupo de Liderazgo de
+Jesús).
+
+**PLAN EN 4 ETAPAS (cada una un prompt/corrida):**
+
+ETAPA 1 — Datos + sección del perfil:
+```
+FEATURE · Perfil SIRVE, etapa 1: modelo de datos y sección en el perfil propio
+
+1. Migración: estructura para el perfil SIRVE del miembro (tabla propia
+   member_sirve_profile 1:1 con members, o columnas en el bloque espiritual — decidir
+   según cómo está lo espiritual hoy y reportar). Catálogos de dones (22), habilidades y
+   pasiones como constantes de lib/ (NO texto libre salvo los campos "otras"/texto).
+2. Sección "Perfil S.I.R.V.E." en el perfil PROPIO (junto a los datos espirituales):
+   resumen limpio por campos con edición en sitio (el patrón de DIR-10/FRM: lápiz por
+   campo, listas solo al editar). Mobile 360px.
+3. PERMISOS (confirmados por Floriana 2026-10-20): la persona ve y edita SOLO el suyo
+   (resolveTargetMemberId). LECTURA además para: coordinador_estudios,
+   coordinador_servidores/encargado_staff (RH) y direccion (solo lectura). admin todo,
+   como siempre. NADIE MÁS — ni líderes de comité ni dirigentes.
+4. Audit_log en cada edición. Tests: dueño edita, otro miembro 403, lectura solo roles
+   definidos. tsc/lint/vitest.
+```
+
+ETAPA 2 — Formulario espejo (patrón SRV-9, calcado):
+```
+FEATURE · Perfil SIRVE, etapa 2: formulario de actualización vinculado
+
+Formulario del módulo de formularios con campos VINCULADOS al perfil SIRVE (edición en
+sitio/guardado directo): abre PRELLENADO con lo que la persona tiene, todo editable, al
+enviar escribe al perfil. AUDIENCIA (FRM-5): graduados de "Liderazgo de Jesús" /
+estudiantes de Sirviendo como Jesús (confirmar la condición exacta — es el momento del
+flujo en que se llena, tras la oración de envío). Es el reemplazo del formulario de CCB:
+el correo de campaña lo enlaza; el envío de ese correo es manual (coordinación), no
+automático en este ítem. Tests: prellenado, round-trip formulario↔perfil, audiencia.
+```
+
+ETAPA 3 — Migrar las respuestas existentes de CCB:
+```
+IMPORT · Perfil SIRVE, etapa 3: migrar las respuestas del formulario 128 de CCB
+
+ARCHIVO: data-import/perfil-sirve-ccb-2026-10-20.csv (utf-8-sig, 1.013 respuestas,
+2018-2026). Radiografía hecha: 834 con Individual ID, 179 sin ID (match por
+nombre+correo; ambiguos a lista manual), 35 personas con respuestas múltiples (gana la
+más reciente). OJO: hay 3 columnas SIN encabezado (índices 17, 23 y 25) que por posición
+son los campos de texto libre "otros dones", "otras habilidades" y "otras pasiones" —
+verificar contra 2-3 filas antes de mapear. Los estilos DISC del CSV calzan con el
+catálogo (Dominante/Influyente/Sólido/Concienzudo). Mapear las respuestas viejas a los
+catálogos nuevos (los textos de opciones son idénticos; los "otras áreas" van al campo
+texto). Si una persona tiene varias respuestas, gana la MÁS RECIENTE. Dry-run con
+conteos y lista de no-matcheados antes de aplicar. Idempotente. No pisa un perfil que
+la persona ya haya editado en el sistema (el dato fresco gana sobre el histórico).
+```
+
+ETAPA 4 — Uso por el equipo de servidores (fase posterior, definir con ellos):
+búsqueda/filtros por dones, habilidades y pasiones para colocación de
+servidores ("¿quién tiene don de enseñanza y pasión por jóvenes en Heredia?") —
+probablemente condiciones del padrón (PAR-5/PAR-7 pattern) restringidas a los
+roles de lectura de la etapa 1. **No se corre hasta validar con el equipo qué
+buscan.**

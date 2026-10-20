@@ -15,7 +15,7 @@ import { reportarError } from '@/lib/observabilidad'
 //  filas y totales de monto en null.
 export async function GET(req: NextRequest) {
   try {
-    // REP-13: también un puesto de dirección, y ve los montos (2026-10-20).
+    // REP-18: también un puesto de dirección, y ve los montos (2026-10-20).
     const auth = await requireVistaFinanciera('finanzas')
     if (auth.res) return auth.res
     // Misma regla que el reporte de donantes (quien-ve-montos.ts).

@@ -46,7 +46,7 @@ export async function GET(req: NextRequest) {
     // módulo finanzas como los roles de revisión (revision_pagos, folletos,
     // coordinadores). Las escrituras siguen acotadas (POST abajo; acciones de
     // revisión en /api/payments/[id]/review con revision_pagos:edit).
-    // REP-13: también un puesto de dirección (lo pide «Pagos por entidad»).
+    // REP-18: también un puesto de dirección (lo pide «Pagos por entidad»).
     const auth = await requireVistaFinanciera(['finanzas', 'revision_pagos'])
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl

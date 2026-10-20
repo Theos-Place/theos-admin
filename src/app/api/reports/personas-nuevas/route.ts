@@ -38,7 +38,7 @@ export async function GET(req: NextRequest) {
     // Día 0 del mes siguiente = último día de este. Sirve también en diciembre.
     const hasta = new Date(Date.UTC(anio, numMes, 0)).toISOString().slice(0, 10)
 
-    // REP-13: un puesto de dirección también ve el contacto (2026-10-20).
+    // REP-18: un puesto de dirección también ve el contacto (2026-10-20).
     const puedeVerContacto = (hasModulePermission(auth.ctx.roles, 'miembros', 'view')
       && moduleScope(auth.ctx.roles, 'miembros') === 'all')
       || (!!auth.ctx.memberId && await tienePuestoDeDireccion(auth.ctx.memberId))

@@ -306,7 +306,7 @@ export async function abreReportesPorPuesto(memberId: string): Promise<boolean> 
 }
 
 /**
- * REP-13 · ¿Ocupa algún puesto de DIRECCIÓN (`esPuestoDeDireccion`: hoy, el
+ * REP-18 · ¿Ocupa algún puesto de DIRECCIÓN (`esPuestoDeDireccion`: hoy, el
  * Director de Área)? Abre los nueve reportes, los de Finanzas y el contacto
  * de Personas nuevas.
  */

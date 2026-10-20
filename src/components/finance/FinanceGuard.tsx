@@ -4,7 +4,7 @@ import { useAuth } from '@/hooks/useAuth'
 
 /**
  * `reportes`: la pantalla es un REPORTE, y un puesto de dirección (Director
- * de Área o comité Directores) también entra — solo a mirar (REP-13,
+ * de Área o comité Directores) también entra — solo a mirar (REP-18,
  * 2026-10-20). Los endpoints lo vuelven a comprobar con requireVistaFinanciera.
  */
 export function FinanceGuard({ children, reportes }: { children: React.ReactNode; reportes?: boolean }) {

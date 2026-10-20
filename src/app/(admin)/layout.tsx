@@ -204,7 +204,7 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
       && ['/reportes', '/reportes/asistencia', '/reportes/personas-nuevas'].includes(pathname)) {
     return <>{children}</>
   }
-  // REP-13 · Un puesto de dirección abre TODO /reportes; cada endpoint lo
+  // REP-18 · Un puesto de dirección abre TODO /reportes; cada endpoint lo
   // vuelve a comprobar con requireAccesoAReporte.
   if (user.direccion_por_puesto && (pathname === '/reportes' || pathname.startsWith('/reportes/'))) {
     return <>{children}</>

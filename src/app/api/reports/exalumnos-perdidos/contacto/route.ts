@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
-// REP-13 · un puesto de dirección ve a todos, como el rol amplio.
+// REP-18 · un puesto de dirección ve a todos, como el rol amplio.
 import { tienePuestoDeDireccion } from '@/lib/supabase/queries/servers'
 import { ESTADOS_DE_CONTACTO, A_QUE_VUELVE } from '@/lib/reports/no-volvieron'
 import {

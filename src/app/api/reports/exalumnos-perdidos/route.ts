@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
-// REP-13 · un puesto de dirección ve a todos, como el rol amplio.
+// REP-18 · un puesto de dirección ve a todos, como el rol amplio.
 import { tienePuestoDeDireccion } from '@/lib/supabase/queries/servers'
 import { getExalumnosPerdidos, getDirigentesConGrupos } from '@/lib/supabase/queries/no-volvieron'
 import { reportarError } from '@/lib/observabilidad'
