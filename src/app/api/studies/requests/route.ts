@@ -39,15 +39,19 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({
         count: scope === 'all'
           ? await countOpenStudyRequests()
-          : (await getStudyRequests({ assigned_to: assignedTo })).filter(r => r.status !== 'resolved' && r.status !== 'rejected').length,
+          : (await getStudyRequests({ assigned_to: assignedTo })).filter(r => r.status === 'open' || r.status === 'in_review').length,
       })
     }
     // REU-2: conteo SOLO de reubicaciones pendientes. El conteo 'open' mezcla
     // reubicaciones con intereses, y los intereses son informativos (EST-6): un
     // badge que los junta no dice cuánta gente está esperando un cambio de grupo.
     if (count === 'relocation') {
+      // Solo las que esperan a alguien: abiertas y en revisión. Las EN ESPERA
+      // se pausaron a propósito (REU-2) y la cola las guarda aparte; contarlas
+      // decía «3 pendientes» con la cola vacía (2026-10-20). Las vencidas
+      // tampoco esperan nada.
       const abiertas = (await getStudyRequests({ type: 'relocation', assigned_to: assignedTo }))
-        .filter(r => r.status !== 'resolved' && r.status !== 'rejected')
+        .filter(r => r.status === 'open' || r.status === 'in_review')
       return NextResponse.json({ count: abiertas.length })
     }
     const status = searchParams.get('status') ?? undefined

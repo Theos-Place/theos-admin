@@ -10,7 +10,6 @@
  * de siempre en la cola, después de avisarle a cada persona.
  */
 import { useEffect, useMemo, useState } from 'react'
-import Link from 'next/link'
 import { Download, Users, UserCheck, Plus, ChevronDown, ChevronUp, Loader2, MapPinned, Info } from 'lucide-react'
 import { BARRA, BARRA_IZQ, BARRA_DER, BOTON_PRIMARIO, TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO } from '@/components/finance/reporte-ui'
 import { useAuth } from '@/hooks/useAuth'
@@ -21,6 +20,7 @@ import { Button } from '@/components/shared/Button'
 import { STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { ETIQUETA_FUENTE, ETIQUETA_ETAPA, etiquetaDeZona, etapaDelCluster, type EtapaDelCluster } from '@/lib/studies/demanda-declarada'
 import { urlDeNuevoGrupo } from '@/lib/studies/grupo-desde-demanda'
+import { requestDeepLink } from '@/lib/studies/request-deeplink'
 import { formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
 import type { DemandaDeclarada, ClusterConOferta } from '@/lib/supabase/queries/demanda-declarada'
@@ -227,14 +227,20 @@ function TarjetaDeCluster({ c, d, compacta }: { c: ClusterConOferta; d: DemandaD
                   Grupo abierto para esta persona: {d.gruposPropuestos[p.grupoPropuestoId] ?? 'ver en la cola'}
                 </p>
               )}
+              {/* Abre ESA solicitud en su pestaña (2026-10-20). Enlace normal y
+                  no <Link>: la cola lee ?tab= y ?request= al entrar, y una
+                  navegación del lado del cliente dejaría la pestaña de antes. */}
+              <a href={enlaceALaCola(p)} className="text-[13px] text-navy underline font-body">
+                Abrir su solicitud
+              </a>
             </li>
           ))}
         </ul>
       )}
       {abierto && (
-        <Link href="/estudios/solicitudes" className="mt-2 inline-block text-[13px] text-navy underline font-body">
+        <a href={pestanaDeLaCola(c)} className="mt-2 inline-block text-[13px] text-navy underline font-body">
           Resolverlas en la cola de solicitudes
-        </Link>
+        </a>
       )}
     </article>
   )
@@ -271,4 +277,18 @@ function Tendencia({ d }: { d: DemandaDeclarada }) {
       </div>
     </section>
   )
+}
+
+/** La solicitud de una persona, abierta en su pestaña. Las becas viven en
+ *  Finanzas → Becas, que también abre una con ?request=. */
+function enlaceALaCola(p: ClusterConOferta['personas'][number]): string {
+  if (p.fuente === 'beca') return `/finanzas/becas?request=${p.id}`
+  return requestDeepLink(p.fuente === 'reubicacion' ? 'relocation' : 'study_interest', p.id)
+}
+
+/** La pestaña de la cola donde está la mayoría de las solicitudes del grupo. */
+function pestanaDeLaCola(c: ClusterConOferta): string {
+  const reubicaciones = c.personas.filter(p => p.fuente === 'reubicacion').length
+  const intereses = c.personas.filter(p => p.fuente === 'interes').length
+  return `/estudios/solicitudes?tab=${reubicaciones > intereses ? 'relocation' : 'study_interest'}`
 }
