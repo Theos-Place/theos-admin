@@ -15,7 +15,7 @@
  *
  * SOLO LECTURA. Lo que escribieron los mentores no se corrige desde acá.
  */
-import { useState, useEffect, useCallback } from 'react'
+import { useState, useEffect, useCallback, useMemo } from 'react'
 import { Heart, Flag, Loader2, Users, Eye } from 'lucide-react'
 import { PageContainer } from '@/components/layout/PageContainer'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -25,8 +25,13 @@ import { useAuth } from '@/hooks/useAuth'
 import { cn } from '@/lib/utils'
 import { formatDateLong } from '@/lib/format'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
+import { RangoDeFechas, Buscador, SelectRotulado } from '@/components/finance/BarraDeReporte'
 import {
-  etiquetaDeCompromiso, etiquetaDePlan, type CierreEnLista, type ResumenDeCierres,
+  PESTANA, BARRA, BARRA_IZQ, TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
+import { enRango } from '@/lib/finance/descargar-excel'
+import {
+  etiquetaDeCompromiso, etiquetaDePlan, resumenDeCierres, type CierreEnLista, type ResumenDeCierres,
 } from '@/lib/studies/cierres-prematrimoniales'
 import {
   PREMAT_EVAL_ROLES, needsFollowUp,
@@ -75,7 +80,16 @@ export default function CierresPrematrimonialesPage() {
   const { user, loaded } = useAuth()
   const [datos, setDatos] = useState<Payload | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [abierto, setAbierto] = useState<Detalle | null>(null)
+  // El nombre de la pareja viaja con el detalle: el del detalle sale de la
+  // SOLICITUD, y un grupo hecho a mano no la tiene (PRE-8). La lista ya lo
+  // resuelve con la matrícula, así que se usa ese.
+  const [abierto, setAbierto] = useState<(Detalle & { pareja: string }) | null>(null)
+  // El orden de los reportes (2026-10-20): rango por fecha de cierre,
+  // búsqueda y plan. La lista llega completa; filtra acá.
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
+  const [busqueda, setBusqueda] = useState('')
+  const [seguimiento, setSeguimiento] = useState<'todos' | 'listos' | 'seguimiento' | 'punto_ciego'>('todos')
   const [cargandoDetalle, setCargandoDetalle] = useState<string | null>(null)
 
   const puedeVer = (user?.roles ?? []).some(r => (PREMAT_EVAL_ROLES as string[]).includes(r))
@@ -92,18 +106,26 @@ export default function CierresPrematrimonialesPage() {
   }, [puedeVer])
   useEffect(() => { cargar() }, [cargar])
 
-  async function abrir(id: string) {
+  async function abrir(id: string, pareja: string) {
     setCargandoDetalle(id)
     try {
       const r = await fetch(`/api/studies/prematrimonial/cierres/${id}`)
       if (!r.ok) throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo abrir el cierre.'))
-      setAbierto(await r.json() as Detalle)
+      setAbierto({ ...(await r.json() as Detalle), pareja })
     } catch (e) {
       setError(e instanceof Error ? e.message : 'No se pudo abrir el cierre.')
     } finally {
       setCargandoDetalle(null)
     }
   }
+
+  const enRangoYBusqueda = useMemoCierres(datos?.items, desde, hasta, busqueda)
+  const visibles = enRangoYBusqueda.filter(c =>
+    seguimiento === 'todos' ? true
+    : seguimiento === 'listos' ? !needsFollowUp(c.action_plan)
+    : seguimiento === 'seguimiento' ? needsFollowUp(c.action_plan)
+    : c.tiene_punto_ciego)
+  const resumen = resumenDeCierres(enRangoYBusqueda)
 
   if (!loaded) return null
   if (!puedeVer) {
@@ -129,22 +151,27 @@ export default function CierresPrematrimonialesPage() {
         {error && <p className="text-sm text-coral-deep font-body">{error}</p>}
 
         {datos && datos.total > 0 && (
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-            <div className={CARD}>
-              <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Cierres</p>
-              <p className="mt-1 text-2xl text-navy font-display font-extrabold">{datos.resumen.total}</p>
+          <div className={PESTANA}>
+            {/* Sin Excel a propósito: es contenido pastoral, y este archivo
+                existe para que se lea de a uno, no para que circule. */}
+            <div className={BARRA}>
+              <div className={BARRA_IZQ}>
+                <RangoDeFechas id="cierre" etiqueta="Cerrado desde" desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
+              </div>
             </div>
-            <div className={CARD}>
-              <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Listos</p>
-              <p className="mt-1 text-2xl text-teal-deep font-display font-extrabold">{datos.resumen.listos}</p>
+            <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {([['Cierres', resumen.total, VALOR_NEUTRO], ['Listos', resumen.listos, VALOR_DINERO],
+                ['En seguimiento', resumen.enSeguimiento, VALOR_PENDIENTE], ['Con punto ciego', resumen.conPuntoCiego, VALOR_NEUTRO]] as const).map(([l, v, c]) => (
+                <div key={l} className={TARJETA}>
+                  <p className={TARJETA_ETIQUETA}>{l}</p>
+                  <p className={cn(TARJETA_VALOR, c)}>{v}</p>
+                </div>
+              ))}
             </div>
-            <div className={CARD}>
-              <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">En seguimiento</p>
-              <p className="mt-1 text-2xl text-coral-deep font-display font-extrabold">{datos.resumen.enSeguimiento}</p>
-            </div>
-            <div className={CARD}>
-              <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Con punto ciego</p>
-              <p className="mt-1 text-2xl text-navy font-display font-extrabold">{datos.resumen.conPuntoCiego}</p>
+            <div className="flex flex-wrap items-center gap-3">
+              <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Buscar por pareja, grupo o mentor…" />
+              <SelectRotulado id="cierre-plan" etiqueta="Mostrar" valor={seguimiento} onCambio={v => setSeguimiento(v as typeof seguimiento)}
+                opciones={[{ value: 'todos', label: 'Todos' }, { value: 'listos', label: 'Listos' }, { value: 'seguimiento', label: 'En seguimiento' }, { value: 'punto_ciego', label: 'Con punto ciego' }]} />
             </div>
           </div>
         )}
@@ -161,9 +188,13 @@ export default function CierresPrematrimonialesPage() {
           />
         )}
 
+        {datos && datos.total > 0 && visibles.length === 0 && (
+          <p className="py-8 text-center text-sm text-navy-light/80 font-body">Ningún cierre con esos filtros.</p>
+        )}
+
         {datos && datos.total > 0 && (
           <div className="space-y-3">
-            {datos.items.map(c => (
+            {visibles.map(c => (
               <div key={c.id} className={cn(CARD, 'flex flex-wrap items-start justify-between gap-3')}>
                 <div className="min-w-0">
                   <div className="flex flex-wrap items-center gap-2">
@@ -191,7 +222,7 @@ export default function CierresPrematrimonialesPage() {
                 </div>
                 <button
                   type="button"
-                  onClick={() => void abrir(c.id)}
+                  onClick={() => void abrir(c.id, c.pareja)}
                   disabled={cargandoDetalle === c.id}
                   className="inline-flex shrink-0 items-center gap-1.5 rounded-full bg-surface-low px-4 py-2 text-[13px] text-navy hover:bg-navy/10 transition-colors font-body focus:outline-none focus:ring-2 focus:ring-coral/40 disabled:opacity-60"
                   aria-label={`Ver el cierre de ${c.pareja}`}
@@ -209,8 +240,7 @@ export default function CierresPrematrimonialesPage() {
           <Modal onClose={() => setAbierto(null)} titleId="cierre-titulo" width={640}>
             <div className="p-6">
               <h2 id="cierre-titulo" className="pr-8 text-lg text-navy font-display font-extrabold tracking-[-0.02em]">
-                {[nombre(abierto.request?.requester), nombre(abierto.request?.spouse)]
-                  .filter(Boolean).join(' y ') || 'Pareja sin identificar'}
+                {abierto.pareja}
               </h2>
               <p className="mt-0.5 text-[13px] text-navy-light/80 font-body">
                 {abierto.grupo?.name ?? 'Sin grupo'}
@@ -259,4 +289,13 @@ export default function CierresPrematrimonialesPage() {
       </div>
     </PageContainer>
   )
+}
+
+/** Rango por fecha de cierre y búsqueda por pareja, grupo o mentor. */
+function useMemoCierres(items: CierreEnLista[] | undefined, desde: string, hasta: string, busqueda: string): CierreEnLista[] {
+  return useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    return (items ?? []).filter(c => enRango(c.fecha, desde, hasta)
+      && (!q || [c.pareja, c.grupo ?? '', c.mentores ?? ''].join(' ').toLowerCase().includes(q)))
+  }, [items, desde, hasta, busqueda])
 }
