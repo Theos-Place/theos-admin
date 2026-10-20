@@ -10,7 +10,7 @@
  * de siempre en la cola, después de avisarle a cada persona.
  */
 import { useEffect, useMemo, useState } from 'react'
-import { Download, Users, UserCheck, Plus, ChevronDown, ChevronUp, Loader2, MapPinned, Info } from 'lucide-react'
+import { Download, Users, UserCheck, Plus, ChevronDown, ChevronUp, ChevronRight, Loader2, MapPinned, Info } from 'lucide-react'
 import { BARRA, BARRA_IZQ, BARRA_DER, BOTON_PRIMARIO, TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO } from '@/components/finance/reporte-ui'
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
@@ -230,8 +230,9 @@ function TarjetaDeCluster({ c, d, compacta }: { c: ClusterConOferta; d: DemandaD
               {/* Abre ESA solicitud en su pestaña (2026-10-20). Enlace normal y
                   no <Link>: la cola lee ?tab= y ?request= al entrar, y una
                   navegación del lado del cliente dejaría la pestaña de antes. */}
-              <a href={enlaceALaCola(p)} className="text-[13px] text-navy underline font-body">
-                Abrir su solicitud
+              <a href={enlaceALaCola(p)}
+                className="mt-1.5 inline-flex items-center gap-1 rounded-full border border-[var(--outline-variant)] px-3 py-1 text-[13px] text-navy hover:bg-surface-low transition-colors font-body">
+                Abrir su solicitud <ChevronRight size={13} aria-hidden="true" />
               </a>
             </li>
           ))}

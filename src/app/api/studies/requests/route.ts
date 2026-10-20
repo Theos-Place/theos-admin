@@ -183,6 +183,14 @@ export async function POST(req: NextRequest) {
       wantsFolleto = body?.wants_folleto === true
     }
 
+    // 2026-10-20 · Interés VIRTUAL: se pide por qué (el formulario lo muestra
+    // solo si eligen esa zona). Se guarda en `reason`, que la cola ya enseña.
+    const { esZonaVirtual, MIN_RAZON_VIRTUAL } = await import('@/lib/studies/demanda-declarada')
+    const esVirtual = body.request_type === 'study_interest' && esZonaVirtual(body.proposed_location)
+    if (esVirtual && reason.length < MIN_RAZON_VIRTUAL) {
+      return NextResponse.json({ error: 'Contanos por qué te sirve que sea virtual.' }, { status: 400 })
+    }
+
     const request = await createStudyRequest({
       recorded_by: recordedBy,
       member_id: memberId,
@@ -192,7 +200,7 @@ export async function POST(req: NextRequest) {
       current_group_id: body.current_group_id ?? null,
       proposed_location: body.proposed_location?.trim() || null,
       proposed_schedule: body.proposed_schedule?.trim() || null,
-      reason: body.request_type === 'relocation' ? reason : null,
+      reason: body.request_type === 'relocation' || esVirtual ? reason : null,
       needed_study_code: neededStudyCode,
       last_class_attended: lastClassAttended,
       last_leader_name: lastLeaderName,

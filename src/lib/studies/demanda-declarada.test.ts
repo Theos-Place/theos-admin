@@ -187,3 +187,29 @@ describe('EST-29 · solo el equipo de estudios', () => {
     expect(readFileSync('src/components/layout/Sidebar.tsx', 'utf8')).not.toContain("href: '/estudios/demanda'")
   })
 })
+
+describe('zona virtual en el interés de estudio (2026-10-20)', () => {
+  it('«Virtual» es su propia zona, no «Otra zona»', async () => {
+    const { ZONA_VIRTUAL, esZonaVirtual } = await import('./demanda-declarada')
+    expect(zonasDeSolicitud({ proposed_location: 'Virtual' }, SEDES)).toEqual({ zonas: [ZONA_VIRTUAL], texto: null })
+    expect(esZonaVirtual(' virtual ')).toBe(true)
+    expect(etiquetaDeZona(ZONA_VIRTUAL, {})).toBe('Virtual')
+    // Un texto libre que MENCIONA virtual sigue siendo «Otra zona»: no se adivina.
+    expect(zonasDeSolicitud({ proposed_location: 'Virtual, vive en Estados Unidos.' }, SEDES).zonas).toEqual([])
+  })
+
+  it('cualquier dirigente disponible sirve para un grupo virtual', async () => {
+    const { ZONA_VIRTUAL } = await import('./demanda-declarada')
+    const d = { memberId: 'a', nombre: 'Ana', disponible: true, puedeDar: ['N1'], zonas: ['heredia'] }
+    expect(dirigentesParaCluster({ planCode: 'N1', zona: ZONA_VIRTUAL }, [d])).toHaveLength(1)
+  })
+
+  it('el formulario pide el porqué solo con virtual, y el servidor lo exige', () => {
+    const f = readFileSync('src/components/studies/StudyRequestActions.tsx', 'utf8')
+    expect(f).toContain("{zoneSel === 'virtual' && (")
+    expect(f).toContain('¿Por qué te sirve virtual?')
+    const api = readFileSync('src/app/api/studies/requests/route.ts', 'utf8')
+    expect(api).toContain('esVirtual && reason.length < MIN_RAZON_VIRTUAL')
+    expect(api).toContain("reason: body.request_type === 'relocation' || esVirtual ? reason : null")
+  })
+})

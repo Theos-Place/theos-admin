@@ -10,6 +10,7 @@ import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { useSedes } from '@/lib/sedes'
 import { ANY_ZONE, DIAS_DE_ESTUDIO } from '@/lib/studies/request-prefs'
 import { cn } from '@/lib/utils'
+import { ETIQUETA_VIRTUAL, MIN_RAZON_VIRTUAL } from '@/lib/studies/demanda-declarada'
 import type { StudyRequestType } from '@/types/study'
 import { textoFalta } from '@/lib/studies/relocation'
 
@@ -72,7 +73,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   // Interés v2: día(s) hasta 2, horario, zona (sede existente o "otra").
   const [days, setDays] = useState<string[]>([])
   const [time, setTime] = useState('')
-  const [zoneSel, setZoneSel] = useState('')     // id de sede | 'otra' | ''
+  const [zoneSel, setZoneSel] = useState('')     // id de sede | 'virtual' | 'otra' | ''
   const [zoneOther, setZoneOther] = useState('')
   // Reubicación (REU-1: días y zonas con selección múltiple)
   const [zones, setZones] = useState<string[]>([])
@@ -129,12 +130,15 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
   function toggleZone(z: string) {
     setZones(prev => prev.includes(z) ? prev.filter(x => x !== z) : [...prev, z])
   }
-  const zoneLabel = zoneSel === 'otra' ? zoneOther.trim() : (zoneSedes.find(s => s.id === zoneSel)?.name ?? '')
+  const zoneLabel = zoneSel === 'otra' ? zoneOther.trim() : zoneSel === 'virtual' ? ETIQUETA_VIRTUAL : (zoneSedes.find(s => s.id === zoneSel)?.name ?? '')
 
   async function submit() {
     if (blocked) return
     if (openModal === 'study_interest') {
       if (!planId) { setError('Seleccioná el estudio de interés.'); return }
+      if (zoneSel === 'virtual' && reason.trim().length < MIN_RAZON_VIRTUAL) {
+        setError('Contanos por qué te sirve que sea virtual.'); return
+      }
     }
     if (openModal === 'relocation') {
       if (reason.trim().length < MIN_REASON) { setError(`Contanos un poco más: la razón debe tener al menos ${MIN_REASON} caracteres.`); return }
@@ -160,7 +164,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
           proposed_zones: openModal === 'relocation' ? zones : undefined,
           was_eligible: openModal === 'study_interest' ? (selectedOption?.is_eligible ?? null) : undefined,
           eligibility_note: openModal === 'study_interest' && selectedOption && !selectedOption.is_eligible ? selectedOption.missing.join(' · ') : undefined,
-          reason: openModal === 'relocation' ? reason.trim() : undefined,
+          reason: openModal === 'relocation' || (openModal === 'study_interest' && zoneSel === 'virtual') ? reason.trim() : undefined,
           needed_study_code: openModal === 'relocation' ? neededStudyCode : undefined,
           last_class_attended: openModal === 'relocation' ? lastClassAttended : undefined,
           last_leader_name: openModal === 'relocation' ? (lastLeader.kind === 'empty' ? '' : lastLeader.label.trim()) : undefined,
@@ -385,10 +389,22 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       <select id="interest-zone" value={zoneSel} onChange={e => setZoneSel(e.target.value)} className={SELECT_CLS}>
                         <option value="">Seleccionar zona…</option>
                         {zoneSedes.map(s => <option key={s.id} value={s.id}>{s.name}</option>)}
+                        <option value="virtual">{ETIQUETA_VIRTUAL}</option>
                         <option value="otra">Otra (escribir)</option>
                       </select>
                       {zoneSel === 'otra' && (
                         <input value={zoneOther} onChange={e => setZoneOther(e.target.value)} placeholder="Escribí la zona" className={cn(SELECT_CLS, 'mt-2 placeholder:text-navy-light/80')} />
+                      )}
+                      {/* Solo si eligen virtual (2026-10-20): por qué. Ayuda a
+                          decidir si se abre un grupo virtual o se le busca uno
+                          presencial cerca. */}
+                      {zoneSel === 'virtual' && (
+                        <div className="mt-2">
+                          <label htmlFor="interest-virtual-reason" className={LABEL_CLS}>¿Por qué te sirve virtual?</label>
+                          <textarea id="interest-virtual-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3}
+                            placeholder="Por ejemplo: vivo fuera del país, trabajo de noche, no tengo cómo trasladarme…"
+                            className={cn(SELECT_CLS, 'placeholder:text-navy-light/80')} />
+                        </div>
                       )}
                     </div>
                   </>

@@ -54,6 +54,17 @@ export function etapaDelCluster(c: Pick<Cluster, 'personas' | 'zona'>, umbral = 
 
 export const SIN_ZONA = '__otra__'
 export const CUALQUIER_ZONA = '__cualquiera__'
+/** «Virtual» se elige en el formulario de interés (2026-10-20). Es una zona
+ *  de verdad para abrir un grupo, no «Otra zona». */
+export const ZONA_VIRTUAL = '__virtual__'
+export const ETIQUETA_VIRTUAL = 'Virtual'
+/** Lo que se le pide a quien elige virtual: por qué. */
+export const MIN_RAZON_VIRTUAL = 10
+
+/** ¿El texto de zona es «Virtual»? Sin importar mayúsculas ni tildes. */
+export function esZonaVirtual(texto: string | null | undefined): boolean {
+  return (texto ?? '').normalize('NFD').replace(/[\u0300-\u036f]/g, '').trim().toLowerCase() === 'virtual'
+}
 
 export type FuenteDeDemanda = 'interes' | 'reubicacion' | 'beca'
 
@@ -115,6 +126,7 @@ export function zonasDeSolicitud(
   }
   const texto = (r.proposed_location ?? '').trim()
   if (!texto) return { zonas: [], texto: null }
+  if (esZonaVirtual(texto)) return { zonas: [ZONA_VIRTUAL], texto: null }
   const code = porNombre.get(sinTildes(texto)) ?? porNombre.get(sinTildes(texto.replace(/^sede\s+/i, ''))) ?? porCodigo.get(sinTildes(texto))
   return code ? { zonas: [code], texto: null } : { zonas: [], texto }
 }
@@ -206,7 +218,8 @@ export function puedeDarPlan(d: Pick<DirigenteParaDemanda, 'puedeDar'>, planCode
 export function dirigentesParaCluster(c: Pick<Cluster, 'planCode' | 'zona'>, dirigentes: readonly DirigenteParaDemanda[]): DirigenteParaDemanda[] {
   return dirigentes
     .filter(d => d.disponible && puedeDarPlan(d, c.planCode))
-    .filter(d => !c.zona || c.zona === SIN_ZONA || c.zona === CUALQUIER_ZONA || d.zonas.length === 0 || d.zonas.includes(c.zona))
+    // Virtual tampoco: se da desde cualquier lado.
+    .filter(d => !c.zona || c.zona === SIN_ZONA || c.zona === CUALQUIER_ZONA || c.zona === ZONA_VIRTUAL || d.zonas.length === 0 || d.zonas.includes(c.zona))
     .sort((a, b) => a.nombre.localeCompare(b.nombre, 'es'))
 }
 
@@ -257,5 +270,6 @@ export function etiquetaDeZona(zona: string | null, zonas: Record<string, string
   if (zona === null) return 'Centralizada'
   if (zona === SIN_ZONA) return 'Otra zona'
   if (zona === CUALQUIER_ZONA) return 'Cualquier zona'
+  if (zona === ZONA_VIRTUAL) return ETIQUETA_VIRTUAL
   return zonas[zona] ?? zona
 }
