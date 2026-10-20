@@ -369,65 +369,82 @@ function DirigentesContenido() {
         </div>
       </div>
 
-      {/* Filtros */}
-      <div className="space-y-3">
-        <div className="flex flex-wrap gap-1.5">
-          {grupos.map(g => (
-            <div key={g.titulo} className="flex flex-wrap items-center gap-1.5">
-              <span className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">
-                {g.titulo}
-              </span>
-              {g.opciones.map(o => {
-                const n = conteos[o.clave] ?? 0
-                // Una opción sin nadie se muestra apagada y no se puede
-                // apretar: dejarla viva lleva a una lista vacía que se lee
-                // como «se rompió algo».
-                // La que ya está puesta NUNCA se deshabilita: apagarla
-                // siempre tiene que poder hacerse, aunque su conteo sea 0.
-                const vacia = o.clave !== 'todos' && n === 0 && !estado.includes(o.clave)
-                return (
-                  <button
-                    key={o.clave}
-                    onClick={() => setEstado(s => alternarFiltro(s, o.clave))}
-                    disabled={vacia}
-                    aria-pressed={o.clave === 'todos' ? estado.length === 0 : estado.includes(o.clave)}
-                    className={cn(
-                      'rounded-full px-3 py-1.5 text-[13px] transition-colors font-body',
-                      (o.clave === 'todos' ? estado.length === 0 : estado.includes(o.clave))
-                        ? 'bg-navy text-white'
-                        : vacia
-                          ? 'bg-surface-low text-navy-light/80 cursor-default'
-                          : 'bg-surface-low text-navy-light hover:bg-surface-container',
-                    )}
-                  >
-                    {o.etiqueta}
-                    {o.clave !== 'todos' && <span className="ml-1.5 opacity-70">{n}</span>}
-                  </button>
-                )
-              })}
+      {/* Filtros. Una sola caja, como la de Grupos (pedido de Floriana,
+          2026-10-20: «se ven como demasiados»). Arriba lo que se escribe o
+          se elige de una lista; abajo los estados, cada grupo con su
+          rótulo y separado del siguiente — antes eran una fila corrida de
+          pastillas donde no se veía dónde terminaba un grupo. */}
+      <div className="rounded-2xl p-4 bg-surface-card shadow-[var(--shadow-md)] space-y-4">
+        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          <div className="space-y-1">
+            <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Buscar</p>
+            <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-2 focus-within:ring-1 focus-within:ring-coral/30">
+              <Search size={15} className="text-navy-light/80 shrink-0" aria-hidden="true" />
+              <input
+                value={query}
+                onChange={e => setQuery(e.target.value)}
+                placeholder="Nombre del dirigente…"
+                aria-label="Buscar dirigente"
+                className="bg-transparent text-sm text-navy outline-none w-full font-body"
+              />
             </div>
-          ))}
-          <div className="flex-1" />
-          <div className="flex items-center gap-2 rounded-xl bg-surface-low px-3 py-1.5 w-full sm:w-56 focus-within:ring-1 focus-within:ring-coral/30">
-            <Search size={15} className="text-navy-light/80 shrink-0" />
-            <input
-              value={query}
-              onChange={e => setQuery(e.target.value)}
-              placeholder="Buscar dirigente…"
-              aria-label="Buscar dirigente"
-              className="bg-transparent text-sm text-navy outline-none w-full font-body"
-            />
           </div>
-        </div>
-
-        {/* Tres filtros de estudio, etiquetados y separados (no se mezclan) */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
-          {/* Se llamaba «Dando ahora», igual que el botón de arriba, y son cosas
+          {/* Se llamaba «Dando ahora», igual que el botón de abajo, y son cosas
               distintas: aquel es «¿está dando algo?» y este «¿qué está dando?». */}
           <StudyFilter label="Qué está dando" hint="Tiene un grupo en curso de ese estudio" value={dandoTipo} onChange={setDandoTipo} options={studyTypes} />
           <StudyFilter label="Formado para darlo" hint="Capacitado para ese estudio (aunque no lo dé)" value={formadoTipo} onChange={setFormadoTipo} options={studyTypes} />
           <StudyFilter label="Disponibilidad" hint="Dispuesto a dar ese estudio ahora" value={dispTipo} onChange={setDispTipo} options={studyTypes} />
         </div>
+
+        <div className="flex flex-wrap gap-x-8 gap-y-4 border-t border-[var(--outline-variant)] pt-4">
+          {grupos.filter(g => g.opciones.some(o => o.clave === 'todos' || (conteos[o.clave] ?? 0) > 0 || estado.includes(o.clave))).map(g => (
+            <div key={g.titulo} className="space-y-1.5">
+              <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">{g.titulo}</p>
+              <div className="flex flex-wrap gap-1.5">
+                {g.opciones.map(o => {
+                  const n = conteos[o.clave] ?? 0
+                  const activa = o.clave === 'todos' ? estado.length === 0 : estado.includes(o.clave)
+                  // Una opción sin nadie NO SE MUESTRA (2026-10-20: «se ven
+                  // como demasiados»). Antes se pintaba apagada, y la mitad de
+                  // la caja eran botones en cero. La que ya está puesta se
+                  // muestra siempre: apagarla tiene que poder hacerse.
+                  if (o.clave !== 'todos' && n === 0 && !activa) return null
+                  return (
+                    <button
+                      key={o.clave}
+                      onClick={() => setEstado(s => alternarFiltro(s, o.clave))}
+                      aria-pressed={activa}
+                      className={cn(
+                        'rounded-lg border px-2.5 py-1 text-[13px] transition-colors font-body',
+                        activa
+                          ? 'bg-navy text-white border-navy'
+                          : 'border-[var(--outline-variant)] text-navy hover:bg-surface-low',
+                      )}
+                    >
+                      {o.etiqueta}
+                      {o.clave !== 'todos' && <span className={cn('ml-1.5', activa ? 'text-white/80' : 'text-navy-light/80')}>{n}</span>}
+                    </button>
+                  )
+                })}
+              </div>
+            </div>
+          ))}
+        </div>
+
+        {(estado.length > 0 || query || dandoTipo || formadoTipo || dispTipo) && (
+          <div className="flex items-center justify-between gap-3 border-t border-[var(--outline-variant)] pt-3">
+            <p className="text-[13px] text-navy-light/80 font-body">
+              <strong className="text-navy">{filtered.length.toLocaleString('es-CR')}</strong> {filtered.length === 1 ? 'dirigente' : 'dirigentes'} con estos filtros
+            </p>
+            <button
+              type="button"
+              onClick={() => { setEstado([]); setQuery(''); setDandoTipo(''); setFormadoTipo(''); setDispTipo('') }}
+              className="text-[13px] text-navy underline font-body"
+            >
+              Limpiar filtros
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Barra de acciones masivas */}
