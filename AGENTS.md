@@ -90,6 +90,30 @@ función resuelve sus nombres contra el path de quien la llama.
 Para revisarlo: `node scripts/sec3/auditar.cjs` (sale con código 1 si algo
 quedó abierto).
 
+## Tablas nuevas en `public`
+
+Desde el 30-oct-2026 Supabase **no da permisos automáticos** sobre tablas
+nuevas de `public`, y la app consulta todo con la llave de servicio: una tabla
+sin su GRANT es una pantalla que responde «permission denied». Toda migración
+que cree una tabla termina con:
+
+```sql
+grant select, insert, update, delete on public.<tabla> to service_role;
+-- si tiene una columna serial/identity:
+grant usage, select on sequence public.<tabla>_id_seq to service_role;
+```
+
+**A `anon` y `authenticated` no se les da nada**: nadie lee tablas desde el
+navegador (todo pasa por rutas API con `requireRoles`). Si alguna vez hace
+falta, va con un comentario `-- SEC-4: abierta porque…` en la migración.
+
+Lo vigila `src/lib/permisos-de-tablas.test.ts` (SEC-4, migración
+`20261020120000`, que además dejó los permisos por defecto solo para
+service_role y le quitó `authenticated` a las 16 tablas con RLS sin
+políticas). El aviso «RLS Enabled No Policy» del linter de Supabase en esas
+tablas es INFO y es a propósito: RLS sin políticas = nadie con la llave
+pública; no se silencia con políticas `using (false)`.
+
 ## Convención de rutas API
 
 1. Errores: `{ error }` con mensaje humano; si el cliente distingue casos, campo `code` aparte.
