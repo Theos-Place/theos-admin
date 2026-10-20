@@ -1,9 +1,17 @@
 'use client'
 
-import { useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useCargaRemota, json } from '@/hooks/useCargaRemota'
 import Link from 'next/link'
-import { Loader2, Check, X, Users, MapPin, Clock, Calendar, Home, Heart } from 'lucide-react'
+import { Loader2, Check, X, Users, MapPin, Clock, Calendar, Home, Heart, Download } from 'lucide-react'
+import { RangoDeFechas, Buscador, SelectRotulado } from '@/components/finance/BarraDeReporte'
+import {
+  PESTANA, BARRA, BARRA_IZQ, BARRA_DER, BOTON_PRIMARIO,
+  TARJETA, TARJETA_ETIQUETA, TARJETA_VALOR, VALOR_NEUTRO, VALOR_DINERO, VALOR_PENDIENTE,
+} from '@/components/finance/reporte-ui'
+import { descargarExcel, enRango } from '@/lib/finance/descargar-excel'
+import { formatDate } from '@/lib/format'
+import { cn } from '@/lib/utils'
 import { DATING_TIME_OPTIONS, LIVING_OPTIONS } from '@/lib/studies/premat-background'
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useToast } from '@/components/shared/Toast'
@@ -13,6 +21,7 @@ const SIN_DATOS: Req[] = []
 
 type Req = {
   id: string
+  created_at: string
   status: 'pago_en_revision' | 'pendiente' | 'grupo_creado' | 'cancelada'
   available_days: string[]; available_times: string[]; zones: string[]
   can_host: boolean; host_address: string | null; host_maps_url: string | null
@@ -61,7 +70,19 @@ export function PrematrimonialQueue() {
     'prematrimonial',
     () => json<{ items?: Req[] }>('/api/studies/prematrimonial', 'No se pudo cargar la cola.').then(d => d.items ?? []),
   )
-  const items = datos ?? SIN_DATOS
+  const todas = datos ?? SIN_DATOS
+  // El orden de los reportes (2026-10-20): rango por fecha de solicitud,
+  // búsqueda por nombre y estado. La cola llega completa: filtra acá.
+  const [desde, setDesde] = useState('')
+  const [hasta, setHasta] = useState('')
+  const [busqueda, setBusqueda] = useState('')
+  const [estado, setEstado] = useState<Req['status'] | 'all'>('all')
+  const enRangoYBusqueda = useMemo(() => {
+    const q = busqueda.trim().toLowerCase()
+    return todas.filter(r => enRango(r.created_at, desde, hasta)
+      && (!q || `${nm(r.requester)} ${nm(r.spouse)}`.toLowerCase().includes(q)))
+  }, [todas, desde, hasta, busqueda])
+  const items = useMemo(() => enRangoYBusqueda.filter(r => estado === 'all' || r.status === estado), [enRangoYBusqueda, estado])
 
   function openGroup(r: Req) {
     setPanel({ id: r.id, mode: 'group' })
@@ -100,15 +121,46 @@ export function PrematrimonialQueue() {
   }
 
   return (
-    <div>
-      <p className="mb-4 text-sm text-navy-light/80 font-body">
+    <div className={PESTANA}>
+      <div className={BARRA}>
+        <div className={BARRA_IZQ}>
+          <RangoDeFechas id="premat" etiqueta="Solicitada desde" desde={desde} hasta={hasta} onDesde={setDesde} onHasta={setHasta} />
+        </div>
+        <div className={BARRA_DER}>
+          <button type="button" disabled={items.length === 0} className={BOTON_PRIMARIO}
+            onClick={() => void descargarExcel('solicitudes-prematrimonial', ['Pareja', 'Estado', 'Días', 'Horario', 'Zonas', 'Boda', 'Solicitada'],
+              items.map(r => [`${nm(r.requester)} y ${nm(r.spouse)}`, STATUS_LABEL[r.status], r.available_days.join(', '), r.available_times.join(' / '),
+                r.zones.join(', '), r.ceremony_date ?? '', formatDate(r.created_at)]))}>
+            <Download size={14} aria-hidden /> Descargar Excel
+          </button>
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        {(['pago_en_revision', 'pendiente', 'grupo_creado', 'cancelada'] as const).map((st, i) => (
+          <div key={st} className={TARJETA}>
+            <p className={TARJETA_ETIQUETA}>{STATUS_LABEL[st]}</p>
+            <p className={cn(TARJETA_VALOR, [VALOR_PENDIENTE, VALOR_PENDIENTE, VALOR_DINERO, VALOR_NEUTRO][i])}>
+              {enRangoYBusqueda.filter(r => r.status === st).length}
+            </p>
+          </div>
+        ))}
+      </div>
+
+      <div className="flex flex-wrap items-center gap-3">
+        <Buscador valor={busqueda} onCambio={setBusqueda} placeholder="Buscar por nombre de la pareja…" />
+        <SelectRotulado id="premat-estado" etiqueta="Estado" valor={estado} onCambio={v => setEstado(v as Req['status'] | 'all')}
+          opciones={[{ value: 'all', label: 'Todas' }, ...(Object.keys(STATUS_LABEL) as Req['status'][]).map(k => ({ value: k, label: STATUS_LABEL[k] }))]} />
+      </div>
+
+      <p className="text-sm text-navy-light/80 font-body">
         Solicitudes de curso prematrimonial. Tomá una pendiente y armá el grupo con la pareja.
       </p>
 
       {loading && <p className="py-12 text-center text-sm text-navy-light/80 font-body">Cargando…</p>}
-      {!loading && items.length === 0 && <p className="py-12 text-center text-sm text-navy-light/80 font-body">No hay solicitudes.</p>}
+      {!loading && items.length === 0 && <p className="py-12 text-center text-sm text-navy-light/80 font-body">{todas.length ? 'No hay solicitudes con esos filtros.' : 'No hay solicitudes.'}</p>}
 
-      <div className="grid grid-cols-1 gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
         {items.map(r => (
           <article key={r.id} className="rounded-2xl bg-white p-5 ring-1 ring-navy/10">
             <div className="flex items-start justify-between gap-2">

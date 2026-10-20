@@ -290,7 +290,15 @@ export async function getPrematEvaluations(filter: { requestIds?: string[]; memb
   if (error) throw error
   let rows = (data ?? []) as Array<Record<string, unknown> & { request: { requester_member_id: string; spouse_member_id: string } | null }>
   if (filter.memberId) {
-    rows = rows.filter(r => r.request?.requester_member_id === filter.memberId || r.request?.spouse_member_id === filter.memberId)
+    // Sin solicitud (grupo creado a mano, PRE-8) la pareja es la matrícula del
+    // grupo: sin esto su cierre no aparecía en la ficha de ninguno de los dos.
+    const { data: mats, error: eMat } = await sb.from('study_enrollments')
+      .select('group_id').eq('member_id', filter.memberId)
+    if (eMat) throw eMat
+    const susGrupos = new Set(((mats ?? []) as Array<{ group_id: string | null }>).map(m => m.group_id).filter(Boolean))
+    rows = rows.filter(r => r.request
+      ? r.request.requester_member_id === filter.memberId || r.request.spouse_member_id === filter.memberId
+      : susGrupos.has(r.group_id as string))
   }
   return rows
 }
@@ -472,17 +480,39 @@ export async function getCierresPrematrimoniales(): Promise<CierreEnLista[]> {
   type Nombre = { first_name: string | null; last_name: string | null } | null
   const nombre = (m: Nombre): string => `${m?.first_name ?? ''} ${m?.last_name ?? ''}`.trim()
 
+  /**
+   * Los grupos creados A MANO no tienen solicitud (PRE-8): su cierre queda
+   * atado al grupo, y la pareja es quien está matriculado en él. Sin esto la
+   * lista decía «Pareja sin identificar» de una pareja que el sistema sí
+   * conoce (el cierre de Danilo y Floriana, 2026-10-20).
+   */
+  const gruposSinSolicitud = [...new Set(((data ?? []) as Array<{ group_id: string | null; request: unknown }>)
+    .filter(r => !r.request && r.group_id).map(r => r.group_id as string))]
+  const parejaDelGrupo = new Map<string, string[]>()
+  if (gruposSinSolicitud.length) {
+    const { data: mats, error: eMat } = await sb.from('study_enrollments')
+      .select('group_id, status, member:members!study_enrollments_member_id_fkey(first_name, last_name)')
+      .in('group_id', gruposSinSolicitud)
+      .not('status', 'in', '(dropped,transferred,cancelled)')
+    if (eMat) throw eMat
+    for (const m of (mats ?? []) as unknown as Array<{ group_id: string; member: Nombre }>) {
+      const n = nombre(m.member)
+      if (n) parejaDelGrupo.set(m.group_id, [...(parejaDelGrupo.get(m.group_id) ?? []), n])
+    }
+  }
+
   return ((data ?? []) as unknown as Array<{
-    id: string; commitment: string; action_plan: string
+    id: string; group_id: string | null; commitment: string; action_plan: string
     topics_to_work: string[] | null; blind_spot: boolean | null; created_at: string
     request: { requester: Nombre; spouse: Nombre } | null
     grupo: { name: string | null } | null
     mentor: Nombre
   }>).map(r => {
-    const dos = [nombre(r.request?.requester ?? null), nombre(r.request?.spouse ?? null)].filter(Boolean)
+    const porSolicitud = [nombre(r.request?.requester ?? null), nombre(r.request?.spouse ?? null)].filter(Boolean)
+    const dos = porSolicitud.length ? porSolicitud : (r.group_id ? parejaDelGrupo.get(r.group_id) ?? [] : [])
     return {
       id: r.id,
-      // Sin la solicitud detrás no hay nombres: se dice, no se deja en blanco.
+      // Ni solicitud ni matrícula: se dice, no se deja en blanco.
       pareja: dos.length ? dos.join(' y ') : 'Pareja sin identificar',
       grupo: r.grupo?.name ?? null,
       mentores: nombre(r.mentor) || null,
