@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAccesoAReporte } from '@/lib/auth/guard'
 import { ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
+// REP-13 · un puesto de dirección ve a todos, como el rol amplio.
+import { tienePuestoDeDireccion } from '@/lib/supabase/queries/servers'
 import { getExalumnosPerdidos, getDirigentesConGrupos } from '@/lib/supabase/queries/no-volvieron'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -29,9 +31,9 @@ export async function GET(req: NextRequest) {
     if (auth.res) return auth.res
     const { ctx } = auth
 
-    const esAmplio = (ctx.roles ?? []).some(
+    const esAmplio = ((ctx.roles ?? []).some(
       r => (ESTUDIOS_REPORTE_ROLES as readonly string[]).includes(r),
-    )
+    ) || (!!ctx.memberId && await tienePuestoDeDireccion(ctx.memberId)))
     const miId = ctx.memberId
 
     // El dirigente queda clavado a sí mismo; el rol amplio elige.

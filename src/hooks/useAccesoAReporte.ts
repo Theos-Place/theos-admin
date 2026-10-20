@@ -30,6 +30,7 @@ export function useAccesoAReporte(slug: SlugDeReporte): { loaded: boolean; puede
       roles: user?.roles ?? [],
       tieneModulo: can('reportes', 'view'),
       porPuesto: user?.abre_reportes_por_puesto === true,
+      direccionPorPuesto: user?.direccion_por_puesto === true,
     }),
   }
 }

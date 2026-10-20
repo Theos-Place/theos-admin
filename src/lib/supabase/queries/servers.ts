@@ -305,6 +305,36 @@ export async function abreReportesPorPuesto(memberId: string): Promise<boolean> 
   return false
 }
 
+/**
+ * REP-13 · ¿Ocupa algún puesto de DIRECCIÓN (`esPuestoDeDireccion`)? Abre los
+ * nueve reportes. Mira áreas y comités: el Director de Área está en un área,
+ * Directores y Consejo Dirección son comités.
+ */
+export async function tienePuestoDeDireccion(memberId: string): Promise<boolean> {
+  const supabase = createAdminClient()
+  const [{ data, error }, areaMap] = await Promise.all([
+    supabase
+      .from('volunteers')
+      .select('position:service_positions!inner(title, is_active, area:areas!service_positions_area_id_fkey(name, area_type, is_active, parent_id))')
+      .eq('member_id', memberId)
+      .eq('status', 'active'),
+    getAreaNameMap(supabase),
+  ])
+  if (error) throw error
+  const { esPuestoDeDireccion } = await import('@/lib/servers/puesto-de-direccion')
+  for (const fila of (data ?? []) as Array<Record<string, unknown>>) {
+    const pos = one<{ title: string; is_active: boolean | null; area: unknown }>(fila.position)
+    if (!pos || pos.is_active === false) continue
+    const area = one<{ name: string; area_type: string; is_active: boolean | null; parent_id: string | null }>(pos.area)
+    if (!area || area.is_active === false || (area.area_type !== 'area' && area.area_type !== 'committee')) continue
+    if (esPuestoDeDireccion({
+      title: pos.title, areaName: area.name, areaType: area.area_type as 'area' | 'committee',
+      parentAreaName: area.parent_id ? areaMap.get(area.parent_id)?.name ?? null : null,
+    })) return true
+  }
+  return false
+}
+
 /** Comité (area_id) de una vacante — para verificar permiso de gestión. */
 export async function getVacancyCommitteeId(vacancyId: string): Promise<string | null> {
   const supabase = createAdminClient()

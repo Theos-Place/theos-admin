@@ -66,7 +66,7 @@ export async function GET() {
      */
     const [
       roleRows, familyMemberIds, inStudyCommittee, grantedFormIds, managedEventIds,
-      documentPromptDismissedAt, abreMiComite, abreReportes, esDirigente, esEmpleado, tieneRecursos,
+      documentPromptDismissedAt, abreMiComite, abreReportes, direccionPorPuesto, esDirigente, esEmpleado, tieneRecursos,
     ] = await Promise.all([
       admin.from('member_roles').select('role')
         .eq('member_id', member.id).eq('is_active', true)
@@ -172,6 +172,17 @@ export async function GET() {
         }
       })(),
 
+      // REP-13: ¿ocupa un puesto de dirección? Abre los nueve reportes.
+      (async (): Promise<boolean> => {
+        try {
+          const { tienePuestoDeDireccion } = await import('@/lib/supabase/queries/servers')
+          return await tienePuestoDeDireccion(member.id)
+        } catch (e) {
+          console.warn('auth/me: puesto de dirección:', e instanceof Error ? e.message : e)
+          return false
+        }
+      })(),
+
       // DIR-7: ¿dirige o dirigió algún grupo? Abre «Los que no volvieron»,
       // acotado a sus propios exalumnos. El recorte de verdad lo hace el
       // endpoint con el id de la sesión; esto solo decide si se pinta la
@@ -232,6 +243,7 @@ export async function GET() {
         es_empleado: esEmpleado,
         abre_mi_comite: abreMiComite,
         abre_reportes_por_puesto: abreReportes,
+        direccion_por_puesto: direccionPorPuesto,
         es_dirigente: esDirigente,
         tiene_recursos: tieneRecursos,
       },

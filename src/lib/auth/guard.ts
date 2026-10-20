@@ -153,6 +153,11 @@ export async function requireAccesoAReporte(
   const { puedeVerReporte, ACCESO_POR_REPORTE } = await import('@/lib/reports/acceso-por-reporte')
   const base = { roles: ctx.roles, tieneModulo: hasModulePermission(ctx.roles, 'reportes', 'view') }
   if (puedeVerReporte(slug, base)) return { ctx }
+  // REP-13 · Un puesto de dirección abre los nueve (2026-10-20).
+  if (ctx.memberId) {
+    const { tienePuestoDeDireccion } = await import('@/lib/supabase/queries/servers')
+    if (await tienePuestoDeDireccion(ctx.memberId)) return { ctx }
+  }
   if (ACCESO_POR_REPORTE[slug]?.porPuesto && ctx.memberId) {
     const { abreReportesPorPuesto } = await import('@/lib/supabase/queries/servers')
     if (await abreReportesPorPuesto(ctx.memberId)) return { ctx }

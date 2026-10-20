@@ -107,6 +107,7 @@ export default function ReportesIndexPage() {
     roles: user?.roles ?? [],
     tieneModulo: can('reportes', 'view'),
     porPuesto: user?.abre_reportes_por_puesto === true,
+    direccionPorPuesto: user?.direccion_por_puesto === true,
     // DIR-7 · Un dirigente ve la tarjeta de «Los que no volvieron» aunque no
     // tenga ningún rol de reportes: entra a lo suyo.
     esDirigente: user?.es_dirigente === true,

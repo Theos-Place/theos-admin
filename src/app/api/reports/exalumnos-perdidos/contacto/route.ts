@@ -2,6 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { ESTUDIOS_REPORTE_ROLES } from '@/lib/auth/roles'
+// REP-13 · un puesto de dirección ve a todos, como el rol amplio.
+import { tienePuestoDeDireccion } from '@/lib/supabase/queries/servers'
 import { ESTADOS_DE_CONTACTO, A_QUE_VUELVE } from '@/lib/reports/no-volvieron'
 import {
   registrarContacto, getExalumnosPerdidos, esDirigenteConHistorico,
@@ -50,9 +52,9 @@ export async function POST(req: NextRequest) {
     }
     const body = parsed.data
 
-    const esAmplio = (ctx.roles ?? []).some(
+    const esAmplio = ((ctx.roles ?? []).some(
       r => (ESTUDIOS_REPORTE_ROLES as readonly string[]).includes(r),
-    )
+    ) || (!!ctx.memberId && await tienePuestoDeDireccion(ctx.memberId)))
     const miId = ctx.memberId
     if (!esAmplio) {
       if (!miId || !(await esDirigenteConHistorico(miId))) {
@@ -95,9 +97,9 @@ export async function GET(req: NextRequest) {
       return NextResponse.json({ error: 'Falta la persona.' }, { status: 400 })
     }
 
-    const esAmplio = (ctx.roles ?? []).some(
+    const esAmplio = ((ctx.roles ?? []).some(
       r => (ESTUDIOS_REPORTE_ROLES as readonly string[]).includes(r),
-    )
+    ) || (!!ctx.memberId && await tienePuestoDeDireccion(ctx.memberId)))
     if (!esAmplio) {
       const miId = ctx.memberId
       if (!miId) return NextResponse.json({ error: 'No autorizado' }, { status: 403 })

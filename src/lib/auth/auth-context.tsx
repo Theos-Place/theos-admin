@@ -51,6 +51,8 @@ export interface AuthUser {
    * habilita esos dos. Lo calcula el servidor mirando los puestos.
    */
   abre_reportes_por_puesto?: boolean
+  /** REP-13 · Ocupa un puesto de dirección: ve los nueve reportes. */
+  direccion_por_puesto?: boolean
   /** DIR-7 · Dirige o dirigió un grupo: abre «Los que no volvieron». */
   es_dirigente?: boolean
   /** REC-1 · Tiene al menos un recurso publicado para su perfil (menú). */
