@@ -2983,9 +2983,17 @@ modo formulario), PATCH con zod + audit_log, formulario espejo con audiencia
 `scripts/srv20/importar-perfil-sirve-ccb.ts` (dry run en producción: 956 de 970
 resueltas, 0 ambiguas, 14 sin ficha).
 
-**Pendiente de aplicar en producción (después del deploy):** correr el import
-con `--aplicar`, revisar los 14 sin ficha (3 correos mal escritos, 1 fila
-basura, Marco Araya Ramírez existe con otro correo — ID 13356).
+**APLICADO EN PRODUCCIÓN 2026-10-21.** Import: 956 resueltas → 952 filas
+(4 colapsaron porque dos IDs de CCB apuntan a la misma ficha fusionada).
+De los 14 sin ficha, 11 se asociaron por TELÉFONO (8 dígitos, exactamente una
+ficha activa) + nombre, y lo confirmó la regla de Floriana: casi todos llenaron
+el formulario a 7–35 días de completar SCJ (`completed_at`). Respaldo en
+`docs/correcciones/2026-10-21-perfil-sirve-ccb-match-por-telefono.json`.
+Quedan 3 sin asociar: Lina Solano (el teléfono es de Glenda Salas Solano, otra
+persona), Carol González Villarreal (nadie con ese nombre, correo ni teléfono) y
+la fila basura «xcvcxv kjnjk». Dato suelto: 23 importados no tienen SCJ
+completado en el sistema — casi todos respuestas 2018–2021, antes del
+histórico importado; no se tocó.
 
 #### Texto original del pedido (referencia)
 

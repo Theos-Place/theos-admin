@@ -1,0 +1,243 @@
+{
+ "motivo": "SRV-20 etapa 3, segunda tanda: 11 respuestas del formulario 128 sin ID ni correo coincidente, asociadas por TELÉFONO (8 dígitos, exactamente una ficha activa) + nombre + graduación de SCJ cerca de la fecha del formulario. Decisión de Floriana 2026-10-21. Geovanny Araya: la graduación en sistema es POSTERIOR al formulario (451 días); se escribe igual, queda anotado.",
+ "asociaciones": [
+  {
+   "csv": "Carol Peña <tandemambientales@gmail.com>",
+   "response": "60660",
+   "memberId": "5de29070-08c2-4a5b-b471-1a8e649460d1",
+   "ficha": "Carol Pena Rojas <carolpr_ga@yahoo.es>",
+   "scj_completado": "2023-06-03",
+   "dias_formulario_menos_graduacion": -68,
+   "protegido": false
+  },
+  {
+   "csv": "Geovanny Araya <arq.geovanny.araya@gmail.con>",
+   "response": "62213",
+   "memberId": "0b5b8a74-185e-44eb-add3-35dbb836850d",
+   "ficha": "Geovanny Araya García <garaya@arquitectosc3.com>",
+   "scj_completado": "2024-08-30",
+   "dias_formulario_menos_graduacion": -451,
+   "protegido": false
+  },
+  {
+   "csv": "Tatiana Arauz Villegas <tatiarauzv2418@gmail.com>",
+   "response": "67356",
+   "memberId": "f069b781-5b0f-4cf9-bd19-f2cd8662d729",
+   "ficha": "Tatiana Arauz Villegas <tatiarauz@hotmail.com>",
+   "scj_completado": "2023-12-05",
+   "dias_formulario_menos_graduacion": -15,
+   "protegido": false
+  },
+  {
+   "csv": "Valeria Campos <valeemobley16@gmail.comv>",
+   "response": "70294",
+   "memberId": "35774e49-0b46-4781-aa92-06966878ed22",
+   "ficha": "Valeria Campos Salas <valeemobley16@gmail.com>",
+   "scj_completado": "2024-05-02",
+   "dias_formulario_menos_graduacion": -7,
+   "protegido": false
+  },
+  {
+   "csv": "Cristina Rodriguez <ccra030193@gmail.com>",
+   "response": "72626",
+   "memberId": "c4107844-d189-4cf9-8733-208beca551c5",
+   "ficha": "Cristina Rodriguez Alfaro <ccra0103@gmail.com>",
+   "scj_completado": "2024-08-12",
+   "dias_formulario_menos_graduacion": -14,
+   "protegido": false
+  },
+  {
+   "csv": "Daniel Hernandez <danielhz2912@gmail.com>",
+   "response": "72859",
+   "memberId": "c870f40b-5f55-41df-a262-18ddd3a41f97",
+   "ficha": "Daniel Antonio Hernandez Zuniga <hzdanton23@gmail.com>",
+   "scj_completado": "2024-08-12",
+   "dias_formulario_menos_graduacion": 4,
+   "protegido": false
+  },
+  {
+   "csv": "Marco Araya Ramirez <marcoarayaramirez@gmail.com>",
+   "response": "74468",
+   "memberId": "81bcc28c-2190-4f7e-9475-7aba960646dc",
+   "ficha": "Marco Araya Ramirez <arayamar2388@gmail.com>",
+   "scj_completado": "2024-12-12",
+   "dias_formulario_menos_graduacion": -29,
+   "protegido": false
+  },
+  {
+   "csv": "Johanna Sauma <jsaumar@gmail.com>",
+   "response": "74492",
+   "memberId": "5a396cd3-590a-491f-9a58-66813e6c940e",
+   "ficha": "Johanna Sauma Rodriguez <jsauma@gmail.com>",
+   "scj_completado": "2024-12-12",
+   "dias_formulario_menos_graduacion": -28,
+   "protegido": false
+  },
+  {
+   "csv": "Jimena Marín <jimenamarincr2015@gmail.con>",
+   "response": "74613",
+   "memberId": "ca15bbca-d5c0-4e02-8141-3d2312405828",
+   "ficha": "Jimena Marín Badilla <jimenamarincr2015@gmail.com>",
+   "scj_completado": "2024-12-17",
+   "dias_formulario_menos_graduacion": -28,
+   "protegido": false
+  },
+  {
+   "csv": "Laura Chaverri <lauracv@gmail.com>",
+   "response": "74706",
+   "memberId": "cd61756a-5404-4262-810a-d8e8107f30c1",
+   "ficha": "Laura Chaverri Vargas <laurachv@gmail.com>",
+   "scj_completado": "2024-12-16",
+   "dias_formulario_menos_graduacion": -24,
+   "protegido": false
+  },
+  {
+   "csv": "Silvia Arce <Silviaarcev95@gmail.com>",
+   "response": "94282",
+   "memberId": "cd1b6a8b-7a4c-4c2c-a055-b9b7e5c196f3",
+   "ficha": "Silvia Arce Viquez <silviaarcev95@hotmail.com>",
+   "scj_completado": "2026-08-24",
+   "dias_formulario_menos_graduacion": -35,
+   "protegido": false
+  }
+ ],
+ "antes": [
+  {
+   "member_id": "35774e49-0b46-4781-aa92-06966878ed22",
+   "baptism_date": "2024-05-25T06:00:00.000Z",
+   "baptism_place": "GAM",
+   "updated_at": "2026-07-18T18:04:52.297Z",
+   "dones_test": [],
+   "dones_oracion": [],
+   "oracion_sin_dones": false,
+   "otros_dones": null,
+   "estilo_primario": null,
+   "estilo_secundario": null,
+   "formacion": null,
+   "ocupacion": null,
+   "habilidades": [],
+   "otras_habilidades": null,
+   "pasiones": [],
+   "otras_pasiones": null,
+   "trayectoria": null,
+   "motivo_salida": null,
+   "que_espera": null,
+   "sirve_fuente": null,
+   "sirve_ccb_response_id": null,
+   "sirve_ccb_submitted_at": null,
+   "editado_en_sistema_at": null,
+   "updated_by": null
+  },
+  {
+   "member_id": "5a396cd3-590a-491f-9a58-66813e6c940e",
+   "baptism_date": "2024-03-31T06:00:00.000Z",
+   "baptism_place": "Campa Pro - Isla Damas",
+   "updated_at": "2026-07-18T18:04:52.297Z",
+   "dones_test": [],
+   "dones_oracion": [],
+   "oracion_sin_dones": false,
+   "otros_dones": null,
+   "estilo_primario": null,
+   "estilo_secundario": null,
+   "formacion": null,
+   "ocupacion": null,
+   "habilidades": [],
+   "otras_habilidades": null,
+   "pasiones": [],
+   "otras_pasiones": null,
+   "trayectoria": null,
+   "motivo_salida": null,
+   "que_espera": null,
+   "sirve_fuente": null,
+   "sirve_ccb_response_id": null,
+   "sirve_ccb_submitted_at": null,
+   "editado_en_sistema_at": null,
+   "updated_by": null
+  },
+  {
+   "member_id": "f069b781-5b0f-4cf9-bd19-f2cd8662d729",
+   "baptism_date": null,
+   "baptism_place": null,
+   "updated_at": "2026-10-21T17:22:00.906Z",
+   "dones_test": [
+    "Liderazgo",
+    "Fe",
+    "Servicio",
+    "Generosidad"
+   ],
+   "dones_oracion": [
+    "Sabiduría",
+    "Profecía",
+    "Fe",
+    "Motivación / Dar ánimo"
+   ],
+   "oracion_sin_dones": false,
+   "otros_dones": "Que tengo valentía, dominio propio",
+   "estilo_primario": "Influyente",
+   "estilo_secundario": "Concienzudo",
+   "formacion": "Ms en Gerencia de Proyectos, Lc en Ing Química",
+   "ocupacion": "Team Lead y propuestas (cotizaciones)",
+   "habilidades": [
+    "Administración",
+    "Manejo de personal",
+    "Deportes"
+   ],
+   "otras_habilidades": null,
+   "pasiones": [
+    "Jóvenes",
+    "Misiones",
+    "Recreación",
+    "Ayuda Social"
+   ],
+   "otras_pasiones": null,
+   "trayectoria": null,
+   "motivo_salida": null,
+   "que_espera": "Guía De Dios, no se en que debería servir todavía",
+   "sirve_fuente": "ccb",
+   "sirve_ccb_response_id": "38846",
+   "sirve_ccb_submitted_at": "2021-03-16T00:00:00.000Z",
+   "editado_en_sistema_at": null,
+   "updated_by": null
+  },
+  {
+   "member_id": "81bcc28c-2190-4f7e-9475-7aba960646dc",
+   "baptism_date": null,
+   "baptism_place": null,
+   "updated_at": "2026-10-21T17:22:00.906Z",
+   "dones_test": [
+    "Servicio",
+    "Generosidad",
+    "Liderazgo"
+   ],
+   "dones_oracion": [
+    "Generosidad",
+    "Servicio"
+   ],
+   "oracion_sin_dones": false,
+   "otros_dones": null,
+   "estilo_primario": "Influyente",
+   "estilo_secundario": "Sólido",
+   "formacion": "Bachillerato",
+   "ocupacion": "Técnico en mantenimiento aeronáutico",
+   "habilidades": [
+    "Cocina",
+    "Administración",
+    "Mecánica",
+    "Manejo de personal"
+   ],
+   "otras_habilidades": null,
+   "pasiones": [
+    "Recreación"
+   ],
+   "otras_pasiones": null,
+   "trayectoria": "Mi primer servicio fue en la sede de Alajuela en montaje y desmontaje por unos 4 meses, en este momento sirvo en Meridiano en el área de Alimentos, y también recibí el llamado para Formar parte del comité de FUN.",
+   "motivo_salida": "En Alajuela dejé de servir por qué me chocaba con mi estudio de Biblia actual.",
+   "que_espera": null,
+   "sirve_fuente": "ccb",
+   "sirve_ccb_response_id": "74468",
+   "sirve_ccb_submitted_at": "2024-11-13T00:00:00.000Z",
+   "editado_en_sistema_at": null,
+   "updated_by": null
+  }
+ ]
+}
