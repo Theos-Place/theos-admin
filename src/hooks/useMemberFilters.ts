@@ -112,6 +112,7 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
     case 'sirve_habilidad':
     case 'sirve_pasion':
     case 'sirve_estilo':
+    case 'sirve_otros':
     case 'profesion': return true
     case 'created': {
       const d = (m.created_at ?? '').slice(0, 10)

@@ -85,10 +85,11 @@ describe('el supuesto en el que se apoya la negación', () => {
     // tiene dos pero en ramas excluyentes (la de «cualquier estudio» hace
     // `break` antes de llegar a la otra). El supuesto sigue en pie.
     // 24 → 25 con REC-1 (2026-10-16): `role` aporta UN set, en su propia rama.
-    // 25 → 27 con SRV-20 4B (2026-10-21): los cuatro `sirve_*` comparten UNA
-    // rama con UN push (la unión ya viene armada en `set`), y `profesion` un
-    // push con el ternario adentro.
-    expect(pushes, 'cambió la cantidad de push: revisá que ningún case aporte DOS sets en la MISMA rama').toBe(27)
+    // 25 → 28 con SRV-20 4B (2026-10-21): los cuatro `sirve_*` de catálogo
+    // comparten UNA rama con UN push (la unión ya viene armada en `set`),
+    // `sirve_otros` un push con su unión, y `profesion` un push con el
+    // ternario adentro.
+    expect(pushes, 'cambió la cantidad de push: revisá que ningún case aporte DOS sets en la MISMA rama').toBe(28)
   })
 
   it('el resolver usa el helper y no una copia a mano', () => {

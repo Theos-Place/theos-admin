@@ -3034,8 +3034,9 @@ rechaza con 403 en /api/members, /ids y /export si llegan sin el rol: no se
 sanean en silencio, porque una lista que ignora parte de su filtro se
 ensancha sola. No entran como audiencia de grupos ni formularios. Módulo puro
 `lib/members/filtros-sirve.ts`; cada condición aporta UN set, así que se
-pueden negar («Excepto —») como las demás. Etapa 4 cerrada; las búsquedas
-por texto libre de «otros dones» u «otras habilidades» no se hicieron.
+pueden negar («Excepto —») como las demás. Más un quinto campo de texto libre, «Otros dones, habilidades o pasiones»,
+que busca en las tres columnas «otros» del perfil (pedido el mismo día).
+Etapa 4 cerrada.
 
 #### Texto original del pedido (referencia)
 

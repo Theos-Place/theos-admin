@@ -23,7 +23,7 @@ import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, Se
 import { ACCOUNT_STATE_LABEL } from '@/lib/members/account-state'
 import { ROLES, BASE_ROLE } from '@/lib/auth/roles'
 import { DONES, ESTILOS, HABILIDADES, PASIONES, AYUDA_ESTILO, puedeLeerSirve } from '@/lib/servers/perfil-sirve'
-import { TIPOS_SIRVE, type TipoSirve, type CondicionSirve } from '@/lib/members/filtros-sirve'
+import { TIPOS_SIRVE, type TipoSirveMultiple, type CondicionSirve } from '@/lib/members/filtros-sirve'
 
 const FORM_CATEGORY_LABEL: Record<FormTemplate['category'], string> = {
   event_registration: 'Inscripción eventos',
@@ -928,7 +928,7 @@ function SelectorSirve({
 }: {
   etiqueta: string
   ayuda: string
-  tipo: TipoSirve
+  tipo: TipoSirveMultiple
   opciones: readonly string[]
   conditions: FilterCondition[]
   addCondition: (c: AddableCondition) => void
@@ -1058,6 +1058,19 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
     if (profesionCond) removeCondition(profesionCond.id)
     if (t) addCondition({ group: 'profesion', type: 'profesion', text: t })
   }
+  const otrosCond = conditions.find(c => c.type === 'sirve_otros') as Extract<FilterCondition, { type: 'sirve_otros' }> | undefined
+  const [otros, setOtros] = useState(otrosCond?.text ?? '')
+  const [otrosPrevia, setOtrosPrevia] = useState(otrosCond?.id)
+  if (otrosPrevia !== otrosCond?.id) {
+    setOtrosPrevia(otrosCond?.id)
+    if (!otrosCond) setOtros('')
+  }
+  function fijarOtros() {
+    const t = otros.trim()
+    if (otrosCond && otrosCond.text === t) return
+    if (otrosCond) removeCondition(otrosCond.id)
+    if (t) addCondition({ group: 'sirve', type: 'sirve_otros', text: t })
+  }
 
   const [ageMin, setAgeMin] = useState(ageCond?.min ?? '')
   const [ageMax, setAgeMax] = useState(ageCond?.max ?? '')
@@ -1095,7 +1108,13 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
   }
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6">
+      {/* Dos bloques y dos columnas: en una sola columna el panel se hacía más
+          alto que la pantalla cuando entraron los filtros del perfil S.I.R.V.E.
+          (pedido de Floriana, 2026-10-21). */}
+      <section aria-labelledby="perfil-generales">
+        <h4 id="perfil-generales" className="mb-3 text-[11px] tracking-widest uppercase text-navy font-display font-semibold">Datos generales</h4>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
       {permite('donor') && <div>
         <Label>Donante</Label>
         <Sel label="Donante" value={donorVal} onChange={v => {
@@ -1107,71 +1126,6 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
           <option value="no">No</option>
         </Sel>
       </div>}
-
-      {permiteRol && <div>
-        <Label>Rol en el sistema</Label>
-        <Sel label="Rol en el sistema" value="any" onChange={v => {
-          // Cada rol es una condición aparte: para «este o este» se unen con O.
-          if (v !== 'any' && !rolesElegidos.some(c => c.role === v)) addCondition({ group: 'role', type: 'role', role: v })
-        }}>
-          <option value="any">Agregar un rol…</option>
-          {ROLES.filter(r => r.id !== BASE_ROLE).map(r => (
-            <option key={r.id} value={r.id}>{r.name}</option>
-          ))}
-        </Sel>
-        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
-          Incluye a quien lo tiene a mano y a quien lo recibe por su puesto.
-        </p>
-      </div>}
-
-      {permite('marital') && <div>
-        <Label>Estado civil</Label>
-        <Sel label="Estado civil" value={maritalVal} onChange={v => {
-          if (maritalCond) removeCondition(maritalCond.id)
-          if (v !== 'any') addCondition({ group: 'marital', type: 'marital', value: v })
-        }}>
-          <option value="any">Cualquiera</option>
-          <option value="Soltero/a">Soltero/a</option>
-          <option value="Casado/a">Casado/a</option>
-          <option value="Unión libre">Unión libre</option>
-          <option value="Divorciado/a">Divorciado/a</option>
-          <option value="Viudo/a">Viudo/a</option>
-        </Sel>
-      </div>}
-
-      {permite('profesion') && <div>
-        <Label>Formación académica / Profesión</Label>
-        <input
-          type="text"
-          aria-label="Formación académica / Profesión"
-          value={profesion}
-          onChange={e => setProfesion(e.target.value)}
-          onBlur={fijarProfesion}
-          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); fijarProfesion() } }}
-          placeholder="Ej. contador, enfermería, diseño"
-          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body placeholder:text-navy-light/80"
-        />
-        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
-          Busca dentro del texto: «conta» encuentra «Contador público». Enter o salir del campo lo aplica.
-        </p>
-      </div>}
-
-      {leeSirve && permite('sirve_don') && (
-        <SelectorSirve etiqueta="Dones" ayuda="Los del test o los que descubrió en oración: cualquiera de los marcados."
-          tipo="sirve_don" opciones={DONES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
-      )}
-      {leeSirve && permite('sirve_habilidad') && (
-        <SelectorSirve etiqueta="Habilidades" ayuda="Cualquiera de las marcadas."
-          tipo="sirve_habilidad" opciones={HABILIDADES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
-      )}
-      {leeSirve && permite('sirve_pasion') && (
-        <SelectorSirve etiqueta="Pasiones" ayuda="A quiénes le gustaría servir: cualquiera de las marcadas."
-          tipo="sirve_pasion" opciones={PASIONES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
-      )}
-      {leeSirve && permite('sirve_estilo') && (
-        <SelectorSirve etiqueta="Estilo" ayuda={`Primario o secundario. ${ESTILOS.map(e => `${e}: ${AYUDA_ESTILO[e].replace(/\.$/, '')}`).join(' · ')}.`}
-          tipo="sirve_estilo" opciones={ESTILOS} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
-      )}
 
       {permite('status') && <div>
         <Label>Estado del perfil</Label>
@@ -1219,11 +1173,105 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
         </div>
       </div>}
 
+      {permite('marital') && <div>
+        <Label>Estado civil</Label>
+        <Sel label="Estado civil" value={maritalVal} onChange={v => {
+          if (maritalCond) removeCondition(maritalCond.id)
+          if (v !== 'any') addCondition({ group: 'marital', type: 'marital', value: v })
+        }}>
+          <option value="any">Cualquiera</option>
+          <option value="Soltero/a">Soltero/a</option>
+          <option value="Casado/a">Casado/a</option>
+          <option value="Unión libre">Unión libre</option>
+          <option value="Divorciado/a">Divorciado/a</option>
+          <option value="Viudo/a">Viudo/a</option>
+        </Sel>
+      </div>}
+
       {permite('created') && <div>
         <Label>Fecha de creación del perfil</Label>
         <DateRange from={createdFrom} to={createdTo}
           onFrom={v => syncCreated(v, createdTo)} onTo={v => syncCreated(createdFrom, v)} />
       </div>}
+
+      {permiteRol && <div>
+        <Label>Rol en el sistema</Label>
+        <Sel label="Rol en el sistema" value="any" onChange={v => {
+          // Cada rol es una condición aparte: para «este o este» se unen con O.
+          if (v !== 'any' && !rolesElegidos.some(c => c.role === v)) addCondition({ group: 'role', type: 'role', role: v })
+        }}>
+          <option value="any">Agregar un rol…</option>
+          {ROLES.filter(r => r.id !== BASE_ROLE).map(r => (
+            <option key={r.id} value={r.id}>{r.name}</option>
+          ))}
+        </Sel>
+        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
+          Incluye a quien lo tiene a mano y a quien lo recibe por su puesto.
+        </p>
+      </div>}
+        </div>
+      </section>
+
+      {(permite('profesion') || leeSirve) && (
+        <section aria-labelledby="perfil-sirve">
+          <h4 id="perfil-sirve" className="mb-3 text-[11px] tracking-widest uppercase text-navy font-display font-semibold">Perfil S.I.R.V.E. y profesión</h4>
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-x-6 gap-y-4">
+      {permite('profesion') && <div>
+        <Label>Formación académica / Profesión</Label>
+        <input
+          type="text"
+          aria-label="Formación académica / Profesión"
+          value={profesion}
+          onChange={e => setProfesion(e.target.value)}
+          onBlur={fijarProfesion}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); fijarProfesion() } }}
+          placeholder="Ej. contador, enfermería, diseño"
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body placeholder:text-navy-light/80"
+        />
+        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
+          Busca dentro del texto: «conta» encuentra «Contador público». Enter o salir del campo lo aplica.
+        </p>
+      </div>}
+
+      {leeSirve && permite('sirve_don') && (
+        <SelectorSirve etiqueta="Dones" ayuda="Los del test o los que descubrió en oración: cualquiera de los marcados."
+          tipo="sirve_don" opciones={DONES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
+      )}
+
+      {leeSirve && permite('sirve_habilidad') && (
+        <SelectorSirve etiqueta="Habilidades" ayuda="Cualquiera de las marcadas."
+          tipo="sirve_habilidad" opciones={HABILIDADES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
+      )}
+
+      {leeSirve && permite('sirve_pasion') && (
+        <SelectorSirve etiqueta="Pasiones" ayuda="A quiénes le gustaría servir: cualquiera de las marcadas."
+          tipo="sirve_pasion" opciones={PASIONES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
+      )}
+
+      {leeSirve && permite('sirve_estilo') && (
+        <SelectorSirve etiqueta="Estilo" ayuda={`Primario o secundario. ${ESTILOS.map(e => `${e}: ${AYUDA_ESTILO[e].replace(/\.$/, '')}`).join(' · ')}.`}
+          tipo="sirve_estilo" opciones={ESTILOS} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
+      )}
+
+      {leeSirve && permite('sirve_otros') && <div>
+        <Label>Otros dones, habilidades o pasiones (texto)</Label>
+        <input
+          type="text"
+          aria-label="Otros dones, habilidades o pasiones"
+          value={otros}
+          onChange={e => setOtros(e.target.value)}
+          onBlur={fijarOtros}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); fijarOtros() } }}
+          placeholder="Ej. carpintería, apicultura"
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body placeholder:text-navy-light/80"
+        />
+        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
+          Lo que la persona escribió fuera de los catálogos, en cualquiera de los tres campos «otros».
+        </p>
+      </div>}
+          </div>
+        </section>
+      )}
     </div>
   )
 }

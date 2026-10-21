@@ -87,6 +87,8 @@ export type FilterCondition = NegableCondition & (
   | { id: number; group: 'sirve'; type: 'sirve_habilidad'; values: string[] }
   | { id: number; group: 'sirve'; type: 'sirve_pasion'; values: string[] }
   | { id: number; group: 'sirve'; type: 'sirve_estilo'; values: string[] }
+  /** Texto libre sobre lo que no cupo en los catálogos: otros dones, otras habilidades, otras pasiones. */
+  | { id: number; group: 'sirve'; type: 'sirve_otros'; text: string }
   /** Texto libre sobre `members.occupation` («Formación académica / Profesión»). */
   | { id: number; group: 'profesion'; type: 'profesion'; text: string }
   /**

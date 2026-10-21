@@ -26,6 +26,7 @@ describe('SRV-20 (4B) · filtros del padrón por el perfil S.I.R.V.E. y profesi�
     expect(conditionLabel({ id: 1, group: 'sirve', type: 'sirve_don', values: ['Fe', 'Enseñanza'] })).toBe('Dones: Fe, Enseñanza')
     expect(conditionLabel({ id: 1, group: 'sirve', type: 'sirve_pasion', values: ['A', 'B', 'C'] })).toBe('Pasiones: 3 seleccionados')
     expect(conditionLabel({ id: 1, group: 'profesion', type: 'profesion', text: 'conta', negate: true })).toBe('Excepto — Profesión: conta')
+    expect(conditionLabel({ id: 1, group: 'sirve', type: 'sirve_otros', text: 'apicultura' })).toBe('Otros (texto): apicultura')
     expect(resumenDeValores([])).toBe('ninguno')
   })
 
@@ -47,6 +48,7 @@ describe('SRV-20 (4B) · filtros del padrón por el perfil S.I.R.V.E. y profesi�
     expect(src).toContain("sirve_don: [{ col: 'dones_test', modo: 'ov' }, { col: 'dones_oracion', modo: 'ov' }]")
     expect(src).toContain("sirve_estilo: [{ col: 'estilo_primario', modo: 'in' }, { col: 'estilo_secundario', modo: 'in' }]")
     expect(src).toContain("q.ilike('occupation', patron)")
+    expect(src).toContain("['otros_dones', 'otras_habilidades', 'otras_pasiones']")
   })
 
   it('la pantalla esconde el bloque a quien no lee el perfil, y el cliente no re-filtra', () => {
@@ -55,6 +57,6 @@ describe('SRV-20 (4B) · filtros del padrón por el perfil S.I.R.V.E. y profesi�
     for (const t of TIPOS_SIRVE) expect(ui).toContain(`leeSirve && permite('${t}')`)
     expect(ui).toContain('...(leeSirve ? TIPOS_SIRVE.filter(permite) : [])')
     const hook = sinComentarios('src/hooks/useMemberFilters.ts')
-    expect(hook).toMatch(/case 'sirve_estilo':\s*case 'profesion': return true/)
+    expect(hook).toMatch(/case 'sirve_estilo':\s*case 'sirve_otros':\s*case 'profesion': return true/)
   })
 })

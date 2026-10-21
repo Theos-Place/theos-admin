@@ -807,7 +807,7 @@ export async function resolveAdvancedConditions(
         const valores = c.values.filter(v => typeof v === 'string' && v.trim())
         const set = new Set<string>()
         if (valores.length > 0) {
-          const columnas: Record<typeof c.type, Array<{ col: string; modo: 'ov' | 'in' }>> = {
+          const columnas: Record<Exclude<typeof c.type, 'sirve_otros'>, Array<{ col: string; modo: 'ov' | 'in' }>> = {
             sirve_don: [{ col: 'dones_test', modo: 'ov' }, { col: 'dones_oracion', modo: 'ov' }],
             sirve_habilidad: [{ col: 'habilidades', modo: 'ov' }],
             sirve_pasion: [{ col: 'pasiones', modo: 'ov' }],
@@ -819,6 +819,18 @@ export async function resolveAdvancedConditions(
               'member_spiritual_data', 'member_id', 'member_id', scopeIds,
             )
             for (const id of parcial) set.add(id)
+          }
+        }
+        res.include.push(set)
+        break
+      }
+      case 'sirve_otros': {
+        // Lo que no cupo en los catálogos: tres columnas de texto, una unión.
+        const patron = patronDeProfesion(c.text ?? '')
+        const set = new Set<string>()
+        if (patron) {
+          for (const col of ['otros_dones', 'otras_habilidades', 'otras_pasiones']) {
+            for (const id of await pagedIds(q => q.ilike(col, patron), 'member_spiritual_data', 'member_id', 'member_id', scopeIds)) set.add(id)
           }
         }
         res.include.push(set)

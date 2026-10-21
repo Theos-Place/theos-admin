@@ -95,6 +95,7 @@ function etiquetaSinNegar(c: FilterCondition): string {
     case 'sirve_habilidad':
     case 'sirve_pasion':
     case 'sirve_estilo': return `${ETIQUETA_SIRVE[c.type]}: ${resumenDeValores(c.values)}`
+    case 'sirve_otros': return `${ETIQUETA_SIRVE[c.type]}: ${c.text}`
     case 'profesion': return `Profesión: ${c.text}`
     case 'role': return `Rol: ${ROLES.find(r => r.id === c.role)?.name ?? c.role}`
     case 'account':

@@ -22,7 +22,7 @@
  */
 import type { FilterCondition } from '@/types/filters'
 
-export const TIPOS_SIRVE = ['sirve_don', 'sirve_habilidad', 'sirve_pasion', 'sirve_estilo'] as const
+export const TIPOS_SIRVE = ['sirve_don', 'sirve_habilidad', 'sirve_pasion', 'sirve_estilo', 'sirve_otros'] as const
 export type TipoSirve = (typeof TIPOS_SIRVE)[number]
 
 export function esCondicionSirve(c: { type: string }): boolean {
@@ -54,6 +54,9 @@ export const ETIQUETA_SIRVE: Record<TipoSirve, string> = {
   sirve_habilidad: 'Habilidades',
   sirve_pasion: 'Pasiones',
   sirve_estilo: 'Estilo',
+  sirve_otros: 'Otros (texto)',
 }
 
-export type CondicionSirve = Extract<FilterCondition, { type: TipoSirve }>
+/** Las de selección múltiple (todas menos el texto libre). */
+export type TipoSirveMultiple = Exclude<TipoSirve, 'sirve_otros'>
+export type CondicionSirve = Extract<FilterCondition, { type: TipoSirveMultiple }>
