@@ -106,6 +106,13 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
     // REC-1 · Los roles no viajan en el Member del padrón (y el padrón no
     // ofrece esta condición): se resuelve solo en el servidor.
     case 'role': return true
+    // SRV-20 (etapa 4B) · El perfil S.I.R.V.E. y la profesión no viajan en el
+    // Member del padrón: se resuelven solo en el servidor (members.ts).
+    case 'sirve_don':
+    case 'sirve_habilidad':
+    case 'sirve_pasion':
+    case 'sirve_estilo':
+    case 'profesion': return true
     case 'created': {
       const d = (m.created_at ?? '').slice(0, 10)
       if (!d) return false

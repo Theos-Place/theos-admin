@@ -2965,7 +2965,7 @@ toca; ambas razones listadas; idempotente. tsc/lint/vitest.
 
 ## Fase 30 — Perfil S.I.R.V.E. (pedido 2026-10-20)
 
-### [x] SRV-20 · Perfil S.I.R.V.E. — ETAPAS 1–3 HECHAS 2026-10-20; etapa 4A (invitación desde el grupo) 2026-10-21 en staging; 4B (filtros del buscador) pendiente
+### [x] SRV-20 · Perfil S.I.R.V.E. — ETAPAS 1–3 HECHAS 2026-10-20; etapa 4 (invitación desde el grupo + filtros del padrón) 2026-10-21; 4A en producción, 4B en staging
 
 **Decisiones de Floriana al construirlo (2026-10-20):**
 - UNA tabla y UNA pestaña: va en `member_spiritual_data` junto al bautismo, y la
@@ -3023,7 +3023,19 @@ invitado), y quien no tiene correo o apagó los avisos no cuenta, porque si no
 el botón se queda para siempre en «enviar» y el reenvío nunca sale.
 **Pendiente:** sembrar el formulario en producción con la audiencia nueva
 antes de que alguien apriete el botón ahí (`ENV_FILE` por defecto, `--aplicar`).
-Parte B (filtros por dones/habilidades/profesión en el buscador) sin empezar.
+
+**Etapa 4, parte B — HECHA 2026-10-21 (staging): filtros del padrón.** En
+Filtros → Perfil: «Formación académica / Profesión» (texto libre sobre
+`members.occupation`, busca dentro del texto) y cuatro desplegables de
+selección múltiple sobre los catálogos del perfil: Dones (test u oración),
+Habilidades, Pasiones y Estilo (primario o secundario). Los cuatro de
+S.I.R.V.E. solo los ve quien lee el perfil (`puedeLeerSirve`) y el servidor
+rechaza con 403 en /api/members, /ids y /export si llegan sin el rol: no se
+sanean en silencio, porque una lista que ignora parte de su filtro se
+ensancha sola. No entran como audiencia de grupos ni formularios. Módulo puro
+`lib/members/filtros-sirve.ts`; cada condición aporta UN set, así que se
+pueden negar («Excepto —») como las demás. Etapa 4 cerrada; las búsquedas
+por texto libre de «otros dones» u «otras habilidades» no se hicieron.
 
 #### Texto original del pedido (referencia)
 

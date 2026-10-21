@@ -1,4 +1,5 @@
 import { createAdminClient, type TableName } from '@/lib/supabase/admin'
+import { patronDeProfesion } from '@/lib/members/filtros-sirve'
 import type { MemberRole } from '@/types/member'
 import type { FilterCondition, ConditionGroup } from '@/types/filters'
 import { evaluateUnits } from '@/lib/filter-units'
@@ -789,6 +790,45 @@ export async function resolveAdvancedConditions(
       }
       case 'marital': {
         res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id', scopeIds))
+        break
+      }
+      /**
+       * SRV-20 (etapa 4B) · Perfil S.I.R.V.E. Cada condición aporta UN set (la
+       * unión de lo marcado), que es lo que `NegableCondition` necesita. Los
+       * dones viven en dos columnas (test y oración) y el estilo en dos
+       * (primario y secundario): se consultan por separado y se unen.
+       * La puerta por rol NO está acá —este resolvedor también evalúa
+       * audiencias guardadas—; está en /api/members y hermanas.
+       */
+      case 'sirve_don':
+      case 'sirve_habilidad':
+      case 'sirve_pasion':
+      case 'sirve_estilo': {
+        const valores = c.values.filter(v => typeof v === 'string' && v.trim())
+        const set = new Set<string>()
+        if (valores.length > 0) {
+          const columnas: Record<typeof c.type, Array<{ col: string; modo: 'ov' | 'in' }>> = {
+            sirve_don: [{ col: 'dones_test', modo: 'ov' }, { col: 'dones_oracion', modo: 'ov' }],
+            sirve_habilidad: [{ col: 'habilidades', modo: 'ov' }],
+            sirve_pasion: [{ col: 'pasiones', modo: 'ov' }],
+            sirve_estilo: [{ col: 'estilo_primario', modo: 'in' }, { col: 'estilo_secundario', modo: 'in' }],
+          }
+          for (const { col, modo } of columnas[c.type]) {
+            const parcial = await pagedIds(
+              q => modo === 'ov' ? q.overlaps(col, valores) : q.in(col, valores),
+              'member_spiritual_data', 'member_id', 'member_id', scopeIds,
+            )
+            for (const id of parcial) set.add(id)
+          }
+        }
+        res.include.push(set)
+        break
+      }
+      case 'profesion': {
+        const patron = patronDeProfesion(c.text ?? '')
+        res.include.push(patron
+          ? await pagedIds(q => q.ilike('occupation', patron), 'members', 'member_id:id', 'id', scopeIds)
+          : new Set<string>())
         break
       }
       case 'account': {

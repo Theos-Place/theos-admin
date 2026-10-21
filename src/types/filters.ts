@@ -77,6 +77,19 @@ export type FilterCondition = NegableCondition & (
   | { id: number; group: 'server'; type: 'server'; value: 'yes' | 'no' }
   | { id: number; group: 'marital'; type: 'marital'; value: string }
   /**
+   * SRV-20 (etapa 4B) · El perfil S.I.R.V.E., de selección MÚLTIPLE (unión),
+   * como los de dirigente. Dones busca en los del test Y en los de oración;
+   * estilo, en el primario Y el secundario. Solo quien lee el perfil
+   * (`puedeLeerSirve`): la pantalla esconde el bloque y el servidor rechaza
+   * la consulta (ver lib/members/filtros-sirve.ts).
+   */
+  | { id: number; group: 'sirve'; type: 'sirve_don'; values: string[] }
+  | { id: number; group: 'sirve'; type: 'sirve_habilidad'; values: string[] }
+  | { id: number; group: 'sirve'; type: 'sirve_pasion'; values: string[] }
+  | { id: number; group: 'sirve'; type: 'sirve_estilo'; values: string[] }
+  /** Texto libre sobre `members.occupation` («Formación académica / Profesión»). */
+  | { id: number; group: 'profesion'; type: 'profesion'; text: string }
+  /**
    * REC-1 · Tiene este ROL del sistema (`member_roles` activo), lo haya dado
    * alguien a mano o un puesto (roles automáticos por puesto). Solo se ofrece
    * donde se pide explícitamente con `allowedTypes`: en el padrón diría quién

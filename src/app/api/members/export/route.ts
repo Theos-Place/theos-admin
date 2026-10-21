@@ -6,6 +6,8 @@ import { rateLimit } from '@/lib/rate-limit'
 import { getMemberIds, getMembersByIds } from '@/lib/supabase/queries/members'
 import { parseGroupsParam, parseOpsParam } from '@/lib/filter-units'
 import { canSeeLeaderAdminStatus } from '@/lib/studies/leader-admin-status'
+import { tieneCondicionesSirve } from '@/lib/members/filtros-sirve'
+import { puedeLeerSirve } from '@/lib/servers/perfil-sirve'
 import { reportarError } from '@/lib/observabilidad'
 
 // GET: devuelve TODOS los miembros que coinciden con los filtros (sin paginar),
@@ -60,6 +62,12 @@ export async function GET(req: NextRequest) {
         const parsed = JSON.parse(rawConditions)
         if (Array.isArray(parsed)) conditions = parsed
       } catch { /* condiciones malformadas → se ignoran */ }
+    }
+    // SRV-20 (etapa 4B) · Filtrar por el perfil S.I.R.V.E. es leerlo persona
+    // por persona: solo quien puede leerlo. Se rechaza, no se sanea en
+    // silencio (ver lib/members/filtros-sirve.ts).
+    if (tieneCondicionesSirve(conditions) && !puedeLeerSirve(auth.ctx?.roles)) {
+      return NextResponse.json({ error: 'No autorizado' }, { status: 403 })
     }
 
     // PostgREST corta cada respuesta en ~1000 filas, así que una sola query

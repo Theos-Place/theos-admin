@@ -22,6 +22,8 @@ import type { FormTemplate } from '@/types/forms'
 import type { FilterCondition, AddableCondition, StudyStatus, AttendanceType, ServiceStatus, FormResponseStatus, QtyOperator, TicketStatus } from '@/types/filters'
 import { ACCOUNT_STATE_LABEL } from '@/lib/members/account-state'
 import { ROLES, BASE_ROLE } from '@/lib/auth/roles'
+import { DONES, ESTILOS, HABILIDADES, PASIONES, AYUDA_ESTILO, puedeLeerSirve } from '@/lib/servers/perfil-sirve'
+import { TIPOS_SIRVE, type TipoSirve, type CondicionSirve } from '@/lib/members/filtros-sirve'
 
 const FORM_CATEGORY_LABEL: Record<FormTemplate['category'], string> = {
   event_registration: 'Inscripción eventos',
@@ -905,12 +907,54 @@ function SelectorDeEstudios({
 }) {
   const cond = conditions.find(c => c.type === tipo) as
     Extract<FilterCondition, { type: 'leader_trained' | 'leader_teaching' | 'leader_available' }> | undefined
-  const elegidos = cond?.studies ?? []
+  return (
+    <SelectorMultiple
+      etiqueta={etiqueta} ayuda={ayuda} opciones={opciones} elegidos={cond?.studies ?? []}
+      onCambiar={siguiente => {
+        if (cond) removeCondition(cond.id)
+        if (siguiente.length > 0) addCondition({ group: 'leader', type: tipo, studies: siguiente } as AddableCondition)
+      }}
+    />
+  )
+}
 
+/**
+ * SRV-20 (etapa 4B) · El mismo desplegable para los catálogos del perfil
+ * S.I.R.V.E. (dones, habilidades, pasiones, estilo). La condición lleva
+ * `values` y no `studies`; lo demás es idéntico.
+ */
+function SelectorSirve({
+  etiqueta, ayuda, tipo, opciones, conditions, addCondition, removeCondition,
+}: {
+  etiqueta: string
+  ayuda: string
+  tipo: TipoSirve
+  opciones: readonly string[]
+  conditions: FilterCondition[]
+  addCondition: (c: AddableCondition) => void
+  removeCondition: (id: number) => void
+}) {
+  const cond = conditions.find(c => c.type === tipo) as CondicionSirve | undefined
+  return (
+    <SelectorMultiple
+      etiqueta={etiqueta} ayuda={ayuda} opciones={opciones.map(v => ({ value: v, label: v }))} elegidos={cond?.values ?? []}
+      onCambiar={siguiente => {
+        if (cond) removeCondition(cond.id)
+        if (siguiente.length > 0) addCondition({ group: 'sirve', type: tipo, values: siguiente } as AddableCondition)
+      }}
+    />
+  )
+}
+
+function SelectorMultiple({ etiqueta, ayuda, opciones, elegidos, onCambiar }: {
+  etiqueta: string
+  ayuda: string
+  opciones: Array<{ value: string; label: string }>
+  elegidos: string[]
+  onCambiar: (siguiente: string[]) => void
+}) {
   function alternar(valor: string) {
-    const siguiente = elegidos.includes(valor) ? elegidos.filter(v => v !== valor) : [...elegidos, valor]
-    if (cond) removeCondition(cond.id)
-    if (siguiente.length > 0) addCondition({ group: 'leader', type: tipo, studies: siguiente } as AddableCondition)
+    onCambiar(elegidos.includes(valor) ? elegidos.filter(v => v !== valor) : [...elegidos, valor])
   }
 
   /**
@@ -951,7 +995,7 @@ function SelectorDeEstudios({
           {elegidos.length > 0 && (
             <button
               type="button"
-              onClick={() => { if (cond) removeCondition(cond.id) }}
+              onClick={() => onCambiar([])}
               className="w-full text-left px-1.5 py-1 text-[13px] text-navy-light/80 hover:text-coral-deep transition-colors font-body underline"
             >
               Limpiar la selección
@@ -995,6 +1039,25 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
   const statusVal = statusCond ? statusCond.value : 'any'
   const maritalVal = maritalCond ? maritalCond.value : 'any'
   const accountVal = accountCond ? accountCond.value : 'any'
+
+  // SRV-20 (etapa 4B) · El perfil S.I.R.V.E. solo lo lee quien dice
+  // puedeLeerSirve; el servidor rechaza igual (403), esto solo evita ofrecer
+  // un filtro que va a fallar. La profesión no está detrás de la puerta.
+  const { user: usuario } = useAuth()
+  const leeSirve = puedeLeerSirve(usuario?.roles)
+  const profesionCond = conditions.find(c => c.type === 'profesion') as Extract<FilterCondition, { type: 'profesion' }> | undefined
+  const [profesion, setProfesion] = useState(profesionCond?.text ?? '')
+  const [profesionPrevia, setProfesionPrevia] = useState(profesionCond?.id)
+  if (profesionPrevia !== profesionCond?.id) {
+    setProfesionPrevia(profesionCond?.id)
+    if (!profesionCond) setProfesion('')
+  }
+  function fijarProfesion() {
+    const t = profesion.trim()
+    if (profesionCond && profesionCond.text === t) return
+    if (profesionCond) removeCondition(profesionCond.id)
+    if (t) addCondition({ group: 'profesion', type: 'profesion', text: t })
+  }
 
   const [ageMin, setAgeMin] = useState(ageCond?.min ?? '')
   const [ageMax, setAgeMax] = useState(ageCond?.max ?? '')
@@ -1076,6 +1139,40 @@ function ProfilePanel({ conditions, addCondition, removeCondition, allowedTypes 
         </Sel>
       </div>}
 
+      {permite('profesion') && <div>
+        <Label>Formación académica / Profesión</Label>
+        <input
+          type="text"
+          aria-label="Formación académica / Profesión"
+          value={profesion}
+          onChange={e => setProfesion(e.target.value)}
+          onBlur={fijarProfesion}
+          onKeyDown={e => { if (e.key === 'Enter') { e.preventDefault(); fijarProfesion() } }}
+          placeholder="Ej. contador, enfermería, diseño"
+          className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body placeholder:text-navy-light/80"
+        />
+        <p className="mt-1.5 text-[13px] text-navy-light/80 font-body">
+          Busca dentro del texto: «conta» encuentra «Contador público». Enter o salir del campo lo aplica.
+        </p>
+      </div>}
+
+      {leeSirve && permite('sirve_don') && (
+        <SelectorSirve etiqueta="Dones" ayuda="Los del test o los que descubrió en oración: cualquiera de los marcados."
+          tipo="sirve_don" opciones={DONES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
+      )}
+      {leeSirve && permite('sirve_habilidad') && (
+        <SelectorSirve etiqueta="Habilidades" ayuda="Cualquiera de las marcadas."
+          tipo="sirve_habilidad" opciones={HABILIDADES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
+      )}
+      {leeSirve && permite('sirve_pasion') && (
+        <SelectorSirve etiqueta="Pasiones" ayuda="A quiénes le gustaría servir: cualquiera de las marcadas."
+          tipo="sirve_pasion" opciones={PASIONES} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
+      )}
+      {leeSirve && permite('sirve_estilo') && (
+        <SelectorSirve etiqueta="Estilo" ayuda={`Primario o secundario. ${ESTILOS.map(e => `${e}: ${AYUDA_ESTILO[e].replace(/\.$/, '')}`).join(' · ')}.`}
+          tipo="sirve_estilo" opciones={ESTILOS} conditions={conditions} addCondition={addCondition} removeCondition={removeCondition} />
+      )}
+
       {permite('status') && <div>
         <Label>Estado del perfil</Label>
         <Sel label="Estado del perfil" value={statusVal} onChange={v => {
@@ -1146,6 +1243,8 @@ export function AdvancedFilters({ conditions, addCondition: agregarCruda, remove
    * hay que marcar la condición.
    */
   const [excluir, setExcluir] = useState(false)
+  const { user: usuarioDelShell } = useAuth()
+  const leeSirve = puedeLeerSirve(usuarioDelShell?.roles)
   const addCondition = useCallback((c: AddableCondition) => {
     // XOR y no OR: «Excepto — no asistió» es, literalmente, quienes SÍ
     // asistieron. Los paneles de asistencia e inscripción traen su propio
@@ -1163,7 +1262,9 @@ export function AdvancedFilters({ conditions, addCondition: agregarCruda, remove
     // lados: dos controles que escriben la misma condición se pisan y el
     // usuario no sabe cuál manda.
     leader:  (['leader', 'leader_state', 'leader_trained', 'leader_teaching', 'leader_available'] as const).filter(permite),
-    profile: [...(['donor', 'age', 'status', 'marital', 'account', 'created'] as const).filter(permite),
+    profile: [...(['donor', 'age', 'status', 'marital', 'account', 'created', 'profesion'] as const).filter(permite),
+      // SRV-20 (etapa 4B) · Solo quien lee el perfil S.I.R.V.E.
+      ...(leeSirve ? TIPOS_SIRVE.filter(permite) : []),
       ...(allowedTypes?.includes('role') ? ['role' as const] : [])],
   }
   // Una pestaña sin condiciones permitidas no se pinta.
