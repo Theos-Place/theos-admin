@@ -3,15 +3,18 @@
 import { useState, useEffect } from 'react'
 import { Check, Loader2, Sparkles } from 'lucide-react'
 
+import { PerfilSirve } from '@/components/members/PerfilSirve'
+
 type Spiritual = {
   baptism_date: string | null
   baptism_place: string | null
-  spiritual_gifts: string | null
 }
 
-/** Tab "Espiritual": datos de member_spiritual_data. Editable por el propio
- *  miembro (su fila) y por roles administrativos. La autorización real vive en
- *  la API + RLS; acá solo se edita y guarda. */
+/** Tab "Espiritual": datos de member_spiritual_data. El bautismo lo edita el
+ *  propio miembro (su fila) y los roles administrativos. Debajo, el perfil
+ *  S.I.R.V.E. (SRV-20): lo edita solo la persona; los roles de lectura lo
+ *  ven, y a los demás la API no se lo manda. La autorización real vive en la
+ *  API; acá solo se edita y guarda. */
 export function MemberSpiritualTab({ memberId }: { memberId: string }) {
   const [data, setData] = useState<Spiritual | null>(null)
   const [loading, setLoading] = useState(true)
@@ -30,7 +33,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
         }
         return r.json()
       })
-      .then((d: Spiritual) => { if (alive) { setData(d); setError(null) } })
+      .then((d: Spiritual) => { if (alive) { setData({ baptism_date: d.baptism_date, baptism_place: d.baptism_place }); setError(null) } })
       .catch((e: Error) => { if (alive) setError(e.message || 'No se pudieron cargar los datos espirituales.') })
       .finally(() => { if (alive) setLoading(false) })
     return () => { alive = false }
@@ -79,10 +82,11 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
   }
 
   return (
+    <div className="space-y-5">
     <div className="rounded-2xl bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-5">
       <div className="flex items-center gap-2">
         <Sparkles size={15} className="text-teal-deep" />
-        <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Datos espirituales</p>
+        <p className="text-[11px] uppercase tracking-wider text-navy-light/80 font-display">Bautismo</p>
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -96,11 +100,6 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
         </div>
       </div>
 
-      <div>
-        <label htmlFor="dones-espirituales" className={labelCls}>Dones espirituales</label>
-        <textarea id="dones-espirituales" rows={4} className={`${inputCls} resize-none`} placeholder="Dones, talentos o áreas de servicio…" value={data?.spiritual_gifts ?? ''} onChange={e => set('spiritual_gifts', e.target.value)} />
-      </div>
-
       <div className="flex items-center gap-3">
         <button
           type="button"
@@ -112,6 +111,10 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
         </button>
         {error && data && <span className="text-[13px] text-coral-deep font-body">No se pudo guardar. Intentá de nuevo.</span>}
       </div>
+    </div>
+
+    {/* SRV-20 · Los dones viven acá, en el perfil S.I.R.V.E. (no se repiten). */}
+    <PerfilSirve memberId={memberId} />
     </div>
   )
 }

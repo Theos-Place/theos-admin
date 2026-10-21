@@ -21,6 +21,7 @@ import { MemberDigitalPass } from './_components/MemberDigitalPass'
 import { MemberPersonalTab } from './_components/MemberPersonalTab'
 import { MemberEmailStatus } from './_components/MemberEmailStatus'
 import { MemberSpiritualTab } from './_components/MemberSpiritualTab'
+import { puedeLeerSirve } from '@/lib/servers/perfil-sirve'
 import { MemberAdminTab } from './_components/MemberAdminTab'
 import { MemberRecommendations } from './_components/MemberRecommendations'
 import { MemberParticipationTab } from './_components/MemberParticipationTab'
@@ -77,9 +78,11 @@ export default function MiembroDetailPage() {
   // historial todas las pantallas del módulo se ven iguales.
   useTituloDePantalla(member && `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim(), 'Miembros')
   const { studyTypes } = useStudyPlans()
-  const { hasRole, member: viewer } = useAuth()
+  const { hasRole, member: viewer, user } = useAuth()
 
   const isStudyAdmin = hasRole(...STUDY_ADMIN_ROLES)
+  // SRV-20 · Los roles que leen el perfil S.I.R.V.E. también ven la pestaña.
+  const leeSirve = puedeLeerSirve(user?.roles)
   // Onboarding de servidores: estos roles también entran al tab Administrativo,
   // pero ahí solo ven su sección (el API no les da los datos de estudios).
   const isServersOnboardingAdmin = hasRole('admin', 'encargado_staff', 'coordinador_servidores')
@@ -345,7 +348,7 @@ export default function MiembroDetailPage() {
     // y solo para ella misma o para quien gestiona estudios. No es un tab más
     // del perfil: es el lugar donde el dirigente mantiene sus propios datos.
     ...(tieneFichaDeDirigente && (isOwnProfile || isStudyAdmin) ? [{ id: 'dirigente', label: 'Dirigente' }] : []),
-    ...(isOwnProfile || isStudyAdmin ? [{ id: 'espiritual', label: 'Espiritual' }] : []),
+    ...(isOwnProfile || isStudyAdmin || leeSirve ? [{ id: 'espiritual', label: 'Espiritual y S.I.R.V.E.' }] : []),
     ...(isStudyAdmin || isServersOnboardingAdmin ? [{ id: 'administrativo', label: 'Administrativo' }] : []),
     PASE_TAB,
   ]
@@ -480,7 +483,7 @@ export default function MiembroDetailPage() {
       )}
 
       {/* TAB: Espiritual (propio miembro o roles administrativos) */}
-      {activeTab === 'espiritual' && (isOwnProfile || isStudyAdmin) && (
+      {activeTab === 'espiritual' && (isOwnProfile || isStudyAdmin || leeSirve) && (
         <MemberSpiritualTab memberId={member.id} />
       )}
 

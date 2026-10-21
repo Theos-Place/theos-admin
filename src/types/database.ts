@@ -2494,23 +2494,80 @@ export type Database = {
         Row: {
           baptism_date: string | null
           baptism_place: string | null
+          dones_oracion: string[]
+          dones_test: string[]
+          editado_en_sistema_at: string | null
+          estilo_primario: string | null
+          estilo_secundario: string | null
+          formacion: string | null
+          habilidades: string[]
           member_id: string
-          spiritual_gifts: string | null
+          motivo_salida: string | null
+          ocupacion: string | null
+          oracion_sin_dones: boolean
+          otras_habilidades: string | null
+          otras_pasiones: string | null
+          otros_dones: string | null
+          pasiones: string[]
+          que_espera: string | null
+          sirve_ccb_response_id: string | null
+          sirve_ccb_submitted_at: string | null
+          sirve_fuente: string | null
+          trayectoria: string | null
           updated_at: string
+          updated_by: string | null
         }
         Insert: {
           baptism_date?: string | null
           baptism_place?: string | null
+          dones_oracion?: string[]
+          dones_test?: string[]
+          editado_en_sistema_at?: string | null
+          estilo_primario?: string | null
+          estilo_secundario?: string | null
+          formacion?: string | null
+          habilidades?: string[]
           member_id: string
-          spiritual_gifts?: string | null
+          motivo_salida?: string | null
+          ocupacion?: string | null
+          oracion_sin_dones?: boolean
+          otras_habilidades?: string | null
+          otras_pasiones?: string | null
+          otros_dones?: string | null
+          pasiones?: string[]
+          que_espera?: string | null
+          sirve_ccb_response_id?: string | null
+          sirve_ccb_submitted_at?: string | null
+          sirve_fuente?: string | null
+          trayectoria?: string | null
           updated_at?: string
+          updated_by?: string | null
         }
         Update: {
           baptism_date?: string | null
           baptism_place?: string | null
+          dones_oracion?: string[]
+          dones_test?: string[]
+          editado_en_sistema_at?: string | null
+          estilo_primario?: string | null
+          estilo_secundario?: string | null
+          formacion?: string | null
+          habilidades?: string[]
           member_id?: string
-          spiritual_gifts?: string | null
+          motivo_salida?: string | null
+          ocupacion?: string | null
+          oracion_sin_dones?: boolean
+          otras_habilidades?: string | null
+          otras_pasiones?: string | null
+          otros_dones?: string | null
+          pasiones?: string[]
+          que_espera?: string | null
+          sirve_ccb_response_id?: string | null
+          sirve_ccb_submitted_at?: string | null
+          sirve_fuente?: string | null
+          trayectoria?: string | null
           updated_at?: string
+          updated_by?: string | null
         }
         Relationships: [
           {
