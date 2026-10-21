@@ -1,6 +1,12 @@
 /**
- * SRV-20 · Perfil S.I.R.V.E.: dones, estilo, formación, habilidades, pasión y
- * trayectoria de servicio de cada persona.
+ * SRV-20 · Perfil S.I.R.V.E.: dones, estilo, habilidades y pasión por servir
+ * de cada persona.
+ *
+ * Decisión de Floriana (2026-10-21): la formación/profesión NO vive acá — es
+ * UN solo campo, «Formación académica / Profesión», espejado con
+ * `members.occupation` (la Profesión de la ficha personal): si se edita en un
+ * lado cambia en el otro. Y la trayectoria de servicio se quitó: el sistema ya
+ * la sabe por los puestos de servicio.
  *
  * Lo llenaban los estudiantes de Sirviendo como Jesús en un formulario de CCB
  * (el 128) después de la oración de envío, y quedaba ahí: nadie lo podía
@@ -70,28 +76,21 @@ export type PerfilSirve = {
   otros_dones: string | null
   estilo_primario: string | null
   estilo_secundario: string | null
-  formacion: string | null
-  ocupacion: string | null
   habilidades: string[]
   otras_habilidades: string | null
   pasiones: string[]
   otras_pasiones: string | null
-  trayectoria: string | null
-  motivo_salida: string | null
-  que_espera: string | null
 }
 
 export const CAMPOS_SIRVE = [
   'dones_test', 'dones_oracion', 'oracion_sin_dones', 'otros_dones', 'estilo_primario', 'estilo_secundario',
-  'formacion', 'ocupacion', 'habilidades', 'otras_habilidades', 'pasiones', 'otras_pasiones',
-  'trayectoria', 'motivo_salida', 'que_espera',
+  'habilidades', 'otras_habilidades', 'pasiones', 'otras_pasiones',
 ] as const satisfies readonly (keyof PerfilSirve)[]
 
 export const PERFIL_VACIO: PerfilSirve = {
   dones_test: [], dones_oracion: [], oracion_sin_dones: false, otros_dones: null,
-  estilo_primario: null, estilo_secundario: null, formacion: null, ocupacion: null,
+  estilo_primario: null, estilo_secundario: null,
   habilidades: [], otras_habilidades: null, pasiones: [], otras_pasiones: null,
-  trayectoria: null, motivo_salida: null, que_espera: null,
 }
 
 const texto = z.string().trim().max(2000).nullable().transform(v => v || null)
@@ -107,15 +106,10 @@ export const esquemaDePerfilSirve = z.object({
   otros_dones: texto,
   estilo_primario: estilo,
   estilo_secundario: estilo,
-  formacion: texto,
-  ocupacion: texto,
   habilidades: delCatalogo(HABILIDADES),
   otras_habilidades: texto,
   pasiones: delCatalogo(PASIONES),
   otras_pasiones: texto,
-  trayectoria: texto,
-  motivo_salida: texto,
-  que_espera: texto,
 }).partial().strict()
 
 /** «Ninguno en la oración» y una lista de dones no conviven: gana lo último que se marcó. */
@@ -167,4 +161,24 @@ export function repartirDones(texto: string | null | undefined): { catalogo: str
     else if (!o) otros.push(p)
   }
   return { catalogo, otros: otros.length ? otros.join(', ') : null }
+}
+
+/**
+ * Une en UN texto la Profesión de la ficha y lo que trajo CCB (formación y
+ * ocupación), para `members.occupation`. Decisión de Floriana (2026-10-21,
+ * «juntar los dos»): nada se pierde. Sin repetir («Abogado · Abogado» es
+ * «Abogado»), sin importar mayúsculas ni tildes, y la ficha va primero porque
+ * es lo más reciente.
+ */
+export function unirProfesion(...partes: Array<string | null | undefined>): string | null {
+  const vistas = new Set<string>()
+  const out: string[] = []
+  for (const p of partes) {
+    const t = (p ?? '').trim()
+    if (!t) continue
+    const k = plano(t)
+    if (vistas.has(k)) continue
+    vistas.add(k); out.push(t)
+  }
+  return out.length ? out.join(' · ') : null
 }

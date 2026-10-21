@@ -54,6 +54,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       .maybeSingle()
     if (error) throw error
     const fila = (data ?? null) as (Record<string, unknown> & PerfilSirve) | null
+    // La Profesión vive en la ficha (members.occupation): es el campo espejo
+    // «Formación académica / Profesión» del S.I.R.V.E. (2026-10-21).
+    const { data: ficha } = await supabase.from('members').select('occupation').eq('id', id).maybeSingle()
     const sirve: PerfilSirve = fila
       ? Object.fromEntries(CAMPOS_SIRVE.map(k => [k, fila[k] ?? PERFIL_VACIO[k]])) as PerfilSirve
       : PERFIL_VACIO
@@ -64,6 +67,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       sirve: leeSirve ? sirve : null,
       sirve_editable: esPropio || auth.ctx.roles.includes('admin'),
       sirve_fuente: leeSirve ? (fila?.sirve_fuente ?? null) : null,
+      occupation: leeSirve ? ((ficha as { occupation: string | null } | null)?.occupation ?? null) : null,
     })
   } catch (error) {
     reportarError('GET /api/members/[id]/spiritual:', error)

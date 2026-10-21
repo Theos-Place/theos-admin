@@ -484,7 +484,7 @@ export default function MiembroDetailPage() {
 
       {/* TAB: Espiritual (propio miembro o roles administrativos) */}
       {activeTab === 'espiritual' && (isOwnProfile || isStudyAdmin || leeSirve) && (
-        <MemberSpiritualTab memberId={member.id} />
+        <MemberSpiritualTab memberId={member.id} onActualizado={refetch} />
       )}
 
       {/* TAB: Administrativo (solo roles administrativos) */}

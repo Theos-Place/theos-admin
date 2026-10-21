@@ -104,12 +104,13 @@ function dbPorApi(): Db {
 const db: Db = env.SUPABASE_DB_PASSWORD ? dbDirecta() : dbPorApi()
 if (!env.SUPABASE_DB_PASSWORD && APLICAR) console.log('(aviso: por la API no hay transacción; el upsert es idempotente y se puede re-correr)')
 
-// Columnas por POSICIÓN (las 17, 23 y 25 no tienen encabezado).
+// Columnas por POSICIÓN (las 17, 23 y 25 no tienen encabezado). Las 19, 21,
+// 29, 30 y 31 (formación, ocupación, trayectoria) ya NO se importan:
+// decisión de Floriana 2026-10-21 — la profesión vive en members.occupation.
 const C = {
   fecha: 0, responseId: 2, individualId: 5, email: 8,
-  donesTest: 15, donesOracion: 16, otrosDones: 17, estilo1: 18, formacion: 19, estilo2: 20, ocupacion: 21,
+  donesTest: 15, donesOracion: 16, otrosDones: 17, estilo1: 18, estilo2: 20,
   habilidades: 22, otrasHabilidades: 23, pasiones: 24, otrasPasiones: 25,
-  queEspera: 29, trayectoria: 30, motivoSalida: 31,
 } as const
 
 const SIN_DONES_EN_ORACION = /no me dijeron ninguno/i
@@ -150,15 +151,10 @@ function perfilDeFila(f: string[]): PerfilSirve {
     otros_dones: unir(...test.sobra, ...oracion.sobra, otros.otros),
     estilo_primario: estilo(f[C.estilo1]),
     estilo_secundario: estilo(f[C.estilo2]),
-    formacion: limpiar(f[C.formacion]),
-    ocupacion: limpiar(f[C.ocupacion]),
     habilidades: hab.enCatalogo,
     otras_habilidades: unir(...hab.sobra, limpiar(f[C.otrasHabilidades])),
     pasiones: pas.enCatalogo,
     otras_pasiones: unir(...pas.sobra, limpiar(f[C.otrasPasiones])),
-    trayectoria: limpiar(f[C.trayectoria]),
-    motivo_salida: limpiar(f[C.motivoSalida]),
-    que_espera: limpiar(f[C.queEspera]),
   }
 }
 
@@ -239,18 +235,17 @@ async function main() {
       const p = perfilDeFila(r.f)
       await db.query(`
         insert into member_spiritual_data (member_id, dones_test, dones_oracion, oracion_sin_dones, otros_dones, estilo_primario, estilo_secundario,
-          formacion, ocupacion, habilidades, otras_habilidades, pasiones, otras_pasiones, trayectoria, motivo_salida, que_espera,
+          habilidades, otras_habilidades, pasiones, otras_pasiones,
           sirve_fuente, sirve_ccb_response_id, sirve_ccb_submitted_at, updated_at)
-        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16,'ccb',$17,$18,now())
+        values ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,'ccb',$12,$13,now())
         on conflict (member_id) do update set
           dones_test=excluded.dones_test, dones_oracion=excluded.dones_oracion, oracion_sin_dones=excluded.oracion_sin_dones, otros_dones=excluded.otros_dones,
-          estilo_primario=excluded.estilo_primario, estilo_secundario=excluded.estilo_secundario, formacion=excluded.formacion, ocupacion=excluded.ocupacion,
+          estilo_primario=excluded.estilo_primario, estilo_secundario=excluded.estilo_secundario,
           habilidades=excluded.habilidades, otras_habilidades=excluded.otras_habilidades, pasiones=excluded.pasiones, otras_pasiones=excluded.otras_pasiones,
-          trayectoria=excluded.trayectoria, motivo_salida=excluded.motivo_salida, que_espera=excluded.que_espera,
           sirve_fuente='ccb', sirve_ccb_response_id=excluded.sirve_ccb_response_id, sirve_ccb_submitted_at=excluded.sirve_ccb_submitted_at, updated_at=now()
         where member_spiritual_data.editado_en_sistema_at is null`,
         [r.memberId, p.dones_test, p.dones_oracion, p.oracion_sin_dones, p.otros_dones, p.estilo_primario, p.estilo_secundario,
-          p.formacion, p.ocupacion, p.habilidades, p.otras_habilidades, p.pasiones, p.otras_pasiones, p.trayectoria, p.motivo_salida, p.que_espera,
+          p.habilidades, p.otras_habilidades, p.pasiones, p.otras_pasiones,
           r.f[C.responseId], new Date(fecha(r.f)).toISOString()])
       n++
     }

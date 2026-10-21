@@ -15,7 +15,10 @@ type Spiritual = {
  *  S.I.R.V.E. (SRV-20): lo edita solo la persona; los roles de lectura lo
  *  ven, y a los demás la API no se lo manda. La autorización real vive en la
  *  API; acá solo se edita y guarda. */
-export function MemberSpiritualTab({ memberId }: { memberId: string }) {
+/** `onActualizado`: la Profesión del S.I.R.V.E. es `members.occupation`; al
+ *  guardarla hay que refrescar la ficha o Info Personal sigue mostrando lo
+ *  viejo hasta recargar (visto en staging, 2026-10-21). */
+export function MemberSpiritualTab({ memberId, onActualizado }: { memberId: string; onActualizado?: () => void }) {
   const [data, setData] = useState<Spiritual | null>(null)
   const [loading, setLoading] = useState(true)
   // El mensaje y no un booleano: un 403 y una caída se arreglan distinto.
@@ -114,7 +117,7 @@ export function MemberSpiritualTab({ memberId }: { memberId: string }) {
     </div>
 
     {/* SRV-20 · Los dones viven acá, en el perfil S.I.R.V.E. (no se repiten). */}
-    <PerfilSirve memberId={memberId} />
+    <PerfilSirve memberId={memberId} onActualizado={onActualizado} />
     </div>
   )
 }

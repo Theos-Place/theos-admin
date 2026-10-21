@@ -2983,6 +2983,16 @@ modo formulario), PATCH con zod + audit_log, formulario espejo con audiencia
 `scripts/srv20/importar-perfil-sirve-ccb.ts` (dry run en producción: 956 de 970
 resueltas, 0 ambiguas, 14 sin ficha).
 
+**Ajuste del 2026-10-21 (Floriana), en staging:** la formación y la ocupación
+se FUNDEN en UN campo «Formación académica / Profesión» que es
+`members.occupation` — el mismo «Profesión» de Info Personal, editado con el
+mismo control y el mismo PATCH, y la ficha se refresca al guardar desde el
+S.I.R.V.E. Regla «juntar los dos» (`unirProfesion`): ficha · formación ·
+ocupación, sin repetir. Dry run en producción: 581 → 1254 fichas con
+Profesión, 935 unidas. Y se QUITA la trayectoria de servicio (3 campos): el
+sistema la sabe por los puestos. Migración `20261021120000`; lo borrado queda
+en `docs/correcciones/2026-10-21-perfil-sirve-profesion-unica.json`.
+
 **APLICADO EN PRODUCCIÓN 2026-10-21.** Import: 956 resueltas → 952 filas
 (4 colapsaron porque dos IDs de CCB apuntan a la misma ficha fusionada).
 De los 14 sin ficha, 11 se asociaron por TELÉFONO (8 dígitos, exactamente una

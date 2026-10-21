@@ -17,6 +17,7 @@
 import { useState, useEffect, useCallback } from 'react'
 import { Pencil, Check, Loader2, Sparkles } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { CampoPerfilEditable } from '@/components/members/CampoPerfilEditable'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import {
   DONES, ESTILOS, AYUDA_ESTILO, HABILIDADES, PASIONES, resumenDeLista, tieneAlgo,
@@ -30,10 +31,11 @@ const CHIP_OFF = 'bg-transparent text-navy/80 border-[var(--outline-variant)] ho
 const INPUT = 'w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 const LABEL = 'text-[11px] uppercase tracking-wider text-navy-light/80 font-display'
 
-type Respuesta = { sirve: Perfil | null; sirve_editable: boolean; sirve_fuente: string | null }
+type Respuesta = { sirve: Perfil | null; sirve_editable: boolean; sirve_fuente: string | null; occupation: string | null }
 
-export function PerfilSirve({ memberId, modo = 'resumen' }: { memberId: string; modo?: 'resumen' | 'formulario' }) {
+export function PerfilSirve({ memberId, modo = 'resumen', onActualizado }: { memberId: string; modo?: 'resumen' | 'formulario'; onActualizado?: () => void }) {
   const [p, setP] = useState<Perfil | null>(null)
+  const [profesion, setProfesion] = useState<string | null>(null)
   const [editable, setEditable] = useState(false)
   const [fuente, setFuente] = useState<string | null>(null)
   const [error, setError] = useState<string | null>(null)
@@ -44,7 +46,7 @@ export function PerfilSirve({ memberId, modo = 'resumen' }: { memberId: string; 
     let vivo = true
     fetch(`/api/members/${memberId}/spiritual`)
       .then(async r => { if (!r.ok) throw new Error(await mensajeDeLaRespuesta(r, 'No se pudo cargar el perfil S.I.R.V.E.')); return r.json() as Promise<Respuesta> })
-      .then(d => { if (!vivo) return; setP(d.sirve); setEditable(d.sirve_editable); setFuente(d.sirve_fuente); setError(null) })
+      .then(d => { if (!vivo) return; setP(d.sirve); setEditable(d.sirve_editable); setFuente(d.sirve_fuente); setProfesion(d.occupation ?? null); setError(null) })
       .catch((e: Error) => { if (vivo) setError(e.message) })
       .finally(() => { if (vivo) setCargando(false) })
     return () => { vivo = false }
@@ -133,13 +135,18 @@ export function PerfilSirve({ memberId, modo = 'resumen' }: { memberId: string; 
         </div>
       </Seccion>
 
-      <Seccion titulo="Formación y ocupación" plegable={plegable} editable={editable}
-        resumen={{ texto: [p.formacion, p.ocupacion].filter(Boolean).join(' · ') || '—', vacio: !p.formacion && !p.ocupacion }}>
-        <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-          <div><p className={LABEL}>Formación académica</p><Texto campo="formacion" placeholder="Ej. Licenciatura en Administración" p={p} editable={editable} guardar={guardar} /></div>
-          <div><p className={LABEL}>¿A qué te dedicás hoy?</p><Texto campo="ocupacion" placeholder="Ej. Contadora, estudiante, ama de casa…" p={p} editable={editable} guardar={guardar} /></div>
-        </div>
-      </Seccion>
+      {/* UN solo campo, espejado con la Profesión de la ficha (members.occupation):
+          decisión de Floriana, 2026-10-21. Se edita con el MISMO control de
+          Info Personal y por el mismo PATCH de la ficha, así que editarlo acá
+          o allá es tocar la misma columna. */}
+      <div className={CARD}>
+        <h3 className="text-sm font-semibold text-navy font-display">Formación académica / Profesión</h3>
+        <p className="text-[13px] text-navy-light/80 font-body">Es el mismo dato que «Profesión» en Info Personal.</p>
+        {editable
+          ? <CampoPerfilEditable etiqueta="Formación académica / Profesión" valor={profesion ?? '—'} memberId={memberId} columna="occupation"
+              onGuardado={(_c, v) => { setProfesion(v || null); onActualizado?.() }} />
+          : <p className="text-sm text-navy font-body">{profesion || <span className="text-navy-light/80 italic">Sin llenar</span>}</p>}
+      </div>
 
       <Seccion titulo="Habilidades" plegable={plegable} editable={editable}
         ayuda="Áreas en las que sos hábil, aunque no sea tu trabajo."
@@ -157,21 +164,12 @@ export function PerfilSirve({ memberId, modo = 'resumen' }: { memberId: string; 
         <Texto campo="otras_pasiones" placeholder="Las que no están en la lista…" p={p} editable={editable} guardar={guardar} />
       </Seccion>
 
-      <Seccion titulo="Tu servicio en Theos" plegable={plegable} editable={editable}
-        resumen={{ texto: p.trayectoria ?? p.que_espera ?? p.motivo_salida ?? '—', vacio: !p.trayectoria && !p.que_espera && !p.motivo_salida }}>
-        <p className={LABEL}>Contanos sobre tu trayectoria de servicio en Theos</p>
-        <Texto campo="trayectoria" placeholder="Dónde has servido y cuánto tiempo…" filas={3} p={p} editable={editable} guardar={guardar} />
-        <p className={cn(LABEL, 'pt-2')}>¿Por qué dejaste de servir en los puestos anteriores?</p>
-        <Texto campo="motivo_salida" placeholder="Si aplica…" filas={2} p={p} editable={editable} guardar={guardar} />
-        <p className={cn(LABEL, 'pt-2')}>Si aún no estás sirviendo, ¿qué estás esperando?</p>
-        <Texto campo="que_espera" placeholder="Si aplica…" filas={2} p={p} editable={editable} guardar={guardar} />
-      </Seccion>
     </div>
   )
 }
 
 type CampoDeLista = 'dones_test' | 'dones_oracion' | 'habilidades' | 'pasiones'
-type CampoTexto = 'otros_dones' | 'formacion' | 'ocupacion' | 'otras_habilidades' | 'otras_pasiones' | 'trayectoria' | 'motivo_salida' | 'que_espera'
+type CampoTexto = 'otros_dones' | 'otras_habilidades' | 'otras_pasiones'
 type Guardar = <K extends keyof Perfil>(campo: K, valor: Perfil[K]) => Promise<void>
 
 function Chips({ campo, catalogo, p, editable, guardar }: { campo: CampoDeLista; catalogo: readonly string[]; p: Perfil; editable: boolean; guardar: Guardar }) {
