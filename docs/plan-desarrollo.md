@@ -2965,7 +2965,29 @@ toca; ambas razones listadas; idempotente. tsc/lint/vitest.
 
 ## Fase 30 — Perfil S.I.R.V.E. (pedido 2026-10-20)
 
-### [ ] SRV-20 · Perfil S.I.R.V.E. en el perfil del miembro + formulario espejo + migración
+### [x] SRV-20 · Perfil S.I.R.V.E. — ETAPAS 1–3 HECHAS 2026-10-20 (staging); la 4 queda para validar con servidores
+
+**Decisiones de Floriana al construirlo (2026-10-20):**
+- UNA tabla y UNA pestaña: va en `member_spiritual_data` junto al bautismo, y la
+  pestaña se llama «Espiritual y S.I.R.V.E.». Los dones NO se repiten: el texto
+  libre `spiritual_gifts` se quitó y los 20 que lo tenían pasaron a «otros dones».
+- Del CSV de CCB NO se importan datos personales ni comité/sede/dirigente: el
+  sistema los tiene más al día. Solo lo propio del perfil.
+- Puestos de dirección y roles de lectura: `ROLES_QUE_LEEN_SIRVE` en
+  `lib/servers/perfil-sirve.ts`.
+
+**Lo hecho:** migraciones `20261020200000` (columnas) y `20261020210000`
+(tipo de campo `sirve_profile`), componente `PerfilSirve` (resumen con lápiz /
+modo formulario), PATCH con zod + audit_log, formulario espejo con audiencia
+«completó SCJ» (`scripts/srv20/sembrar-formulario-perfil-sirve.ts`), import
+`scripts/srv20/importar-perfil-sirve-ccb.ts` (dry run en producción: 956 de 970
+resueltas, 0 ambiguas, 14 sin ficha).
+
+**Pendiente de aplicar en producción (después del deploy):** correr el import
+con `--aplicar`, revisar los 14 sin ficha (3 correos mal escritos, 1 fila
+basura, Marco Araya Ramírez existe con otro correo — ID 13356).
+
+#### Texto original del pedido (referencia)
 
 Pedido de estudios/servidores: lo que hoy es un formulario de CCB (lo llenan
 los estudiantes de Sirviendo como Jesús tras la oración de envío) pasa a vivir
