@@ -11,8 +11,10 @@
  * NO GUARDA RESPUESTAS PARA EL BLOQUE: el campo `sirve_profile` escribe en
  * `member_spiritual_data`. La pregunta extra sí es una respuesta normal.
  *
- * LA AUDIENCIA: quien COMPLETÓ Sirviendo como Jesús (plan SCJ). Es el
- * momento del flujo en que se llena. Sin la restricción, cualquiera con el
+ * LA AUDIENCIA: quien completó O está cursando Sirviendo como Jesús (plan
+ * SCJ). Desde el 2026-10-21 el dirigente manda la invitación a todo el grupo
+ * mientras está en curso, así que «completó» solo dejaría afuera a quien
+ * recibe el correo. Sin la restricción, cualquiera con el
  * link abre un formulario que le promete guardar un perfil que la
  * coordinación no esperaba. Se arma con el mismo sistema del padrón (FRM-5)
  * y se prueba contra `normalizeRestriction`: una restricción mal formada se
@@ -67,10 +69,10 @@ export function camposDelFormulario(ids: IdsDelFormulario): CampoSembrado[] {
   ]
 }
 
-/** Solo quien completó Sirviendo como Jesús. Mismo formato del padrón (`Restriccion`). */
+/** Quien completó o está cursando SCJ (`status: 'any'` = completado + matrícula vigente). Mismo formato del padrón. */
 export function restriccionGraduadosSCJ() {
   return {
-    conditions: [{ id: 1, group: 'study', type: 'study', study: PLAN_QUE_ABRE, status: 'completed', from: null, to: null }],
+    conditions: [{ id: 1, group: 'study', type: 'study', study: PLAN_QUE_ABRE, status: 'any', from: null, to: null }],
     groups: [],
     ops: {},
   }

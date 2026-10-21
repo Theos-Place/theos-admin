@@ -31,6 +31,8 @@ import {
 import { LeaderContact } from '@/components/studies/LeaderContact'
 import { StudyReceiptModal } from '@/components/finance/StudyReceiptModal'
 import { StudyRequestActions } from '@/components/studies/StudyRequestActions'
+import { InvitarPerfilSirve } from '@/components/studies/InvitarPerfilSirve'
+import { esGrupoSCJ } from '@/lib/servers/invitacion-perfil-sirve'
 import { ResolverInscripcion } from '@/components/studies/ResolverInscripcion'
 import { LeaderFeedbackPanel } from '@/components/studies/LeaderFeedbackPanel'
 import { withdrawReasonError } from '@/lib/studies/close-payload'
@@ -748,6 +750,12 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
           </div>
           {(canManageGroups || group.viewer_scope === 'leader') && (
             <div className="flex gap-2">
+              {/* SRV-20 · Solo en grupos de SCJ: el dirigente pide a sus
+                  estudiantes el perfil S.I.R.V.E. (en cualquier estado del
+                  grupo: en matrícula, en curso o cerrado). */}
+              {esGrupoSCJ(group.study_type_id) && (
+                <InvitarPerfilSirve groupId={id} />
+              )}
               {/* El cierre también es del DIRIGENTE del grupo (2026-08-20);
                   editar/eliminar siguen siendo solo de gestión. */}
               {group.status === 'en_curso' && (

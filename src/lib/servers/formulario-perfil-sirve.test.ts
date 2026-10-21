@@ -17,13 +17,13 @@ describe('SRV-20 · el formulario espejo del perfil S.I.R.V.E.', () => {
     expect(campos.map(c => c.field_type)).toEqual(['info', 'sirve_profile', 'textarea'])
   })
 
-  it('la audiencia es «completó Sirviendo como Jesús», y sobrevive a normalizeRestriction', () => {
+  it('la audiencia es «completó o cursando Sirviendo como Jesús», y sobrevive a normalizeRestriction', () => {
     expect(PLAN_QUE_ABRE).toBe('SCJ')
     const r = restriccionGraduadosSCJ()
     const n = normalizeRestriction(r)
     expect(n).not.toBeNull()
     expect(n?.conditions).toHaveLength(1)
-    expect(n?.conditions[0]).toMatchObject({ type: 'study', study: 'SCJ', status: 'completed' })
+    expect(n?.conditions[0]).toMatchObject({ type: 'study', study: 'SCJ', status: 'any' })
   })
 
   it('el seed no escribe textos propios: los toma del módulo', () => {

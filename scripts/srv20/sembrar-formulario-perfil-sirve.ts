@@ -46,7 +46,7 @@ async function main() {
 
   console.log(existente ? `Formulario existente: ${existente.id}` : 'Formulario NUEVO')
   for (const c of CAMPOS) console.log(`  · [${c.field_type}] ${c.label}`)
-  console.log(`\nAudiencia: completó ${plan.name} (${PLAN_QUE_ABRE})`)
+  console.log(`\nAudiencia: completó o está cursando ${plan.name} (${PLAN_QUE_ABRE})`)
 
   if (!APLICAR) {
     console.log('\n🔎 DRY RUN — nada escrito. Corré con --aplicar.')

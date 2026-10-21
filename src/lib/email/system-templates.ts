@@ -19,6 +19,8 @@ export type { TemplateData }
 // 'bienvenida' y 'recuperacion_contrasena' las maneja Supabase Auth, no acá.
 export type SystemTemplateKey =
   | 'form_asignado' | 'form_completado'
+  /** SRV-20: el dirigente de SCJ invita a llenar el perfil S.I.R.V.E. */
+  | 'sirve_invitacion'
   | 'matricula_estudiante' | 'matricula_dirigente' | 'inicio_capacitacion'
   | 'traslado_estudiante' | 'traslado_dirigente_sale' | 'traslado_dirigente_entra'
   | 'beca_aprobada' | 'beca_aprobada_parcial' | 'beca_rechazada' | 'beca_movida'

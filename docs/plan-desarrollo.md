@@ -2965,7 +2965,7 @@ toca; ambas razones listadas; idempotente. tsc/lint/vitest.
 
 ## Fase 30 — Perfil S.I.R.V.E. (pedido 2026-10-20)
 
-### [x] SRV-20 · Perfil S.I.R.V.E. — ETAPAS 1–3 HECHAS 2026-10-20 (staging); la 4 queda para validar con servidores
+### [x] SRV-20 · Perfil S.I.R.V.E. — ETAPAS 1–3 HECHAS 2026-10-20; etapa 4A (invitación desde el grupo) 2026-10-21 en staging; 4B (filtros del buscador) pendiente
 
 **Decisiones de Floriana al construirlo (2026-10-20):**
 - UNA tabla y UNA pestaña: va en `member_spiritual_data` junto al bautismo, y la
@@ -3004,6 +3004,26 @@ persona), Carol González Villarreal (nadie con ese nombre, correo ni teléfono)
 la fila basura «xcvcxv kjnjk». Dato suelto: 23 importados no tienen SCJ
 completado en el sistema — casi todos respuestas 2018–2021, antes del
 histórico importado; no se tocó.
+
+**Etapa 4, parte A — HECHA 2026-10-21 (staging): el botón del grupo de SCJ.**
+Pedido de Floriana: en todo grupo de Sirviendo como Jesús, un botón para el
+dirigente que manda un correo a los estudiantes pidiendo llenar el formulario
+del perfil. Decisiones: a TODOS los matriculados activos (no solo los que
+completaron; la audiencia del formulario pasó a «completó o cursando»); un
+correo por persona, y un segundo clic ofrece REENVIAR solo a quien no ha
+llenado; también mientras el grupo está en curso. Quién lo aprieta: la misma
+regla que cerrar el grupo (`puedeCerrarEsteGrupo`: coordinación, dirigente o
+co-dirigente). Piezas: reglas puras en `lib/servers/invitacion-perfil-sirve.ts`,
+correo `sirve_invitacion` + tabla `sirve_form_invites` (migración
+`20261021140000`), envío en `lib/email/sirve-invite-notify.ts`, endpoint
+`/api/studies/groups/[id]/sirve-invite` (GET estado, POST `{action}`),
+componente `InvitarPerfilSirve`. Dos reglas aprendidas probándolo: se registra
+solo lo que SALIÓ (`enviado`, BEC-3: un `.invalid` daba `ok` y quedaba como
+invitado), y quien no tiene correo o apagó los avisos no cuenta, porque si no
+el botón se queda para siempre en «enviar» y el reenvío nunca sale.
+**Pendiente:** sembrar el formulario en producción con la audiencia nueva
+antes de que alguien apriete el botón ahí (`ENV_FILE` por defecto, `--aplicar`).
+Parte B (filtros por dones/habilidades/profesión en el buscador) sin empezar.
 
 #### Texto original del pedido (referencia)
 
