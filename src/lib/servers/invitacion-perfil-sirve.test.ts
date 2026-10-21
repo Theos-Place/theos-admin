@@ -66,6 +66,6 @@ describe('SRV-20 · invitación al perfil S.I.R.V.E. desde el grupo', () => {
     expect(m).toContain("grant select, insert, update, delete on public.sirve_form_invites to service_role")
     expect(m).toContain("'sirve_invitacion'")
     const f = readFileSync('src/lib/servers/formulario-perfil-sirve.ts', 'utf8')
-    expect(f).toContain("status: 'any'")
+    expect(f).toContain('restriccionDelFormulario(): null')
   })
 })

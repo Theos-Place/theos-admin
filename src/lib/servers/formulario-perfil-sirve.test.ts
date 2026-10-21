@@ -1,7 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { camposDelFormulario, restriccionGraduadosSCJ, PLAN_QUE_ABRE, TITULO_DEL_FORMULARIO } from './formulario-perfil-sirve'
-import { normalizeRestriction } from '@/lib/audiencia/restriccion'
+import { camposDelFormulario, restriccionDelFormulario, PLAN_QUE_ABRE, TITULO_DEL_FORMULARIO } from './formulario-perfil-sirve'
 
 const sinComentarios = (ruta: string): string =>
   readFileSync(ruta, 'utf8').replace(/\/\*[\s\S]*?\*\//g, ' ').replace(/(^|[^:])\/\/.*$/gm, '$1')
@@ -17,19 +16,16 @@ describe('SRV-20 · el formulario espejo del perfil S.I.R.V.E.', () => {
     expect(campos.map(c => c.field_type)).toEqual(['info', 'sirve_profile', 'textarea'])
   })
 
-  it('la audiencia es «completó o cursando Sirviendo como Jesús», y sobrevive a normalizeRestriction', () => {
+  it('NO tiene audiencia: cualquiera con sesión y el link lo llena (decisión 2026-10-21)', () => {
     expect(PLAN_QUE_ABRE).toBe('SCJ')
-    const r = restriccionGraduadosSCJ()
-    const n = normalizeRestriction(r)
-    expect(n).not.toBeNull()
-    expect(n?.conditions).toHaveLength(1)
-    expect(n?.conditions[0]).toMatchObject({ type: 'study', study: 'SCJ', status: 'any' })
+    expect(restriccionDelFormulario()).toBeNull()
   })
 
   it('el seed no escribe textos propios: los toma del módulo', () => {
     const seed = readFileSync('scripts/srv20/sembrar-formulario-perfil-sirve.ts', 'utf8')
     expect(seed).toContain("from '../../src/lib/servers/formulario-perfil-sirve'")
-    expect(seed).toContain('restriccionGraduadosSCJ()')
+    expect(seed).toContain('restriccionDelFormulario()')
+    expect(seed).toContain('requires_auth: true')
     expect(seed).not.toContain(TITULO_DEL_FORMULARIO)
   })
 })

@@ -10,7 +10,7 @@
  *  · Quién aprieta: coordinación de estudios, o el dirigente / co-dirigente
  *    de ESE grupo. Es la misma regla que cerrar el grupo (`puedeCerrarEsteGrupo`).
  *  · A quién: todos los matriculados ACTIVOS del grupo, no solo los que
- *    completaron. Por eso la audiencia del formulario se abre a «cursando».
+ *    completaron. El formulario no tiene audiencia (2026-10-21).
  *  · Cuándo: mientras el grupo esté en curso y también cerrado.
  *  · Un correo por persona. Un segundo clic no repite a quien ya recibió:
  *    ofrece reenviar SOLO a quienes aún no llenaron el perfil.

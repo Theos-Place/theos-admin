@@ -17,7 +17,7 @@ import { createClient } from '@supabase/supabase-js'
 import { readFileSync } from 'node:fs'
 import { randomUUID } from 'node:crypto'
 import {
-  camposDelFormulario, restriccionGraduadosSCJ, PLAN_QUE_ABRE,
+  camposDelFormulario, restriccionDelFormulario, PLAN_QUE_ABRE,
   TITULO_DEL_FORMULARIO, DESCRIPCION_DEL_FORMULARIO,
 } from '../../src/lib/servers/formulario-perfil-sirve'
 
@@ -36,9 +36,9 @@ const ID = { intro: randomUUID(), perfil: randomUUID(), comentarios: randomUUID(
 async function main() {
   console.log(`Base: ${env.NEXT_PUBLIC_SUPABASE_URL}\n`)
 
-  // El plan de la audiencia tiene que existir: si no, la restricción apunta a nada.
+  // El plan del correo del grupo tiene que existir (no cierra el formulario).
   const { data: plan } = await db.from('study_plans').select('code, name').eq('code', PLAN_QUE_ABRE).maybeSingle()
-  if (!plan) throw new Error(`No existe el plan ${PLAN_QUE_ABRE}: la audiencia quedaría vacía.`)
+  if (!plan) throw new Error(`No existe el plan ${PLAN_QUE_ABRE}.`)
 
   const CAMPOS = camposDelFormulario(ID)
   const { data: existente } = await db.from('forms')
@@ -46,7 +46,7 @@ async function main() {
 
   console.log(existente ? `Formulario existente: ${existente.id}` : 'Formulario NUEVO')
   for (const c of CAMPOS) console.log(`  · [${c.field_type}] ${c.label}`)
-  console.log(`\nAudiencia: completó o está cursando ${plan.name} (${PLAN_QUE_ABRE})`)
+  console.log(`\nAudiencia: sin restricción (solo sesión). Lo invita el grupo de ${plan.name} (${PLAN_QUE_ABRE}).`)
 
   if (!APLICAR) {
     console.log('\n🔎 DRY RUN — nada escrito. Corré con --aplicar.')
@@ -62,7 +62,7 @@ async function main() {
     allow_multiple_responses: true,
     category: 'survey' as const,
     entity_type: 'general',
-    audience_restrictions: restriccionGraduadosSCJ(),
+    audience_restrictions: restriccionDelFormulario(),
   }
 
   let formId = existente?.id

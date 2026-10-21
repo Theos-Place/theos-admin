@@ -11,14 +11,12 @@
  * NO GUARDA RESPUESTAS PARA EL BLOQUE: el campo `sirve_profile` escribe en
  * `member_spiritual_data`. La pregunta extra sí es una respuesta normal.
  *
- * LA AUDIENCIA: quien completó O está cursando Sirviendo como Jesús (plan
- * SCJ). Desde el 2026-10-21 el dirigente manda la invitación a todo el grupo
- * mientras está en curso, así que «completó» solo dejaría afuera a quien
- * recibe el correo. Sin la restricción, cualquiera con el
- * link abre un formulario que le promete guardar un perfil que la
- * coordinación no esperaba. Se arma con el mismo sistema del padrón (FRM-5)
- * y se prueba contra `normalizeRestriction`: una restricción mal formada se
- * descarta en silencio y el formulario queda abierto a todo el mundo.
+ * LA AUDIENCIA: NINGUNA (decisión de Floriana, 2026-10-21). Antes estaba
+ * acotado a quien completó o cursaba Sirviendo como Jesús; se quitó porque el
+ * correo del grupo ya decide a quién se le pide, y si alguien más quiere
+ * llenar su perfil por el link de compartir, que pueda. Lo único que exige
+ * es sesión (`requires_auth`): el bloque escribe en el perfil de quien lo
+ * abre, y sin sesión no hay perfil.
  *
  * Módulo PURO: define el contenido. Quien escribe en la base es el seed
  * (`scripts/srv20/sembrar-formulario-perfil-sirve.ts`).
@@ -32,7 +30,7 @@ export const DESCRIPCION_DEL_FORMULARIO =
   + 'dónde te gustaría servir. Lo que ya tengamos guardado viene lleno; revisalo y '
   + 'corregí lo que cambió. Cada cambio se guarda solo.'
 
-/** El plan cuya graduación abre el formulario. */
+/** El plan al que pertenece el formulario (para el correo del grupo, no para cerrarlo). */
 export const PLAN_QUE_ABRE = 'SCJ'
 
 export type IdsDelFormulario = {
@@ -69,11 +67,7 @@ export function camposDelFormulario(ids: IdsDelFormulario): CampoSembrado[] {
   ]
 }
 
-/** Quien completó o está cursando SCJ (`status: 'any'` = completado + matrícula vigente). Mismo formato del padrón. */
-export function restriccionGraduadosSCJ() {
-  return {
-    conditions: [{ id: 1, group: 'study', type: 'study', study: PLAN_QUE_ABRE, status: 'any', from: null, to: null }],
-    groups: [],
-    ops: {},
-  }
+/** Sin restricción: cualquiera con sesión y el link lo llena (2026-10-21). */
+export function restriccionDelFormulario(): null {
+  return null
 }

@@ -1,0 +1,9 @@
+{
+  "fecha": "2026-10-21",
+  "motivo": "Floriana: quitar la restricción de audiencia (SCJ completado o cursando) del formulario «Tu perfil S.I.R.V.E.»; cualquiera con sesión y el link lo llena. Sigue con requires_auth=true.",
+  "como_revertir": "update forms set audience_restrictions = '<valor_anterior>'::jsonb where id = '<id>'",
+  "antes": [
+    { "env": "produccion", "id": "3bb486fa-7a9b-439a-bee2-603562d3b022", "audience_restrictions": {"ops": {}, "groups": [], "conditions": [{"id": 1, "to": null, "from": null, "type": "study", "group": "study", "study": "SCJ", "status": "any"}]} },
+    { "env": "staging", "id": "3c4380cd-3b7f-48ef-b624-612345dc2136", "audience_restrictions": {"ops": {}, "groups": [], "conditions": [{"id": 1, "to": null, "from": null, "type": "study", "group": "study", "study": "SCJ", "status": "any"}]} }
+  ]
+}
