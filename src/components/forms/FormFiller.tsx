@@ -21,6 +21,7 @@ import { calcAge } from '@/lib/format'
 import { AlertTriangle, Check, ChevronLeft, ChevronRight, User } from 'lucide-react'
 import { CampoPerfilEditable } from '@/components/members/CampoPerfilEditable'
 import { ConfiguracionDelDirigente } from '@/components/studies/ConfiguracionDelDirigente'
+import { PerfilSirve } from '@/components/members/PerfilSirve'
 import { editabilidadDeCampo, OPCIONES_GENERO } from '@/lib/members/campo-editable'
 import { textoDeRestricciones } from '@/lib/members/restriccion-alimenticia'
 import { RestriccionAlimenticia } from '@/components/members/RestriccionAlimenticia'
@@ -305,7 +306,7 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
     return pages[pageIndex]
       // `leader_availability` no guarda respuesta (escribe en la ficha), así
       // que exigirlo como obligatorio bloquearía el envío para siempre.
-      .filter(f => f.type !== 'section' && f.type !== 'personal_data' && f.type !== 'leader_availability' && f.is_required && isFieldVisible(f, answers))
+      .filter(f => f.type !== 'section' && f.type !== 'personal_data' && f.type !== 'leader_availability' && f.type !== 'sirve_profile' && f.is_required && isFieldVisible(f, answers))
       .filter(f => {
         const ans = answers[f.id]
         return ans === undefined || ans === '' || (Array.isArray(ans) && ans.length === 0)
@@ -588,6 +589,38 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
                       </div>
                     </div>
                     <ConfiguracionDelDirigente memberId={user.member_id} editable />
+                  </div>
+                )
+              }
+
+              // SRV-20 · El perfil S.I.R.V.E., el MISMO bloque del perfil, en modo
+              // formulario: prellenado, guarda campo por campo. Mismas reglas que
+              // `leader_availability`: no en preview ni por otra persona.
+              if (field.type === 'sirve_profile') {
+                if (isPreview || onBehalf || !user?.member_id) {
+                  return (
+                    <div key={field.id} className="rounded-[14px] border border-dashed border-[rgba(112,189,194,.5)] bg-[rgba(112,189,194,.06)] px-[18px] py-4">
+                      <p className="text-[13px] text-[var(--fg-muted,#8c8fb0)] font-body">
+                        Acá va el bloque del perfil S.I.R.V.E. Se ve cuando lo abre la
+                        persona con su propia cuenta.
+                      </p>
+                    </div>
+                  )
+                }
+                return (
+                  <div key={field.id} className="rounded-[14px] border border-[rgba(112,189,194,.3)] bg-[rgba(112,189,194,.06)] px-[18px] py-4">
+                    <div className="mb-3">
+                      <div className="flex items-center gap-1.5">
+                        <User size={14} color="#2a8b8f" />
+                        <span className="text-[13px] font-bold text-[#2a8b8f] font-display">
+                          {field.label || 'Tu perfil S.I.R.V.E.'}
+                        </span>
+                      </div>
+                      <div className="text-[13px] text-[var(--fg-muted,#8c8fb0)] font-body">
+                        Viene con lo que ya tenemos guardado. Cada cambio se guarda solo.
+                      </div>
+                    </div>
+                    <PerfilSirve memberId={user.member_id} modo="formulario" />
                   </div>
                 )
               }

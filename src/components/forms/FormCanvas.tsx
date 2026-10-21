@@ -150,7 +150,7 @@ export function FormCanvas({
          * elegir campos, el formulario y el perfil empezarían a preguntar
          * cosas distintas.
          */
-        if (field.type === 'leader_availability') {
+        if (field.type === 'leader_availability' || field.type === 'sirve_profile') {
           return (
             <div
               key={field.id}
@@ -170,7 +170,7 @@ export function FormCanvas({
                     onMover={hasta => onFieldsChange(moverCampo(fields, index, hasta))} />
                   <User size={14} color="var(--brand-teal-deep, #2a8b8f)" />
                   <span className="text-[13px] font-bold text-[var(--brand-teal-deep,#2a8b8f)] font-display">
-                    Disponibilidad del dirigente
+                    {field.type === 'sirve_profile' ? 'Perfil S.I.R.V.E.' : 'Disponibilidad del dirigente'}
                   </span>
                   <span className="text-[11px] text-[rgba(42,139,143,.6)] font-display">#{index + 1}</span>
                 </div>

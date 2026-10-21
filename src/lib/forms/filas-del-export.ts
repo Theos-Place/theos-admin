@@ -141,8 +141,8 @@ export function celdaComoTexto(v: string | number | Date | null): string {
   return esPathDeAdjunto(s) ? urlDeAdjunto(s) : s
 }
 
-/** Los campos que generan columna. `personal_data` y `leader_availability`
- *  parecen campos pero escriben en la ficha y nunca guardan respuesta. */
+/** Los campos que generan columna. `personal_data`, `leader_availability` y
+ *  `sirve_profile` parecen campos pero escriben en la ficha y nunca guardan respuesta. */
 export function camposConDatos<T extends { field_type: string }>(campos: readonly T[]): T[] {
   return campos.filter(f => isDataField(f.field_type))
 }

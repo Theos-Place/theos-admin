@@ -15,8 +15,7 @@ import {
   FileText,
   User,
   CalendarClock,
-  type LucideIcon,
-} from 'lucide-react'
+  type LucideIcon, Sparkles } from 'lucide-react'
 import type { FieldType } from '@/data/form-config'
 
 const ICON_MAP: Record<FieldType, LucideIcon> = {
@@ -34,6 +33,7 @@ const ICON_MAP: Record<FieldType, LucideIcon> = {
   page_break:    FileText,
   personal_data: User,
   leader_availability: CalendarClock,
+  sirve_profile: Sparkles,
   image: ImageIcon,
   studies_done: GraduationCap,
 }

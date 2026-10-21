@@ -43,6 +43,8 @@ export type FieldType =
    * conteste se quede en respuestas que alguien tiene que transcribir.
    */
   | 'leader_availability'
+  /** SRV-20: el perfil S.I.R.V.E. embebido; escribe en member_spiritual_data, no guarda respuesta. */
+  | 'sirve_profile'
   /** Imagen adjunta a la respuesta (pensado para comprobantes). El valor que se
    *  guarda es el PATH del bucket privado, no una URL — ver lib/forms/attachment. */
   | 'image'

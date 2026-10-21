@@ -64,6 +64,8 @@ const FIELD_GROUPS: { label: string; types: { type: FieldType; label: string }[]
       // la campaña de marzo/julio/noviembre con este módulo sin que lo
       // contestado quede en respuestas que alguien transcribe.
       { type: 'leader_availability', label: 'Disponibilidad del dirigente' },
+      // SRV-20: el perfil S.I.R.V.E., mismo patrón.
+      { type: 'sirve_profile', label: 'Perfil S.I.R.V.E.' },
       { type: 'studies_done',  label: 'Estudios aprobados (oculto)' },
     ],
   },
@@ -105,6 +107,9 @@ function defaultField(type: FieldType, order: number): FormFieldNew {
   }
   if (type === 'leader_availability') {
     base.label = 'Tu disponibilidad como dirigente'
+  }
+  if (type === 'sirve_profile') {
+    base.label = 'Tu perfil S.I.R.V.E.'
   }
   return base
 }
@@ -636,6 +641,7 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                   activeField.type === 'page_break' ? 'Bloque / Página' :
                   activeField.type === 'personal_data' ? 'Datos personales'
                   : activeField.type === 'leader_availability' ? 'Disponibilidad del dirigente'
+                  : activeField.type === 'sirve_profile' ? 'Perfil S.I.R.V.E.'
                   : activeField.type}
                 </p>
                 <button

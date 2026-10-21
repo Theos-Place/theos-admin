@@ -52,7 +52,8 @@ export const NON_DATA_FIELD_TYPES: readonly string[] =
   // SRV-9: `leader_availability` entra por lo mismo que `personal_data` —
   // parece un campo pero no guarda respuesta: escribe en la ficha del
   // dirigente. Una columna suya en el export saldría vacía siempre.
-  ['section', 'info', 'page_break', 'personal_data', 'leader_availability']
+  // SRV-20: `sirve_profile` igual — escribe en el perfil.
+  ['section', 'info', 'page_break', 'personal_data', 'leader_availability', 'sirve_profile']
 
 export function isDataField(type: FieldType | string): boolean {
   return !NON_DATA_FIELD_TYPES.includes(type)
