@@ -334,7 +334,7 @@ export const ROLES: Role[] = [
   {
     id: 'reportes',
     name: 'Reportes',
-    description: 'Acceso a todos los reportes del sistema',
+    description: 'Ve los nueve reportes del sistema, incluidos los acotados (Estudios, Dirigentes, Servidores, los que no volvieron). Solo lectura.',
     color: '#7FB2D4',
     permissions: [
       { module: 'reportes', actions: ['view', 'export'], scope: 'all' },

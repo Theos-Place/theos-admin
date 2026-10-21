@@ -14,6 +14,8 @@
  *  1. `roles` — quien tenga uno de esos roles entra, tenga o no el módulo.
  *  2. `moduloAlcanza` — si es `true`, el módulo `reportes` basta. Los reportes
  *     acotados lo ponen en `false`: ahí el módulo NO alcanza y manda la lista.
+ *     OJO: el ROL `reportes` es otra cosa y abre los nueve (REP-19); esto es
+ *     el módulo que otros roles traen de paso.
  *  3. `porPuesto` — lo abre un PUESTO de sede (anfitrión, encargado de
  *     logística), sin ningún rol de por medio. Ver
  *     `puestos-que-abren-reportes.ts`.
@@ -151,12 +153,27 @@ export type QuienPregunta = {
   esDirigente?: boolean
 }
 
+/**
+ * REP-19 · El ROL `reportes` abre los nueve (decisión de Floriana, 2026-10-21:
+ * «ya existe un acceso tipo reportes que debería de poder ver todos»).
+ *
+ * Es el rol, no el módulo: el módulo `reportes` lo traen también otros roles
+ * de paso (comunicaciones, coordinaciones) y para esos sigue valiendo
+ * `moduloAlcanza`, con los reportes acotados cerrados. Quien recibe el rol
+ * `reportes` a mano lo recibe para mirar números, y la restricción de
+ * REP-11 lo dejaba viendo cuatro de nueve: el caso fue la cuenta de
+ * Finanzas, que no veía Servidores.
+ */
+export const ROL_QUE_ABRE_TODOS = 'reportes' as const
+
 export function puedeVerReporte(slug: SlugDeReporte, quien: QuienPregunta): boolean {
   const regla = ACCESO_POR_REPORTE[slug]
   if (!regla) return false
   // REP-18 · Un puesto de dirección abre TODOS (ver puesto-de-direccion.ts).
   if (quien.direccionPorPuesto === true) return true
   const roles = quien.roles ?? []
+  // REP-19 · El rol `reportes` abre TODOS.
+  if ((roles as readonly string[]).includes(ROL_QUE_ABRE_TODOS)) return true
   if (regla.roles.some(r => (roles as readonly string[]).includes(r))) return true
   if (regla.moduloAlcanza && quien.tieneModulo) return true
   if (regla.porSerDirigente && quien.esDirigente === true) return true

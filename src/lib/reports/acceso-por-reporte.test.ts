@@ -13,8 +13,10 @@ const sinComentarios = (ruta: string): string =>
 
 const TODOS = Object.keys(ACCESO_POR_REPORTE) as SlugDeReporte[]
 
-/** Alguien con el módulo `reportes` y nada más — el rol `reportes` a secas. */
-const soloModulo = { roles: ['reportes'], tieneModulo: true }
+/** Alguien con el MÓDULO `reportes` de paso (p. ej. comunicaciones) y nada más. */
+const soloModulo = { roles: ['comunicaciones'], tieneModulo: true }
+/** REP-19 · El ROL `reportes` a secas: abre los nueve. */
+const rolReportes = { roles: ['reportes'], tieneModulo: true }
 /** El anfitrión después de REP-11: sin rol de reportes, con su puesto. */
 const soloPuesto = { roles: ['miembro'], tieneModulo: false, porPuesto: true }
 const nadie = { roles: ['miembro'], tieneModulo: false }
@@ -80,6 +82,14 @@ describe('REP-11 · el módulo sigue abriendo lo que siempre abrió', () => {
   it('dirección y admin ven los siete', () => {
     for (const rol of ['direccion', 'admin']) {
       expect(reportesVisibles({ roles: [rol], tieneModulo: true }).length, rol).toBe(TODOS.length)
+    }
+  })
+
+  it('REP-19 · el ROL `reportes` ve los nueve, aunque el módulo de paso no alcance', () => {
+    expect(reportesVisibles(rolReportes).sort()).toEqual([...TODOS].sort())
+    // Con el módulo de paso, los acotados siguen cerrados.
+    for (const slug of ['estudios', 'dirigentes', 'servidores', 'exalumnos-perdidos', 'recurrentes-perdidos'] as SlugDeReporte[]) {
+      expect(puedeVerReporte(slug, soloModulo), slug).toBe(false)
     }
   })
 

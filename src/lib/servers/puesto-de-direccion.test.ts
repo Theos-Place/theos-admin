@@ -24,8 +24,10 @@ describe('REP-18 · los puestos de dirección ven todos los reportes (2026-10-20
     const slugs = Object.keys(ACCESO_POR_REPORTE) as SlugDeReporte[]
     expect(slugs.length).toBeGreaterThanOrEqual(9)
     for (const s of slugs) expect(puedeVerReporte(s, { roles: [], tieneModulo: false, direccionPorPuesto: true }), s).toBe(true)
-    // Sin el puesto, el rol `reportes` solo no alcanza para Estudios: el bug.
-    expect(puedeVerReporte('estudios', { roles: ['reportes'], tieneModulo: true })).toBe(false)
+    // Sin el puesto, el MÓDULO de paso no alcanza para Estudios (el bug de
+    // REP-18). Desde REP-19 el ROL `reportes` sí abre todo, así que acá va
+    // un rol que trae el módulo sin ser `reportes`.
+    expect(puedeVerReporte('estudios', { roles: ['comunicaciones'], tieneModulo: true })).toBe(false)
   })
 
   it('el servidor, el menú y la pantalla miran la misma señal', () => {

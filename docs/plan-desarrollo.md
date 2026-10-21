@@ -109,6 +109,9 @@ virtual, conteo de reubicaciones, enlaces de la demanda) quedó en staging.
    (`esPuestoDeDireccion` → `tienePuestoDeDireccion`), no por rol: el rol
    `reportes` abre solo cuatro, que era el bug (Melissa Acón no veía
    Estudios ni Dirigentes).
+ · **REP-19** — el ROL `reportes` ve los nueve reportes (2026-10-21). El módulo
+   de paso (comunicaciones, coordinaciones) sigue abriendo solo los cuatro
+   generales. Caso: la cuenta de Finanzas no veía Servidores.
  · **SEC-4** — tablas de `public` solo con la llave de servicio (aviso de
    Supabase: desde el 30-oct no hay GRANT automático). Regla en AGENTS.md,
    `permisos-de-tablas.test.ts`, y migración `20261020120000` con los
