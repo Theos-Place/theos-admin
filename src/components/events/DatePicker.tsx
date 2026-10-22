@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useLayoutEffect, useRef, useState } from 'react'
 import { createPortal } from 'react-dom'
 import { DayPicker } from 'react-day-picker'
 import { es } from 'react-day-picker/locale'
@@ -38,6 +38,28 @@ function labelOf(d: Date | undefined): string {
   return `${d.getDate()} de ${MESES[d.getMonth()]} ${d.getFullYear()}`
 }
 
+/** Altura típica del calendario (un mes de 6 filas con padding), para el primer render. */
+const ALTO_TIPICO = 340
+const ANCHO_TIPICO = 300
+const MARGEN = 4
+
+/**
+ * Dónde va el popover: debajo del botón si cabe en el viewport; si no, encima;
+ * y nunca más a la derecha de lo que la ventana permite.
+ */
+export function posicionDelPopover(
+  boton: { top: number; bottom: number; left: number },
+  altoReal: number | undefined,
+  viewport: { width: number; height: number } = { width: window.innerWidth, height: window.innerHeight },
+): { top: number; left: number } {
+  const alto = altoReal && altoReal > 0 ? altoReal : ALTO_TIPICO
+  const cabeAbajo = boton.bottom + MARGEN + alto <= viewport.height
+  const cabeArriba = boton.top - MARGEN - alto >= 0
+  const top = cabeAbajo || !cabeArriba ? boton.bottom + MARGEN : boton.top - MARGEN - alto
+  const left = Math.max(8, Math.min(boton.left, viewport.width - ANCHO_TIPICO - 8))
+  return { top, left }
+}
+
 export function DatePicker({ value, onChange, min, error, placeholder = 'Seleccionar fecha', ariaLabel }: DatePickerProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
@@ -48,11 +70,22 @@ export function DatePicker({ value, onChange, min, error, placeholder = 'Selecci
 
   // Posiciona el popover (fixed, vía portal) bajo el botón — visible aunque el
   // contenedor del filtro tenga overflow.
+  //
+  // Y si abajo no cabe, ARRIBA. Es `fixed`, así que lo que sobresale del
+  // viewport no se ve ni haciendo scroll: en «Termina el» del evento
+  // recurrente (al pie del paso 2) el calendario mostraba el mes y los días
+  // de la semana y nada más (video de Floriana, 2026-10-22). La altura real
+  // se mide después del primer render; hasta entonces se usa la típica.
   function openPicker() {
     const r = ref.current?.getBoundingClientRect()
-    if (r) setRect({ top: r.bottom + 4, left: r.left })
+    if (r) setRect(posicionDelPopover(r, popRef.current?.offsetHeight))
     setOpen(o => !o)
   }
+  useLayoutEffect(() => {
+    if (!open) return
+    const r = ref.current?.getBoundingClientRect()
+    if (r) setRect(posicionDelPopover(r, popRef.current?.offsetHeight))
+  }, [open])
 
   useEffect(() => {
     if (!open) return
@@ -64,7 +97,7 @@ export function DatePicker({ value, onChange, min, error, placeholder = 'Selecci
     function onKey(e: KeyboardEvent) { if (e.key === 'Escape') setOpen(false) }
     function reposition() {
       const r = ref.current?.getBoundingClientRect()
-      if (r) setRect({ top: r.bottom + 4, left: r.left })
+      if (r) setRect(posicionDelPopover(r, popRef.current?.offsetHeight))
     }
     document.addEventListener('mousedown', onClick)
     document.addEventListener('keydown', onKey)
