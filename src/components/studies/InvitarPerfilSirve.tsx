@@ -77,7 +77,9 @@ export function InvitarPerfilSirve({ groupId }: { groupId: string }) {
           <Button onClick={() => setConfirmar(false)} disabled={enviando} variante="fantasma">Cancelar</Button>
         </div>
       )}
-      <p className="text-[13px] text-navy-light/80 font-body">{detalle}</p>
+      {/* Acotado al ancho del botón y a la derecha: si no, el detalle se
+          extendía hacia la izquierda por encima del resto de la cabecera. */}
+      <p className="max-w-[18rem] text-right text-[13px] leading-snug text-navy-light/80 font-body">{detalle}</p>
     </div>
   )
 }

@@ -749,7 +749,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             )}
           </div>
           {(canManageGroups || group.viewer_scope === 'leader') && (
-            <div className="flex gap-2">
+            // items-start: el botón de la encuesta S.I.R.V.E. lleva una línea
+            // de detalle debajo, y con el alineado por defecto (stretch) los
+            // botones vecinos se estiraban a esa altura.
+            <div className="flex items-start gap-2">
               {/* SRV-20 · Solo en grupos de SCJ: el dirigente pide a sus
                   estudiantes el perfil S.I.R.V.E. (en cualquier estado del
                   grupo: en matrícula, en curso o cerrado). */}
