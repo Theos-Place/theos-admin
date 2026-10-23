@@ -51,9 +51,11 @@ export function InvitarPerfilSirve({ groupId }: { groupId: string }) {
   // Cuántos recibirán el correo en este clic. Primer envío: a quien no se le
   // ha mandado, se le puede escribir y no llenó. Reenvío: los pendientes.
   const cuantos = e.accion === 'enviar' ? Math.max(0, e.matriculados - e.llenaron - e.sinContacto - e.pendientes) : e.pendientes
-  const etiqueta = e.accion === 'enviar' ? 'Pedir el perfil S.I.R.V.E.'
-    : e.accion === 'reenviar' ? `Reenviar a ${e.pendientes} que no lo han llenado`
-    : 'Todos llenaron su perfil S.I.R.V.E.'
+  // «Enviar encuesta S.I.R.V.E.»: pedido de Floriana (2026-10-23), el nombre
+  // anterior («Pedir el perfil…») no decía que mandaba un correo.
+  const etiqueta = e.accion === 'enviar' ? 'Enviar encuesta S.I.R.V.E.'
+    : e.accion === 'reenviar' ? `Reenviar encuesta S.I.R.V.E. a ${e.pendientes} pendiente${e.pendientes === 1 ? '' : 's'}`
+    : 'Todos llenaron la encuesta S.I.R.V.E.'
   const sinContacto = e.sinContacto > 0 ? ` · ${e.sinContacto} sin correo o con avisos apagados` : ''
   const detalle = (e.invitados > 0
     ? `${e.invitados} invitado${e.invitados === 1 ? '' : 's'} · ${e.llenaron} ${e.llenaron === 1 ? 'lo llenó' : 'lo llenaron'}`

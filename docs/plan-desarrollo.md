@@ -3020,7 +3020,7 @@ co-dirigente). Piezas: reglas puras en `lib/servers/invitacion-perfil-sirve.ts`,
 correo `sirve_invitacion` + tabla `sirve_form_invites` (migración
 `20261021140000`), envío en `lib/email/sirve-invite-notify.ts`, endpoint
 `/api/studies/groups/[id]/sirve-invite` (GET estado, POST `{action}`),
-componente `InvitarPerfilSirve`. Dos reglas aprendidas probándolo: se registra
+componente `InvitarPerfilSirve` (botón «Enviar encuesta S.I.R.V.E.», renombrado el 2026-10-23 porque «Pedir el perfil» no decía que mandaba un correo). Dos reglas aprendidas probándolo: se registra
 solo lo que SALIÓ (`enviado`, BEC-3: un `.invalid` daba `ok` y quedaba como
 invitado), y quien no tiene correo o apagó los avisos no cuenta, porque si no
 el botón se queda para siempre en «enviar» y el reenvío nunca sale.
