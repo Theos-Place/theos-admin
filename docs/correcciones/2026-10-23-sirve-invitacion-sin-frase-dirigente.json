@@ -1,0 +1,5 @@
+{
+  "fecha": "2026-10-23",
+  "motivo": "Floriana: quitar «Te lo pide {{nombre_dirigente}}, de tu grupo.» del correo sirve_invitacion",
+  "antes": "<p>Hola {{nombre}},</p>\n\n   <p>Estás en <strong>{{nombre_grupo}}</strong> de Sirviendo como Jesús. Como parte del\n   curso te pedimos llenar tu perfil S.I.R.V.E.: tus dones, tu estilo, tus habilidades y\n   dónde te gustaría servir. Es lo que usa el equipo de servidores para encontrarte un\n   lugar.</p>\n\n   <p>Toma unos minutos y lo que ya tengamos guardado viene lleno; solo revisalo y corregí\n   lo que cambió. Cada cambio se guarda solo.</p>\n\n   <div class=\"cta-wrapper\"><a class=\"cta-button\" href=\"{{link_form}}\">Llenar mi perfil S.I.R.V.E. →</a></div>\n\n   <p>Te lo pide {{nombre_dirigente}}, de tu grupo.</p>\n\n   <p>Atentamente,<br><strong>Área de Estudios · Theos Place</strong></p>"
+}

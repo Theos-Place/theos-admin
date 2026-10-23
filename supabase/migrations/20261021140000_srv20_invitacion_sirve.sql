@@ -45,8 +45,6 @@ SELECT
 
    <div class="cta-wrapper"><a class="cta-button" href="{{link_form}}">Llenar mi perfil S.I.R.V.E. →</a></div>
 
-   <p>Te lo pide {{nombre_dirigente}}, de tu grupo.</p>
-
    <p>Atentamente,<br><strong>Área de Estudios · Theos Place</strong></p>',
   'html', 'transactional', true, 'sirve_invitacion', true,
   '["nombre","nombre_grupo","nombre_dirigente","link_form"]'::jsonb
