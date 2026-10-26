@@ -7,7 +7,7 @@ import Link from 'next/link'
 import type { StudyGroup, StudyType } from '@/types/study'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { useAuth } from '@/hooks/useAuth'
-import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
+import { GROUP_ADMIN_ROLES, STUDY_ADMIN_ROLES } from '@/lib/auth/roles'
 import { groupZoneFilterOptions, zoneFilterParam } from '@/lib/studies/group-zone-filter'
 import { usePaginatedList } from '@/hooks/usePaginatedList'
 import type { DbGroupListItem } from '@/lib/supabase/queries/studies'
@@ -29,7 +29,8 @@ import { useSortableTable } from '@/hooks/useSortableTable'
 import { useRowSelection } from '@/hooks/useRowSelection'
 import { useToast } from '@/components/shared/Toast'
 import { cn, claveAlfabetica } from '@/lib/utils'
-import { Plus, BookOpen } from 'lucide-react'
+import { Plus, BookOpen, CloudUpload } from 'lucide-react'
+import { Button } from '@/components/shared/Button'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { getInitials, formatDateNumeric } from '@/lib/format'
@@ -153,6 +154,7 @@ export default function GruposPage() {
   const { zoneSedes: ZONE_SEDES, sedes: ALL_SEDES } = useSedes()
   const { user: actor } = useAuth()
   const canManageGroups = (actor?.roles ?? []).some(r => (GROUP_ADMIN_ROLES as string[]).includes(r))
+  const canImport = (actor?.roles ?? []).some(r => (STUDY_ADMIN_ROLES as readonly string[]).includes(r) || r === 'admin')
   const STUDY_GROUP_COLUMNS = useMemo(() => buildStudyGroupColumns(STUDY_TYPES), [STUDY_TYPES])
   // Por defecto solo los grupos abiertos/activos; los finalizados se ven con el filtro.
   const [selectedStatuses, setSelectedStatuses] = useState<EstadoVisible[]>(ESTADOS_POR_DEFECTO)
@@ -398,6 +400,15 @@ export default function GruposPage() {
               run: exportarParticipantes,
             }]}
           />
+          {/* EST-2: import masivo de grupos. Estaba en Resumen; se movió acá
+              el 2026-10-26 (pedido de Floriana): es una acción sobre grupos.
+              Mismo guard que la pantalla de importar (el server re-valida). */}
+          {canImport && (
+            <Button href="/estudios/importar" variante="secundario" radio="xl">
+              <CloudUpload size={14} aria-hidden="true" />
+              Importar grupos
+            </Button>
+          )}
           {canManageGroups && (
             <Link
               href="/estudios/grupos/nuevo"
