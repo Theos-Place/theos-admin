@@ -1,0 +1,46 @@
+{
+  "fecha": "2026-10-26",
+  "motivo": [
+    "Floriana: el tiquete de folletos DIS3 (cierre DIS2 de Fernando Gutiérrez, 24-oct) no debió crearse: los tres folletos de discípulos se imprimen al crear DIS1. Se borra.",
+    "La cuenta de Auth ranvega19@gmail.com (creada en AUTH-1) estaba vinculada a Camila Calero Corrales (menor, misma familia); el correo es de Randall Vega Rodríguez (adulto, dirigente). Se vincula a Randall y se desvincula de Camila."
+  ],
+  "tiquete_borrado": {
+    "id": "53c9c89b-32ce-4369-9f33-aa8064c77a57",
+    "source_group_id": "1f1cfd36-130b-4cce-9a65-2e8cdf19faef",
+    "source_plan_code": "DIS3",
+    "target_level_code": "DIS3",
+    "quantity": 10,
+    "sede": "Sede Pedregal Domingos",
+    "close_date": "2026-10-24T06:00:00.000Z",
+    "available_at": "2026-11-01T06:00:00.000Z",
+    "status": "enviado_entregado",
+    "confirmed_by": null,
+    "confirmed_at": "2026-10-24T14:36:03.704Z",
+    "created_at": "2026-10-24T14:36:03.704Z",
+    "updated_at": "2026-10-26T14:51:50.817Z",
+    "tipo": "cierre",
+    "bloque_id": null,
+    "target_leader_id": null,
+    "note": null,
+    "target_leader_name": null,
+    "origin_group_id": "ec19ee7d-97d3-4c6b-9b11-42fd30a42134",
+    "quantity_leaders": 1
+  },
+  "members_antes": [
+    {
+      "id": "08fe13d9-ee7c-491f-9275-e756f789ad92",
+      "first_name": "Randall",
+      "last_name": "Vega Rodríguez",
+      "email": "ranvega19@gmail.com",
+      "auth_user_id": null
+    },
+    {
+      "id": "75d00885-1f27-4c26-9e20-5ec563014c80",
+      "first_name": "Camila",
+      "last_name": "Calero Corrales",
+      "email": null,
+      "auth_user_id": "4e8452b9-3c68-4ccb-a1c7-9a953a01b5e7"
+    }
+  ],
+  "como_revertir": "insert into folleto_requests select * from json_populate_record(null::folleto_requests, <tiquete_borrado>); update members set auth_user_id = <antes> por id"
+}
