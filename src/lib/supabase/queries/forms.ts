@@ -530,13 +530,6 @@ export async function hasMemberResponded(formId: string, memberId: string): Prom
   return (data ?? []).length > 0
 }
 
-/**
- * Lo mismo para quien responde SIN ficha: la clave es el correo.
- *
- * Es lo único que identifica a un invitado entre dos envíos — la IP no sirve
- * (una familia comparte la del router) y el nombre lo escribe la persona cada
- * vez. Se compara en minúsculas y sin espacios, que es como se guarda.
- */
 /** FRM-7 · Cuándo fue la última respuesta de esta persona (ISO) o null. */
 export async function lastMemberResponseAt(formId: string, memberId: string): Promise<string | null> {
   const supabase = createAdminClient()
@@ -547,7 +540,13 @@ export async function lastMemberResponseAt(formId: string, memberId: string): Pr
   return ((data ?? [])[0] as { submitted_at: string | null } | undefined)?.submitted_at ?? null
 }
 
-/** FRM-7 · Lo mismo para quien responde sin ficha: por correo. */
+/**
+ * FRM-7 · Lo mismo para quien responde SIN ficha: la clave es el correo.
+ *
+ * Es lo único que identifica a un invitado entre dos envíos — la IP no sirve
+ * (una familia comparte la del router) y el nombre lo escribe la persona cada
+ * vez. Se compara en minúsculas y sin espacios, que es como se guarda.
+ */
 export async function lastGuestResponseAt(formId: string, guestEmail: string): Promise<string | null> {
   const correo = guestEmail.trim().toLowerCase()
   if (!correo) return null
@@ -557,17 +556,6 @@ export async function lastGuestResponseAt(formId: string, guestEmail: string): P
     .eq('form_id', formId).eq('guest_email', correo).order('submitted_at', { ascending: false }).limit(1)
   if (error) throw error
   return ((data ?? [])[0] as { submitted_at: string | null } | undefined)?.submitted_at ?? null
-}
-
-export async function hasGuestResponded(formId: string, guestEmail: string): Promise<boolean> {
-  const correo = guestEmail.trim().toLowerCase()
-  if (!correo) return false
-  const supabase = createAdminClient()
-  const { data, error } = await supabase
-    .from('form_responses').select('id')
-    .eq('form_id', formId).eq('guest_email', correo).limit(1)
-  if (error) throw error
-  return (data ?? []).length > 0
 }
 
 /**
