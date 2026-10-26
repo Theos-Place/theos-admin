@@ -1,0 +1,8 @@
+{
+  "fecha": "2026-10-26",
+  "motivo": "Randall Vega Rodríguez no recibía el correo de «recuperar contraseña»: su cuenta de Auth (ranvega19@gmail.com, 4e8452b9-3c68-4ccb-a1c7-9a953a01b5e7) nació en AUTH-1 vinculada a Camila Calero Corrales, menor de edad, y por eso estaba deshabilitada (banned_until 2126-01-01, política de menores). Al pasar la cuenta a Randall (adulto) el bloqueo quedó pegado y /api/auth/password-link registraba «cuenta_deshabilitada» en cada intento (8 intentos entre el 25 y el 26 de octubre).",
+  "accion": "auth.admin.updateUserById(id, { ban_duration: 'none' })",
+  "antes": { "banned_until": "2126-01-01T00:00:00Z" },
+  "despues": { "banned_until": null },
+  "como_revertir": "auth.admin.updateUserById(id, { ban_duration: '876000h' })"
+}
