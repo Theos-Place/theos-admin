@@ -36,6 +36,7 @@ import { Plus, Calendar, Code, ExternalLink, Repeat, CheckCircle2, X, AlertCircl
 import { EmptyState } from '@/components/shared/EmptyState'
 import { CheckSquare } from 'lucide-react'
 import { mostrarInscripciones } from '@/lib/events/inscripcion-visible'
+import { formatDate } from '@/lib/format'
 
 type EventView = 'calendar' | 'list' | 'grid'
 const VIEW_STORAGE_KEY = 'theos_eventos_view'
@@ -582,7 +583,6 @@ function EventosContent() {
               <tbody>
                 {visibleRows.map((event, idx) => {
                   const typeColor = typeStyle(event.event_type).color
-                  const startDate = new Date(event.start_at)
                   const past = isPastEvent(event)
                   const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
                   const elig = eligibilityByEventId.get(event.id)
@@ -621,7 +621,7 @@ function EventosContent() {
                         <EventTypeBadge type={event.event_type} size="sm" />
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 whitespace-nowrap font-body">
-                        {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                        {formatDate(event.start_at)}
                       </td>
                       {/* Conteos de inscripción = datos de gestión: no para
                           quien solo ve los eventos públicos. */}
@@ -680,7 +680,6 @@ function EventosContent() {
           <ul className="md:hidden">
             {visibleRows.map((event, idx) => {
               const typeColor = typeStyle(event.event_type).color
-              const startDate = new Date(event.start_at)
               const past = isPastEvent(event)
               const recurrence = event.is_recurring ? recurrenceLabel(event.recurrence_rule) : null
               const elig = eligibilityByEventId.get(event.id)
@@ -699,7 +698,7 @@ function EventosContent() {
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium text-navy font-body">{event.name}</p>
                     <p className="truncate text-[13px] text-navy-light/80 font-body">
-                      {startDate.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+                      {formatDate(event.start_at)}
                       {canManage && <>{' · '}{event.registrations.length} inscritos</>}
                     </p>
                     {event.is_recurring && (

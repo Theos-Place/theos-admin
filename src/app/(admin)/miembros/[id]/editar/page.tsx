@@ -17,6 +17,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { RESTRICCIONES_ALIMENTICIAS, normalizarRestricciones } from '@/lib/members/restriccion-alimenticia'
 import { mensajeDelError } from '@/lib/api/mensaje-del-error'
 
+import { DatePicker } from '@/components/events/DatePicker'
 export default function EditarMiembroPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const router = useRouter()
@@ -326,13 +327,7 @@ export default function EditarMiembroPage({ params }: { params: Promise<{ id: st
               </div>
               <div className="form-group">
                 <label className="form-label" htmlFor="edit-birth-date">Fecha de nacimiento</label>
-                <input
-                  id="edit-birth-date"
-                  type="date"
-                  className="form-input"
-                  value={birthDate}
-                  onChange={e => setBirthDate(e.target.value)}
-                />
+                <DatePicker id="edit-birth-date" className="form-input" value={birthDate} onChange={v => setBirthDate(v)} />
               </div>
             </div>
 

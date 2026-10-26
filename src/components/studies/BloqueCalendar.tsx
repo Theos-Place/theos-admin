@@ -15,9 +15,9 @@ import {
   type BloqueLite, type VentanaGrupo,
 } from '@/lib/studies/bloque-calendar'
 import { cn } from '@/lib/utils'
+import { formatDayMonth } from '@/lib/format'
 
-const fmtCorto = (iso: string) =>
-  new Date(`${iso}T00:00:00`).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })
+const fmtCorto = (iso: string) => formatDayMonth(iso)
 
 export function BloqueCalendar({ year, bloques, ventanas, todayIso, onSelect }: {
   year: number

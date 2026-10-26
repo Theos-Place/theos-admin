@@ -199,6 +199,7 @@ export function RecurrenceSelector({ value, onChange, startDate, endDate, onEndD
           <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Termina el (opcional)</p>
           <div className="flex items-center gap-2 max-w-xs">
             <DatePicker
+              ariaLabel="Termina el"
               value={endDate ?? ''}
               onChange={onEndDateChange}
               min={startDate}

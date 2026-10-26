@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth'
 
 import { usePermissions } from '@/hooks/usePermissions'
 import { formatDateLong } from '@/lib/format'
+import { formatDateTime } from '@/lib/format'
 
 /**
  * FRM-6b · Acá vivía `exportToCSV`, que armaba el CSV en el navegador mientras
@@ -319,7 +320,7 @@ export default function RespuestasPage() {
                         </div>
                       </td>
                       <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
-                        {new Date(resp.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                        {formatDateTime(resp.submitted_at)}
                       </td>
                       <td className="px-4 py-3">
                         <button
@@ -356,7 +357,7 @@ export default function RespuestasPage() {
                       <p className="truncate text-[13px] text-navy-light/80 font-body">{recordedByLabel(resp.recorded_by_name)}</p>
                     )}
                     <p className="truncate text-[13px] text-navy-light/80 font-body">
-                      {new Date(resp.submitted_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                      {formatDateTime(resp.submitted_at)}
                     </p>
                   </div>
                   <ChevronRight size={16} className="text-navy-light/80 shrink-0" />

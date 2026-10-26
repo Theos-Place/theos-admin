@@ -34,7 +34,9 @@ import {
   resumenGeneral, desgloseDeTarjeta, APORTE_VACIO, type AporteAlResumen,
 } from '@/lib/communications/resumen-general'
 import { formatDate } from '@/lib/format'
+import { formatDateTime } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type MainTab = 'historial' | 'programados' | 'borradores' | 'sistema'
 type ChannelFilter = 'all' | CommunicationChannel
 type StatusFilter = 'all' | CommunicationStatus
@@ -361,21 +363,9 @@ export default function ComunicacionesPage() {
                 <option value="failed">Fallido</option>
               </select>
               <div className="flex items-center gap-2">
-                <input
-                  type="date"
-                  aria-label="Desde"
-                  className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  value={dateFrom}
-                  onChange={e => setDateFrom(e.target.value)}
-                />
+                <DatePicker ariaLabel="Desde" className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30" value={dateFrom} onChange={v => setDateFrom(v)} />
                 <span className="text-navy-light/80 text-sm">—</span>
-                <input
-                  type="date"
-                  aria-label="Hasta"
-                  className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30"
-                  value={dateTo}
-                  onChange={e => setDateTo(e.target.value)}
-                />
+                <DatePicker ariaLabel="Hasta" className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30" value={dateTo} onChange={v => setDateTo(v)} />
               </div>
             </div>
 
@@ -442,7 +432,7 @@ export default function ComunicacionesPage() {
                       <div className="flex items-center gap-3 text-[13px] text-navy-light/80 font-body">
                         <span className="flex items-center gap-1">
                           <Calendar size={11} />
-                          {msg.sent_at ? new Date(msg.sent_at).toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' }) : '—'}
+                          {msg.sent_at ? formatDateTime(msg.sent_at) : '—'}
                         </span>
                         <span>por {msg.sent_by}</span>
                       </div>

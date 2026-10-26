@@ -110,12 +110,12 @@ describe('fechas puras: no se corren un día en Costa Rica', () => {
 // que antes; lo que cambia es que la protección de zona vive en un solo lugar.
 describe('formatMonthYear y formatDayMonth', () => {
   it('mes y año, sin día', () => {
-    expect(formatMonthYear('2026-05-15')).toBe('may 2026')
-    expect(formatMonthYear('2026-01-01')).toBe('ene 2026')
+    expect(formatMonthYear('2026-05-15')).toBe('05/2026')
+    expect(formatMonthYear('2026-01-01')).toBe('01/2026')
   })
   it('día y mes, sin año', () => {
-    expect(formatDayMonth('2026-05-15')).toBe('15 may')
-    expect(formatDayMonth('2026-01-01')).toBe('1 ene')
+    expect(formatDayMonth('2026-05-15')).toBe('15/05')
+    expect(formatDayMonth('2026-01-01')).toBe('01/01')
   })
   it('null da la raya, igual que el resto', () => {
     expect(formatMonthYear(null)).toBe('—')

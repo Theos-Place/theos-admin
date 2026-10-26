@@ -18,6 +18,7 @@ import { cn } from '@/lib/utils'
 import { Button } from '@/components/shared/Button'
 import { formatMoney, formatDate } from '@/lib/format'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   planInstallments, FREQUENCIES, FREQUENCY_LABEL, type PlanFrequency,
 } from '@/lib/finance/installments'
@@ -812,13 +813,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       </div>
                       <div className="space-y-1">
                         <label htmlFor="plan-primer" className="block text-[13px] text-navy-light/80 font-display">Vence el primero</label>
-                        <input
-                          id="plan-primer"
-                          type="date"
-                          value={planPanel.firstDue}
-                          onChange={e => setPlanPanel(p => p ? { ...p, firstDue: e.target.value } : p)}
-                          className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                        />
+                        <DatePicker id="plan-primer" value={planPanel.firstDue} onChange={v => setPlanPanel(p => p ? { ...p, firstDue: v } : p)} className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
                       </div>
                       <div className="space-y-1">
                         <label htmlFor="plan-frecuencia" className="block text-[13px] text-navy-light/80 font-display">Frecuencia</label>

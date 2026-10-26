@@ -101,8 +101,8 @@ function DateRange({ from, to, onFrom, onTo }: {
   // Mismo date picker de eventos (look Theos), consistente en todos los tabs.
   return (
     <div className="grid grid-cols-2 gap-2">
-      <DatePicker value={from} onChange={onFrom} placeholder="Desde" />
-      <DatePicker value={to} onChange={onTo} min={from || undefined} placeholder="Hasta" />
+      <DatePicker ariaLabel="Desde" value={from} onChange={onFrom} placeholder="Desde" />
+      <DatePicker ariaLabel="Hasta" value={to} onChange={onTo} min={from || undefined} placeholder="Hasta" />
     </div>
   )
 }

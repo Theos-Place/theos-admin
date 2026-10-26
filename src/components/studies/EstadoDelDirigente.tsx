@@ -34,6 +34,7 @@ import {
 } from '@/lib/leaders/estado-del-dirigente'
 import { disponibilidadEfectiva } from '@/lib/leaders/esta-dirigiendo'
 
+import { DatePicker } from '@/components/events/DatePicker'
 export type EstadoGuardado = Estado & {
   /** DIR-8 · «Está en el grupo de WhatsApp». Manual y logístico: no es una
    *  nota confidencial, así que lo marca quien puede editar el estado. */
@@ -351,12 +352,7 @@ export function EstadoDelDirigenteForm({
           {e.razonNoDisponible === 'pausa' && (
             <>
               <Campo controlId="dir-pausa-hasta" etiqueta="Vuelve el">
-                <input
-                  type="date"
-                  id="dir-pausa-hasta" value={e.pausaHasta ?? ''}
-                  onChange={ev => setE({ ...e, pausaHasta: ev.target.value || null })}
-                  className={TEXTO}
-                />
+                <DatePicker id="dir-pausa-hasta" value={e.pausaHasta ?? ''} onChange={v => setE({ ...e, pausaHasta: v || null })} className={TEXTO} />
               </Campo>
               {puedeNotas && (
                 <Nota controlId="dir-nota-pausa" etiqueta="Por qué la pausa" obligatoria

@@ -954,7 +954,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
                     : r.payment_status === 'paid' ? 'Pagado'
                     : r.payment_status === 'pending' ? (r.payment_in_review ? 'En revisión' : 'Pendiente')
                     : (r.payment_status ?? ''),
-                  r.registered_at ? new Date(r.registered_at).toLocaleDateString('es-CR') : '',
+                  r.registered_at ? formatDate(r.registered_at) : '',
                 ]),
                 `inscritos-${event.name}`,
               )}

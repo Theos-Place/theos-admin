@@ -7,6 +7,7 @@ import { useServers } from '@/hooks/useServers'
 import { useToast } from '@/components/shared/Toast'
 import { Check } from 'lucide-react'
 
+import { DatePicker } from '@/components/events/DatePicker'
 export default function EditarVacantePage() {
   const { id } = useParams<{ id: string }>()
   const router = useRouter()
@@ -155,7 +156,7 @@ export default function EditarVacantePage() {
           <div className="form-row">
             <div className="form-group">
               <label htmlFor="expira" className="form-label">Expira</label>
-              <input id="expira" type="date" aria-label="Expira" className={inputCls} value={expiresAt} onChange={e => setExpiresAt(e.target.value)} />
+              <DatePicker id="expira" ariaLabel="Expira" className={inputCls} value={expiresAt} onChange={v => setExpiresAt(v)} />
             </div>
             <div className="form-group flex items-end">
               <label className="flex items-center gap-2 cursor-pointer pb-2">

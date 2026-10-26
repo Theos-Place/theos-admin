@@ -22,6 +22,7 @@ import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/stud
 import { toClosePayload, missingReasons, missingReasonsMessage } from '@/lib/studies/close-payload'
 import { ChevronLeft, CheckCircle, AlertTriangle, BookOpen, Star, Sparkles } from 'lucide-react'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type ParticipantResult = {
   member_id: string
   member_name: string
@@ -679,17 +680,9 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
                   {avisoDeAnticipacion(minimoDias)}
                 </p>
               )}
-              <input
-                id="inicio-sucesor"
-                type="date"
-                value={inicioSucesor}
-                min={minimoDias
+              <DatePicker id="inicio-sucesor" value={inicioSucesor} min={minimoDias
                   ? sumarDias(hoyCR, minimoDias)
-                  : sumarDias(hoyCR, -MESES_DE_HOLGURA * 31)}
-                max={sumarDias(hoyCR, MESES_DE_HOLGURA * 31)}
-                onChange={e => setInicioSucesor(e.target.value)}
-                className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              />
+                  : sumarDias(hoyCR, -MESES_DE_HOLGURA * 31)} max={sumarDias(hoyCR, MESES_DE_HOLGURA * 31)} onChange={v => setInicioSucesor(v)} className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               {!errorInicio && inicioSucesor !== inicioCalculado && (
                 <p className="text-[13px] text-navy-light/80 font-body">
                   La fecha sugerida era el {formatDateLong(inicioCalculado)}.

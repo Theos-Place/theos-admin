@@ -5,6 +5,7 @@ import { Check, Loader2, Sparkles } from 'lucide-react'
 
 import { PerfilSirve } from '@/components/members/PerfilSirve'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type Spiritual = {
   baptism_date: string | null
   baptism_place: string | null
@@ -95,7 +96,7 @@ export function MemberSpiritualTab({ memberId, onActualizado }: { memberId: stri
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         <div>
           <label htmlFor="fecha-de-bautizo" className={labelCls}>Fecha de bautizo</label>
-          <input id="fecha-de-bautizo" type="date" className={inputCls} value={data?.baptism_date ?? ''} onChange={e => set('baptism_date', e.target.value || null)} />
+          <DatePicker id="fecha-de-bautizo" className={inputCls} value={data?.baptism_date ?? ''} onChange={v => set('baptism_date', v || null)} />
         </div>
         <div>
           <label htmlFor="lugar-de-bautizo" className={labelCls}>Lugar de bautizo</label>

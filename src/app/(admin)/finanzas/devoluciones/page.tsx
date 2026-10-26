@@ -22,6 +22,7 @@ import { refundKindLabel, REFUND_KINDS, kindHasPlan, type RefundKind } from '@/l
 import { useToast } from '@/components/shared/Toast'
 import { formatDate, formatMoney } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 function RefundStatusBadge({ status }: { status: RefundStatus }) {
   const cfg: Record<RefundStatus, { label: string; color: string; bg: string }> = {
     pending:    { label: 'Pendiente',   color: '#7F6210', bg: 'rgba(233,185,73,0.15)'  },
@@ -251,11 +252,11 @@ export default function DevolucionesPage() {
           <div className={BARRA_IZQ}>
             <label htmlFor="dev-desde" className={GRUPO_FILTRO}>
               <span className={ETIQUETA_FILTRO}>Solicitada desde</span>
-              <input id="dev-desde" type="date" value={desde} max={hasta || undefined} onChange={e => setDesde(e.target.value)} className={CAMPO_FECHA} />
+              <DatePicker id="dev-desde" value={desde} max={hasta || undefined} onChange={v => setDesde(v)} className={CAMPO_FECHA} />
             </label>
             <label htmlFor="dev-hasta" className={GRUPO_FILTRO}>
               <span className={ETIQUETA_FILTRO}>Hasta</span>
-              <input id="dev-hasta" type="date" value={hasta} min={desde || undefined} onChange={e => setHasta(e.target.value)} className={CAMPO_FECHA} />
+              <DatePicker id="dev-hasta" value={hasta} min={desde || undefined} onChange={v => setHasta(v)} className={CAMPO_FECHA} />
             </label>
             {(desde || hasta) && (
               <button type="button" onClick={() => { setDesde(''); setHasta('') }} className={BOTON_SECUNDARIO}>Limpiar</button>
@@ -470,8 +471,7 @@ export default function DevolucionesPage() {
               </p>
               <div>
                 <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">Fecha de transferencia</label>
-                <input id="fecha-de-transferencia" type="date" value={completionDate} onChange={e => setCompletionDate(e.target.value)}
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy" />
+                <DatePicker id="fecha-de-transferencia" value={completionDate} onChange={v => setCompletionDate(v)} className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy" />
               </div>
               <div>
                 <label htmlFor="numero-de-confirmacion" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">Número de confirmación</label>

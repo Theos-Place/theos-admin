@@ -5,6 +5,7 @@ import { Check } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { formatCRC } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
 interface ModalAjusteSalarialProps {
@@ -85,12 +86,7 @@ export function ModalAjusteSalarial({
             </div>
             <div className="space-y-1">
               <label htmlFor="fecha-efectiva" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha efectiva <span className="text-coral-deep">*</span></label>
-              <input id="fecha-efectiva"
-                type="date"
-                className={cn(inputCls, 'font-body')}
-                value={raiseDate}
-                onChange={e => onRaiseDateChange(e.target.value)}
-              />
+              <DatePicker id="fecha-efectiva" className={cn(inputCls, 'font-body')} value={raiseDate} onChange={v => onRaiseDateChange(v)} />
             </div>
             <div className="flex justify-end gap-2 pt-2">
               <button

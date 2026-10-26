@@ -19,6 +19,7 @@ import { generateCSV, exportQuickBooksCSV } from '@/lib/export'
 import { formatDate } from '@/lib/format'
 import { anioDe, caeEn } from '@/lib/fecha/partes-de-fecha'
 import { useEventTypeStyle } from '@/hooks/useEventTypes'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   categoriaDePago, claveDeCategoria, etiquetaDeCategoria, cumpleFiltroDeCategoria, fechaDelPago, enRango,
   ETIQUETA_DE_AREA, type AreaDePago,
@@ -229,11 +230,11 @@ export default function ReportesPage() {
                 {/* REP-17 · rango por fecha de pago (cancelados) o de creación del cobro (el resto). */}
                 <label className={GRUPO_FILTRO}>
                   <span className={ETIQUETA_FILTRO}>Desde</span>
-                  <input type="date" value={pagoDesde} onChange={e => setPagoDesde(e.target.value)} aria-label="Pagos desde" className={CAMPO_FECHA} />
+                  <DatePicker value={pagoDesde} onChange={v => setPagoDesde(v)} ariaLabel="Pagos desde" className={CAMPO_FECHA} />
                 </label>
                 <label className={GRUPO_FILTRO}>
                   <span className={ETIQUETA_FILTRO}>Hasta</span>
-                  <input type="date" value={pagoHasta} onChange={e => setPagoHasta(e.target.value)} aria-label="Pagos hasta" className={CAMPO_FECHA} />
+                  <DatePicker value={pagoHasta} onChange={v => setPagoHasta(v)} ariaLabel="Pagos hasta" className={CAMPO_FECHA} />
                 </label>
                 <select value={categoriaFilter} onChange={e => { setCategoriaFilter(e.target.value); setEntityFilter('all') }} aria-label="Comité" className={CAMPO}>
                   {opcionesDeCategoria.map(o => <option key={o.value} value={o.value}>{o.label}</option>)}

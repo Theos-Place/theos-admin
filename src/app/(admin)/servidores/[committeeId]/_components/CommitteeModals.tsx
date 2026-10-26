@@ -4,6 +4,7 @@ import { Search, Plus } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import type { CommitteeServer, CommitteePosition } from '@/types/server'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type DisconnectReason = 'renuncia' | 'cambio' | 'fin-periodo' | 'otro'
 
 const DISCONNECT_REASONS: { value: DisconnectReason; label: string }[] = [
@@ -86,12 +87,7 @@ export function DisconnectModal({
             <label htmlFor="fecha-efectiva-de-salida" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Fecha efectiva de salida
             </label>
-            <input id="fecha-efectiva-de-salida"
-              type="date"
-              className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              value={date}
-              onChange={e => onDateChange(e.target.value)}
-            />
+            <DatePicker id="fecha-efectiva-de-salida" className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" value={date} onChange={v => onDateChange(v)} />
           </div>
         </div>
 

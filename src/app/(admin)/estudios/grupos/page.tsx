@@ -35,6 +35,7 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { ErrorState } from '@/components/shared/ErrorState'
 import { getInitials, formatDateNumeric } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const PAGE_SIZE = 25
 const ESTADOS_POR_DEFECTO: EstadoVisible[] = ['en_matricula', 'por_iniciar', 'en_curso']
 
@@ -555,23 +556,9 @@ export default function GruposPage() {
               Inicio entre
             </p>
             <div className="flex items-center gap-2">
-              <input
-                type="date"
-                className={cn(inputCls, 'font-body')}
-                aria-label="Fecha de inicio desde"
-                value={startFrom}
-                max={startTo || undefined}
-                onChange={e => setStartFrom(e.target.value)}
-              />
+              <DatePicker className={cn(inputCls, 'font-body')} ariaLabel="Fecha de inicio desde" value={startFrom} max={startTo || undefined} onChange={v => setStartFrom(v)} />
               <span className="text-[13px] text-navy-light/80">y</span>
-              <input
-                type="date"
-                className={cn(inputCls, 'font-body')}
-                aria-label="Fecha de inicio hasta"
-                value={startTo}
-                min={startFrom || undefined}
-                onChange={e => setStartTo(e.target.value)}
-              />
+              <DatePicker className={cn(inputCls, 'font-body')} ariaLabel="Fecha de inicio hasta" value={startTo} min={startFrom || undefined} onChange={v => setStartTo(v)} />
             </div>
           </div>
 

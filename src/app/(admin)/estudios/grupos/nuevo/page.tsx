@@ -28,6 +28,7 @@ import { canAdvanceLeaderStep, leaderStepHint } from '@/lib/studies/leader-step'
 import { RestriccionDeAudiencia } from '@/components/audiencia/RestriccionDeAudiencia'
 import type { GroupRestriction } from '@/lib/studies/group-restrictions'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
   { value: 'en_matricula', label: 'En matrícula' },
   { value: 'en_curso',     label: 'En curso' },
@@ -487,12 +488,7 @@ function NuevoGrupo() {
               <label htmlFor="fecha-de-inicio-estimada" className="text-[13px] text-navy-light/80 font-display">
                 Fecha de inicio estimada
               </label>
-              <input id="fecha-de-inicio-estimada"
-                type="date"
-                className={inputCls}
-                value={step1.start_date}
-                onChange={e => setS1('start_date', e.target.value)}
-              />
+              <DatePicker id="fecha-de-inicio-estimada" className={inputCls} value={step1.start_date} onChange={v => setS1('start_date', v)} />
             </div>
 
             {/* GRU-1: ventana de matrícula. El grupo solo acepta matrículas
@@ -502,13 +498,7 @@ function NuevoGrupo() {
               <label htmlFor="inicio-de-matricula" className="text-[13px] text-navy-light/80 font-display">
                 Inicio de matrícula
               </label>
-              <input id="inicio-de-matricula"
-                type="date"
-                className={inputCls}
-                value={step1.enrollment_start}
-                max={step1.enrollment_end || undefined}
-                onChange={e => { setEnrollTouched(true); setS1('enrollment_start', e.target.value) }}
-              />
+              <DatePicker id="inicio-de-matricula" className={inputCls} value={step1.enrollment_start} max={step1.enrollment_end || undefined} onChange={v => { setEnrollTouched(true); setS1('enrollment_start', v) }} />
             </div>
             {/* Fin de matrícula: nunca antes del inicio ni antes de hoy; el
                 tope es el arranque del grupo SOLO si es futuro (acotar por un
@@ -517,14 +507,7 @@ function NuevoGrupo() {
               <label htmlFor="fin-de-matricula" className="text-[13px] text-navy-light/80 font-display">
                 Fin de matrícula
               </label>
-              <input id="fin-de-matricula"
-                type="date"
-                className={inputCls}
-                value={step1.enrollment_end}
-                min={minEnrollmentEnd(step1.enrollment_start, toYmdLocal(new Date()))}
-                max={maxEnrollmentEnd(step1.start_date, toYmdLocal(new Date()))}
-                onChange={e => { setEnrollTouched(true); setS1('enrollment_end', e.target.value) }}
-              />
+              <DatePicker id="fin-de-matricula" className={inputCls} value={step1.enrollment_end} min={minEnrollmentEnd(step1.enrollment_start, toYmdLocal(new Date()))} max={maxEnrollmentEnd(step1.start_date, toYmdLocal(new Date()))} onChange={v => { setEnrollTouched(true); setS1('enrollment_end', v) }} />
             </div>
 
             <div className="col-span-1 sm:col-span-2">

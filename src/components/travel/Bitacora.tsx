@@ -22,6 +22,7 @@ import {
 } from '@/lib/travel/kilometraje'
 import type { Moneda } from '@/lib/travel/presupuesto'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const etiqueta = 'text-[11px] tracking-widest uppercase text-navy-light/80 font-display'
 const campo = 'w-full rounded-xl border border-navy/15 px-3 py-2 text-[13px] text-navy font-body focus:border-coral focus:outline-none focus:ring-1 focus:ring-coral'
 
@@ -116,8 +117,7 @@ export function Bitacora({ viajeId, editable, tramosIniciales, tarifa, moneda, a
             <div key={i} className="grid grid-cols-1 gap-2 rounded-xl bg-surface-low p-3 sm:grid-cols-12 sm:items-end">
               <div className="space-y-1 sm:col-span-2">
                 <label htmlFor={`t-fecha-${i}`} className={etiqueta}>Fecha</label>
-                <input id={`t-fecha-${i}`} type="date" className={campo} value={t.fecha}
-                  onChange={e => set(i, { fecha: e.target.value })} />
+                <DatePicker id={`t-fecha-${i}`} className={campo} value={t.fecha} onChange={v => set(i, { fecha: v })} />
               </div>
               <div className="space-y-1 sm:col-span-3">
                 <label htmlFor={`t-org-${i}`} className={etiqueta}>Origen</label>

@@ -4,6 +4,7 @@ import { cn } from '@/lib/utils'
 import { AlertOctagon } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
 interface ModalDarDeBajaProps {
@@ -54,12 +55,7 @@ export function ModalDarDeBaja({
         </div>
         <div className="space-y-1">
           <label htmlFor="fecha-de-baja" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Fecha de baja</label>
-          <input id="fecha-de-baja"
-            type="date"
-            className={cn(inputCls, 'font-body')}
-            value={terminateDate}
-            onChange={e => onTerminateDateChange(e.target.value)}
-          />
+          <DatePicker id="fecha-de-baja" className={cn(inputCls, 'font-body')} value={terminateDate} onChange={v => onTerminateDateChange(v)} />
         </div>
         <div className="space-y-1">
           <label htmlFor="motivo" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Motivo</label>

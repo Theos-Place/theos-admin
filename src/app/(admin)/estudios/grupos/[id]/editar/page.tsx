@@ -21,6 +21,7 @@ import type { StudyType, StudyGroup, GroupStatus } from '@/types/study'
 import { RestriccionDeAudiencia } from '@/components/audiencia/RestriccionDeAudiencia'
 import { normalizeRestriction, type GroupRestriction } from '@/lib/studies/group-restrictions'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const STATUS_OPTIONS: Array<{ value: GroupStatus; label: string }> = [
   { value: 'en_matricula', label: 'En matrícula' },
   { value: 'en_curso',     label: 'En curso' },
@@ -345,21 +346,21 @@ function EditarForm({ group, studyType, refetch }: {
           {/* Fechas */}
           <div className="space-y-1">
             <label htmlFor="fecha-de-inicio" className={labelCls}>Fecha de inicio</label>
-            <input id="fecha-de-inicio" type="date" className={inputCls} value={startDate} onChange={e => setStartDate(e.target.value)} />
+            <DatePicker id="fecha-de-inicio" className={inputCls} value={startDate} onChange={v => setStartDate(v)} />
           </div>
           <div className="space-y-1">
             <label htmlFor="fecha-de-cierre" className={labelCls}>Fecha de cierre</label>
-            <input id="fecha-de-cierre" type="date" className={inputCls} value={endDate} onChange={e => setEndDate(e.target.value)} />
+            <DatePicker id="fecha-de-cierre" className={inputCls} value={endDate} onChange={v => setEndDate(v)} />
           </div>
 
           {/* GRU-1: ventana de matrícula (vacías = modo manual). */}
           <div className="space-y-1">
             <label htmlFor="inicio-de-matricula" className={labelCls}>Inicio de matrícula</label>
-            <input id="inicio-de-matricula" type="date" className={inputCls} value={enrollStart} max={enrollEnd || undefined} onChange={e => setEnrollStart(e.target.value)} />
+            <DatePicker id="inicio-de-matricula" className={inputCls} value={enrollStart} max={enrollEnd || undefined} onChange={v => setEnrollStart(v)} />
           </div>
           <div className="space-y-1">
             <label htmlFor="fin-de-matricula" className={labelCls}>Fin de matrícula</label>
-            <input id="fin-de-matricula" type="date" className={inputCls} value={enrollEnd} min={minEnrollmentEnd(enrollStart, toYmdLocal(new Date()))} max={maxEnrollmentEnd(startDate, toYmdLocal(new Date()))} onChange={e => setEnrollEnd(e.target.value)} />
+            <DatePicker id="fin-de-matricula" className={inputCls} value={enrollEnd} min={minEnrollmentEnd(enrollStart, toYmdLocal(new Date()))} max={maxEnrollmentEnd(startDate, toYmdLocal(new Date()))} onChange={v => setEnrollEnd(v)} />
           </div>
 
           {/* WhatsApp */}

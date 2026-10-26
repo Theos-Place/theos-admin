@@ -23,6 +23,7 @@ import {
 import { NOTA_DE_CONVERSION, sigueAbierta } from '@/lib/finance/solicitud-de-beca'
 import type { FinanceRequest } from '@/types/finance'
 
+import { DatePicker } from '@/components/events/DatePicker'
 export function OfrecerArregloButton({ req, onDone }: {
   req: FinanceRequest
   onDone: (actualizada: FinanceRequest) => void
@@ -128,13 +129,7 @@ export function OfrecerArregloButton({ req, onDone }: {
               <label htmlFor="arreglo-primer-vencimiento" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
                 Vence el primer tracto
               </label>
-              <input
-                id="arreglo-primer-vencimiento"
-                type="date"
-                value={primerVencimiento}
-                onChange={e => setPrimerVencimiento(e.target.value)}
-                className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-              />
+              <DatePicker id="arreglo-primer-vencimiento" value={primerVencimiento} onChange={v => setPrimerVencimiento(v)} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
             </div>
 
             <div className="space-y-1">

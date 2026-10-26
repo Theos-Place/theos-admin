@@ -28,6 +28,7 @@ import { generateCSV } from '@/lib/export'
 import { InfoDelEncabezado } from '@/components/shared/InfoDelEncabezado'
 import { explicacionDeDonantes } from '@/lib/finance/ventana-de-donante'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type StatusFilter = 'all' | 'identified' | 'unidentified'
 
 /**
@@ -149,11 +150,11 @@ export function DonacionesPanel() {
           <div className={BARRA_IZQ}>
             <label className={GRUPO_FILTRO}>
               <span className={ETIQUETA_FILTRO}>Desde</span>
-              <input type="date" value={dateFrom} onChange={e => setDateFrom(e.target.value)} aria-label="Donaciones desde" className={CAMPO_FECHA} />
+              <DatePicker value={dateFrom} onChange={v => setDateFrom(v)} ariaLabel="Donaciones desde" className={CAMPO_FECHA} />
             </label>
             <label className={GRUPO_FILTRO}>
               <span className={ETIQUETA_FILTRO}>Hasta</span>
-              <input type="date" value={dateTo} onChange={e => setDateTo(e.target.value)} aria-label="Donaciones hasta" className={CAMPO_FECHA} />
+              <DatePicker value={dateTo} onChange={v => setDateTo(v)} ariaLabel="Donaciones hasta" className={CAMPO_FECHA} />
             </label>
             {gestiona && (
               <>

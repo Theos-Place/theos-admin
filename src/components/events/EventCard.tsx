@@ -10,6 +10,7 @@ import { EventStatusBadge } from '@/components/events/EventStatusBadge'
 import { RealizadoBadge } from '@/components/events/RealizadoBadge'
 import { isPastEvent, recurrenceLabel } from '@/lib/events/expand-recurrence'
 import { useEventTypeStyle } from '@/hooks/useEventTypes'
+import { formatDate } from '@/lib/format'
 
 interface EventCardProps {
   event: AdminEvent
@@ -78,7 +79,7 @@ export function EventCard({ event, linkToDetail = true, eligibility, onRegister,
         <div className="mt-auto space-y-1 pt-1">
           <p className="flex items-center gap-1.5 text-[13px] text-navy-light/80 font-body">
             <Clock size={13} className="shrink-0 text-navy-light/80" />
-            {start.toLocaleDateString('es-CR', { day: 'numeric', month: 'short', year: 'numeric' })}
+            {formatDate(start.toISOString())}
             {' · '}
             {start.toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit', hour12: true })}
           </p>

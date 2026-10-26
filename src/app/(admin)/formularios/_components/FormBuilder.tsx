@@ -23,6 +23,7 @@ import { RestriccionDeAudiencia } from '@/components/audiencia/RestriccionDeAudi
 import { normalizeRestriction, type Restriccion } from '@/lib/audiencia/restriccion'
 import { exigeIdentificarse, AVISO_EXIGE_CUENTA } from '@/lib/forms/audiencia'
 
+import { DatePicker } from '@/components/events/DatePicker'
 // Tipos estructurales que no exigen label (el separador de página es un divisor).
 type FormStatus = 'draft' | 'active'
 
@@ -597,22 +598,11 @@ export function FormBuilder({ formId }: FormBuilderProps) {
               <div className="flex flex-wrap gap-3">
                 <label className="text-[13px] text-navy-light/80 font-body">
                   Activo desde
-                  <input
-                    type="date"
-                    value={windowStart}
-                    onChange={e => setWindowStart(e.target.value)}
-                    className="block mt-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                  />
+                  <DatePicker ariaLabel="Activo desde" value={windowStart} onChange={v => setWindowStart(v)} className="block mt-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
                 </label>
                 <label className="text-[13px] text-navy-light/80 font-body">
                   Hasta (inclusive)
-                  <input
-                    type="date"
-                    value={windowEnd}
-                    min={windowStart || undefined}
-                    onChange={e => setWindowEnd(e.target.value)}
-                    className="block mt-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                  />
+                  <DatePicker ariaLabel="Hasta (inclusive)" value={windowEnd} min={windowStart || undefined} onChange={v => setWindowEnd(v)} className="block mt-1 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
                 </label>
               </div>
             </div>

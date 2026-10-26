@@ -11,6 +11,7 @@ import { formatSedeRecency } from '@/lib/sede-attendance'
 import { ACCOUNT_STATE_LABEL } from '@/lib/members/account-state'
 import { conditionLabel } from '@/lib/condition-labels'
 import { textoDeRestricciones } from '@/lib/members/restriccion-alimenticia'
+import { formatDate } from '@/lib/format'
 
 export function initials(m: Member) {
   return initialsFromParts(m.first_name, m.last_name)
@@ -179,7 +180,7 @@ export const MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'join_date', label: 'Fecha de ingreso', defaultVisible: false,
-    exportValue: m => m.join_date ? new Date(m.join_date).toLocaleDateString('es-CR', { day: '2-digit', month: '2-digit', year: '2-digit' }) : '',
+    exportValue: m => m.join_date ? formatDate(m.join_date) : '',
   },
   {
     key: 'gender', label: 'Género', defaultVisible: false,

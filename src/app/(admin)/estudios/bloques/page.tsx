@@ -15,6 +15,7 @@ import { BloqueCalendar } from '@/components/studies/BloqueCalendar'
 import { availableYears, type VentanaGrupo } from '@/lib/studies/bloque-calendar'
 import { formatDate, ymdCR } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 /** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
 const SIN_DATOS: Bloque[] = []
 
@@ -292,11 +293,11 @@ export default function BloquesPage() {
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label htmlFor="fecha-de-apertura" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Fecha de apertura</label>
-                <input id="fecha-de-apertura" type="date" value={form.fecha_apertura} onChange={e => setForm(f => ({ ...f, fecha_apertura: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+                <DatePicker id="fecha-de-apertura" value={form.fecha_apertura} onChange={v => setForm(f => ({ ...f, fecha_apertura: v }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               </div>
               <div className="space-y-1">
                 <label htmlFor="cierre-de-matricula" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Cierre de matrícula</label>
-                <input id="cierre-de-matricula" type="date" value={form.fecha_cierre_matricula} onChange={e => setForm(f => ({ ...f, fecha_cierre_matricula: e.target.value }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+                <DatePicker id="cierre-de-matricula" value={form.fecha_cierre_matricula} onChange={v => setForm(f => ({ ...f, fecha_cierre_matricula: v }))} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
               </div>
             </div>
             {milestones && (

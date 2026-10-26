@@ -21,6 +21,7 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { formatCRC, formatDate } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   mesActual, nombreDelMes, revisarFactura, sePuedeCerrar, type Factura, type Saldo, type Semana,
 } from '@/lib/finance/adelantos'
@@ -261,9 +262,9 @@ function ModalFactura({ a, onCerrar, onListo }: { a: Adelanto; onCerrar: () => v
       <div className="p-5 space-y-3">
         <h2 id="factura-title" className="text-base font-bold text-navy font-display">Nueva factura · {a.sede_name}</h2>
         <div className="grid grid-cols-2 gap-3">
-          <div className="space-y-1"><label htmlFor="f-semana" className={etiqueta}>Semana (fecha de charla)</label><input id="f-semana" type="date" className={campo} value={f.semana} onChange={e => set('semana', e.target.value)} /></div>
+          <div className="space-y-1"><label htmlFor="f-semana" className={etiqueta}>Semana (fecha de charla)</label><DatePicker id="f-semana" className={campo} value={f.semana} onChange={v => set('semana', v)} /></div>
           <div className="space-y-1"><label htmlFor="f-enc" className={etiqueta}>Encargado</label><input id="f-enc" className={campo} value={f.encargado ?? ''} onChange={e => set('encargado', e.target.value)} /></div>
-          <div className="space-y-1"><label htmlFor="f-fecha" className={etiqueta}>Fecha de la factura</label><input id="f-fecha" type="date" className={campo} value={f.fecha} onChange={e => set('fecha', e.target.value)} /></div>
+          <div className="space-y-1"><label htmlFor="f-fecha" className={etiqueta}>Fecha de la factura</label><DatePicker id="f-fecha" className={campo} value={f.fecha} onChange={v => set('fecha', v)} /></div>
           <div className="space-y-1"><label htmlFor="f-monto" className={etiqueta}>Monto</label><input id="f-monto" type="number" min={0} step="any" className={campo} value={f.monto || ''} onChange={e => set('monto', Number(e.target.value))} /></div>
           <div className="space-y-1 col-span-2"><label htmlFor="f-prov" className={etiqueta}>Proveedor</label><input id="f-prov" className={campo} value={f.proveedor} onChange={e => set('proveedor', e.target.value)} /></div>
           <div className="space-y-1"><label htmlFor="f-num" className={etiqueta}>N° factura electrónica</label><input id="f-num" className={campo} value={f.numero_factura ?? ''} onChange={e => set('numero_factura', e.target.value)} /></div>

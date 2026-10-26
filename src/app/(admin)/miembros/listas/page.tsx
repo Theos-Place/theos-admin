@@ -30,7 +30,7 @@ function timeAgo(dateStr: string | null): string {
   const weeks = Math.floor(days / 7)
   if (weeks === 1) return 'hace 1 semana'
   if (weeks < 5) return `hace ${weeks} semanas`
-  return new Date(dateStr).toLocaleDateString('es-CR', { day: 'numeric', month: 'short' })
+  return formatDate(dateStr)
 }
 
 export default function ListasGuardadasPage() {

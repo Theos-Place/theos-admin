@@ -18,6 +18,7 @@ import { toYmdLocal } from '@/lib/format'
 import { ScholarshipRequestModal } from '@/components/finance/ScholarshipRequestModal'
 import { PageContainer } from '@/components/layout/PageContainer'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type Enrollee = { member_id: string; name: string; email: string | null; has_cedula: boolean; meets_requirement: boolean }
 
 const DAYS = ['Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes']
@@ -414,7 +415,7 @@ export default function PrematrimonialWizardPage() {
                   con su regla y su copy exacto (mínimo hoy + 6 meses). */}
               <div>
                 <p className="mb-1.5 text-[13px] font-medium text-navy-light/80 font-body">{CEREMONY_DATE_QUESTION}</p>
-                <input aria-label={CEREMONY_DATE_QUESTION} type="date" value={ceremonyDate} min={minWeddingDate} onChange={e => setCeremonyDate(e.target.value)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
+                <DatePicker ariaLabel={CEREMONY_DATE_QUESTION} value={ceremonyDate} min={minWeddingDate} onChange={v => setCeremonyDate(v)} className="rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />
                 <label className="ml-3 text-[13px] text-navy font-body"><input type="checkbox" checked={dateDefined} onChange={e => setDateDefined(e.target.checked)} /> Fecha ya definida</label>
               </div>
               <textarea value={comments} onChange={e => setComments(e.target.value)} rows={3} placeholder="Comentarios adicionales (opcional)" className="w-full rounded-xl border border-navy/15 px-3 py-2 text-sm outline-none focus:border-navy/30 font-body" />

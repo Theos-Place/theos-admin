@@ -16,6 +16,7 @@ import { DATING_TIME_OPTIONS, LIVING_OPTIONS } from '@/lib/studies/premat-backgr
 import { MemberCombobox, type MemberHit } from '@/components/shared/MemberCombobox'
 import { useToast } from '@/components/shared/Toast'
 
+import { DatePicker } from '@/components/events/DatePicker'
 /** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
 const SIN_DATOS: Req[] = []
 
@@ -228,7 +229,7 @@ export function PrematrimonialQueue() {
                   <input value={gZone} onChange={e => setGZone(e.target.value)} placeholder="Zona" className="flex-1 rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
                   <input value={gTime} onChange={e => setGTime(e.target.value)} placeholder="Horario" className="flex-1 rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
                 </div>
-                <input aria-label="Fecha de inicio del grupo" type="date" value={gStart} onChange={e => setGStart(e.target.value)} className="rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
+                <DatePicker ariaLabel="Fecha de inicio del grupo" value={gStart} onChange={v => setGStart(v)} className="rounded-lg border border-navy/15 px-3 py-2 text-[13px] outline-none focus:border-navy/30 font-body" />
                 <div className="flex gap-2 pt-1">
                   <button onClick={() => createGroup(r.id)} disabled={busy} className="inline-flex items-center gap-1.5 rounded-full bg-teal px-3.5 py-1.5 text-[13px] font-medium text-navy disabled:opacity-50 font-body">{busy ? <Loader2 size={13} className="animate-spin" /> : <Check size={13} />} Crear y asignar</button>
                   <button onClick={() => setPanel(null)} className="rounded-full px-3.5 py-1.5 text-[13px] text-navy-light/80 font-body">Cerrar</button>

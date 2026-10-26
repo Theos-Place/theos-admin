@@ -18,6 +18,7 @@ import {
 import { studyLabel } from '@/data/study-catalog'
 import { formatDateLong, ymdCR } from '@/lib/format'
 import { cn } from '@/lib/utils'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   resumenDeHorarios, resumenDeEstudios, resumenDeZonas, resumenDeExtras,
   type LineaDeResumen,
@@ -569,19 +570,9 @@ function VentanaDelAño({ desde, hasta, disabled, onChange }: {
         ¿En qué parte del año podés?
       </p>
       <div className="flex flex-wrap items-center gap-2">
-        <input
-          type="date" value={d} min={hoy} disabled={disabled}
-          aria-label="Disponible desde"
-          onChange={e => aplicar(e.target.value, h)}
-          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body disabled:opacity-60"
-        />
+        <DatePicker value={d} min={hoy} disabled={disabled} ariaLabel="Disponible desde" onChange={v => aplicar(v, h)} className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body disabled:opacity-60" />
         <span className="text-[13px] text-navy-light/80 font-body">a</span>
-        <input
-          type="date" value={h} min={d || hoy} disabled={disabled}
-          aria-label="Disponible hasta"
-          onChange={e => aplicar(d, e.target.value)}
-          className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body disabled:opacity-60"
-        />
+        <DatePicker value={h} min={d || hoy} disabled={disabled} ariaLabel="Disponible hasta" onChange={v => aplicar(d, v)} className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body disabled:opacity-60" />
         {(d || h) && !disabled && (
           <button
             onClick={() => aplicar('', '')}

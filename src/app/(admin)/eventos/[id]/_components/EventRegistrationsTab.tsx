@@ -10,6 +10,7 @@ import type { AdminEvent } from '@/data/event-config'
 import { getInitials, formatCRC } from '@/lib/format'
 import { generateCSV } from '@/lib/export'
 import { usePermissions } from '@/hooks/usePermissions'
+import { formatDate } from '@/lib/format'
 
 type Event = AdminEvent
 type PaymentStatus = 'pending' | 'paid' | 'exempted'
@@ -184,7 +185,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                 ['Nombre', 'Fecha de inscripción', 'Pago'],
                 event.registrations.map(r => [
                   r.member_name,
-                  new Date(r.registered_at).toLocaleDateString('es-CR'),
+                  formatDate(r.registered_at),
                   etiquetaPago(r, event.requires_payment),
                 ]),
                 'inscritos',
@@ -235,7 +236,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                     </div>
                   </td>
                   <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
-                    {new Date(reg.registered_at).toLocaleDateString('es-CR')}
+                    {formatDate(reg.registered_at)}
                   </td>
                   <td className="px-4 py-3">
                     <div className="flex flex-wrap items-center gap-2">
@@ -311,7 +312,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm text-navy font-body">{reg.member_name}</p>
                     <p className="text-[13px] text-navy-light/80 font-body">
-                      {new Date(reg.registered_at).toLocaleDateString('es-CR')}
+                      {formatDate(reg.registered_at)}
                     </p>
                   </div>
                   <select aria-label={`Estado de pago de ${reg.member_name}`}

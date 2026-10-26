@@ -87,7 +87,7 @@ const LIST_MEMBER_COLUMNS: ColumnDef<Member>[] = [
   },
   {
     key: 'join_date', label: 'Fecha de ingreso', defaultVisible: false,
-    exportValue: m => m.join_date ? new Date(m.join_date).toLocaleDateString('es-CR') : '',
+    exportValue: m => m.join_date ? formatDate(m.join_date) : '',
   },
 ]
 

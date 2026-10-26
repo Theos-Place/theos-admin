@@ -14,6 +14,7 @@ import { useToast } from '@/components/shared/Toast'
 import { levelLabel } from '@/lib/studies/folletos'
 import { todayCR } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const inputCls = 'w-full rounded-xl bg-surface-card px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body'
 const labelCls = 'text-[11px] tracking-widest uppercase text-navy-light/80 font-display'
 
@@ -96,7 +97,7 @@ export function RegistrarPaqueteDeNiveles({ pagoId, onRegistrado }: { pagoId: st
         </div>
         <div className="space-y-1">
           <label htmlFor={`paq-fecha-${pagoId}`} className={labelCls}>Fecha del pago</label>
-          <input id={`paq-fecha-${pagoId}`} type="date" value={fecha} onChange={e => setFecha(e.target.value)} className={inputCls} />
+          <DatePicker id={`paq-fecha-${pagoId}`} value={fecha} onChange={v => setFecha(v)} className={inputCls} />
         </div>
       </div>
       <div className="space-y-1">

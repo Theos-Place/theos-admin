@@ -8,6 +8,7 @@ import type { Member } from '@/types/member'
 import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from '@/lib/cedula'
 import { noLlevaCuenta } from '@/lib/members/alta-persona'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type Step1Data = {
   first_name: string
   last_name: string
@@ -233,13 +234,7 @@ export function NewMemberStep1({
 
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         <Field label="Fecha de nacimiento" htmlFor="member-birth-date">
-          <input
-            id="member-birth-date"
-            type="date"
-            className={inputCls}
-            value={data.birth_date}
-            onChange={e => onData('birth_date', e.target.value)}
-          />
+          <DatePicker id="member-birth-date" className={inputCls} value={data.birth_date} onChange={v => onData('birth_date', v)} />
         </Field>
         <Field label="Género" htmlFor="member-gender">
           <select

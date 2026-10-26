@@ -29,6 +29,7 @@ import type { PlanFrequency } from '@/lib/finance/installments'
  * notifica directo a todos los miembros con rol activo finanzas o admin.
  */
 import { createAdminClient, type Updatable } from '@/lib/supabase/admin'
+import { formatDate } from '@/lib/format'
 import type {
   FinanceRequest, FinanceRequestWriteInput, FinanceRequestStatus, FinanceRequestType,
 } from '@/types/finance'
@@ -97,7 +98,7 @@ function paymentLabel(p: DbRow['payment']): string | null {
   const amount = p.amount != null
     ? new Intl.NumberFormat('es-CR', { style: 'currency', currency: 'CRC', maximumFractionDigits: 0 }).format(p.amount)
     : ''
-  const date = p.paid_at ? new Date(p.paid_at).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: 'numeric' }) : ''
+  const date = p.paid_at ? formatDate(p.paid_at) : ''
   return [p.description, amount, date].filter(Boolean).join(' · ') || null
 }
 

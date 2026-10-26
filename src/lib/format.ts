@@ -93,12 +93,19 @@ export function calcAge(birthDate: string | null | undefined): number {
   return edad
 }
 
-/** Fecha corta: "5 may 2026". null/inválida → '—'. */
+/**
+ * FORMATO TICO (decisión de Floriana, 2026-10-26): toda fecha en tablas,
+ * listas, chips y controles va en dd/mm/aaaa. La forma en letras («5 de mayo
+ * de 2026», `formatDateLong`) queda SOLO para frases y correos, donde un
+ * número en medio de la oración se lee peor. Antes `formatDate` daba
+ * «5 may 2026» y era el formato de 124 lugares.
+ */
+/** Fecha corta: "05/05/2026". null/inválida → '—'. */
 export function formatDate(d: string | null | undefined): string {
   if (!d) return '—'
   const date = parseFlexibleDate(d)
   if (isNaN(date.getTime())) return '—'
-  return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short', year: 'numeric' })
+  return date.toLocaleDateString(LOCALE, { day: '2-digit', month: '2-digit', year: 'numeric' })
 }
 
 /** Fecha con mes completo: "5 de mayo de 2026" (es-CR usa "5 de mayo de 2026"). null → '—'. */
@@ -109,22 +116,23 @@ export function formatDateLong(d: string | null | undefined): string {
   return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'long', year: 'numeric' })
 }
 
-/** Día y mes corto: "5 may", sin año. null → '—'. Para rangos dentro del mismo
+/** Día y mes: "05/05", sin año. null → '—'. Para rangos dentro del mismo
  *  año, donde repetir el año en los dos extremos sobra. */
 export function formatDayMonth(d: string | null | undefined): string {
   if (!d) return '—'
   const date = parseFlexibleDate(d)
   if (isNaN(date.getTime())) return '—'
-  return date.toLocaleDateString(LOCALE, { day: 'numeric', month: 'short' })
+  // A mano: es-CR sin año no rellena ceros («15/5»), y el formato tico es dd/mm.
+  return `${String(date.getDate()).padStart(2, '0')}/${String(date.getMonth() + 1).padStart(2, '0')}`
 }
 
-/** Mes y año: "may 2026". null → '—'. Para rangos de contrato y similares,
+/** Mes y año: "05/2026". null → '—'. Para rangos de contrato y similares,
  *  donde el día no aporta. */
 export function formatMonthYear(d: string | null | undefined): string {
   if (!d) return '—'
   const date = parseFlexibleDate(d)
   if (isNaN(date.getTime())) return '—'
-  return date.toLocaleDateString(LOCALE, { month: 'short', year: 'numeric' })
+  return `${String(date.getMonth() + 1).padStart(2, '0')}/${date.getFullYear()}`
 }
 
 /** Fecha numérica: "05/05/2026". null → '—'. */
@@ -162,13 +170,13 @@ export function formatNumber(n: number | null | undefined): string {
   return n.toLocaleString(LOCALE)
 }
 
-/** Fecha y hora: "5 may 2026, 02:30 p. m.". null → '—'. */
+/** Fecha y hora: "05/05/2026, 02:30 p. m.". null → '—'. */
 export function formatDateTime(d: string | null | undefined): string {
   if (!d) return '—'
   const date = new Date(d)
   if (isNaN(date.getTime())) return '—'
   return date.toLocaleDateString(LOCALE, {
-    day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit',
+    day: '2-digit', month: '2-digit', year: 'numeric', hour: '2-digit', minute: '2-digit',
   })
 }
 

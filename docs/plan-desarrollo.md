@@ -117,6 +117,17 @@ virtual, conteo de reubicaciones, enlaces de la demanda) quedó en staging.
    `folletosQuePide` (`FOLLETOS_DE_DISCIPULOS`, vale en legacy y bloques);
    `cierrePideFolletos` separa «hay sucesor» de «pide folletos» en el
    endpoint y la pantalla de cierre; DIS1 entra a los folletos anticipados.
+ · **FECHAS TICAS** (2026-10-26, Floriana): toda fecha en tablas, listas,
+   chips y controles va en dd/mm/aaaa. `formatDate` → «05/05/2026»,
+   `formatDateTime` → «05/05/2026, 02:30 p. m.», `formatDayMonth` → «05/05»,
+   `formatMonthYear` → «05/2026»; 12 llamadas sueltas con mes en letras
+   pasaron al formateador central (trinquete 56 → 40). La forma en letras
+   («5 de mayo de 2026») queda SOLO en frases y correos. Y los 65 campos
+   `<input type="date">` nativos —que el navegador pinta según su idioma—
+   se reemplazaron por el `DatePicker` de Theos (ahora con max, id,
+   disabled, className, style; muestra dd/mm/aaaa y se abre hacia arriba
+   si no cabe). Excel sigue exportando fechas reales, que Excel muestra
+   según cada compu.
  · **REP-19** — el ROL `reportes` ve los nueve reportes (2026-10-21). El módulo
    de paso (comunicaciones, coordinaciones) sigue abriendo solo los cuatro
    generales. Caso: la cuenta de Finanzas no veía Servidores.

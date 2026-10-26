@@ -9,6 +9,7 @@ import { DOCUMENT_TYPES, DOCUMENT_TYPE_LABEL } from '@/lib/cedula'
 import { calcAge } from '@/lib/format'
 import { Modal } from '@/components/shared/Modal'
 import { RELACIONES_FAMILIARES } from '@/lib/members/relaciones'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   sePuedeBuscar, minimoParaBuscar, candidatosVisibles, seleccionAutomatica,
   textoSinResultados, consultaParaElServidor,
@@ -258,7 +259,7 @@ export function FamilyMemberModal({ defaultLastName = '', existingIds = [], onAd
                 className={cn(inputCls, 'font-mono')}
               />
               <div className="relative">
-                <input aria-label="Fecha de nacimiento" type="date" value={birthDate} onChange={e => setBirthDate(e.target.value)} className={cn(inputCls, 'font-body')} />
+                <DatePicker ariaLabel="Fecha de nacimiento" value={birthDate} onChange={v => setBirthDate(v)} className={cn(inputCls, 'font-body')} />
                 {isMinor && (
                   <span className="absolute -top-2 right-2 rounded-full bg-coral px-2 py-0.5 text-[11px] font-bold text-white font-display">Menor</span>
                 )}

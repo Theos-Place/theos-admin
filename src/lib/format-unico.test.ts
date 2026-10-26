@@ -29,7 +29,10 @@ import { join } from 'node:path'
  * cuenta llamadas, y quitar una en otro lado deja el total igual—, así que
  * esos tres lugares quedaron clavados aparte en `fechas-solo-dia.test.ts`.
  */
-const TECHO = 56
+// 56 → 40 el 2026-10-26 (formato tico): las que pintaban tablas y listas con
+// el mes en letras pasaron a `formatDate` / `formatDateTime`, que ahora dan
+// dd/mm/aaaa. Quedan las de frases, correos, días de la semana y zonas.
+const TECHO = 40
 
 const RX = /\.(toLocaleDateString|toLocaleTimeString)\(/g
 

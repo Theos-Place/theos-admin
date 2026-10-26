@@ -11,6 +11,7 @@ import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { REDIRECT_AFTER_SAVE_MS } from '@/lib/constants'
 import { formatCRC } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type EntityOption = { id: string; name: string; amount: number }
 
 export default function NuevoCuponPage() {
@@ -203,10 +204,7 @@ export default function NuevoCuponPage() {
 
           <div>
             <label htmlFor="expires" className="text-[13px] uppercase tracking-widest mb-2 block font-display text-navy-light/80">5. Vencimiento</label>
-            <input
-              id="expires" type="date" value={expiresAt} onChange={e => setExpiresAt(e.target.value)}
-              className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy"
-            />
+            <DatePicker id="expires" value={expiresAt} onChange={v => setExpiresAt(v)} className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy" />
           </div>
 
           <button

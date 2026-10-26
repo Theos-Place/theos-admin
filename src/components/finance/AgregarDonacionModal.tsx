@@ -8,6 +8,7 @@ import { CURRENCIES, currencySymbol, todayCR, amountStep } from '@/lib/format'
 import { mensajeDeLaRespuesta } from '@/lib/api/mensaje-del-error'
 import { cn } from '@/lib/utils'
 
+import { DatePicker } from '@/components/events/DatePicker'
 /**
  * DON-2 · Registrar una donación a mano.
  *
@@ -91,8 +92,7 @@ export function AgregarDonacionModal({ onClose, onCreada }: {
             <label htmlFor="don-fecha" className={etiqueta}>Fecha</label>
             {/* max = hoy: una donación futura es siempre un error de tecleo.
                 El servidor lo valida igual. */}
-            <input id="don-fecha" type="date" max={todayCR()} className={campo}
-              value={fecha} onChange={e => setFecha(e.target.value)} />
+            <DatePicker id="don-fecha" max={todayCR()} className={campo} value={fecha} onChange={v => setFecha(v)} />
           </div>
           <div className="space-y-1">
             <label htmlFor="don-moneda" className={etiqueta}>Moneda</label>

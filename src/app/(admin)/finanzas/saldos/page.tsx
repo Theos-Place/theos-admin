@@ -19,6 +19,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { hasModulePermission } from '@/lib/auth/roles'
 import { plata, type SaldoAFavor, type DetalleDelSaldo } from '@/lib/finance/saldo-a-favor'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const METODO: Record<string, string> = { sinpe: 'SINPE', cash: 'Efectivo', card: 'Tarjeta', comprobante: 'Comprobante', scholarship: 'Beca' }
 
 /** El detalle de un saldo: los pagos, quién y cuándo se movió, y qué cubre el costo. */
@@ -159,11 +160,11 @@ export default function SaldosAFavorPage() {
         <div className={BARRA_IZQ}>
           <label htmlFor="saldo-desde" className={GRUPO_FILTRO}>
             <span className={ETIQUETA_FILTRO}>Generado desde</span>
-            <input id="saldo-desde" type="date" value={desde} max={hasta || undefined} onChange={e => setDesde(e.target.value)} className={CAMPO_FECHA} />
+            <DatePicker id="saldo-desde" value={desde} max={hasta || undefined} onChange={v => setDesde(v)} className={CAMPO_FECHA} />
           </label>
           <label htmlFor="saldo-hasta" className={GRUPO_FILTRO}>
             <span className={ETIQUETA_FILTRO}>Hasta</span>
-            <input id="saldo-hasta" type="date" value={hasta} min={desde || undefined} onChange={e => setHasta(e.target.value)} className={CAMPO_FECHA} />
+            <DatePicker id="saldo-hasta" value={hasta} min={desde || undefined} onChange={v => setHasta(v)} className={CAMPO_FECHA} />
           </label>
           {(desde || hasta) && (
             <button type="button" onClick={() => { setDesde(''); setHasta('') }} className={BOTON_SECUNDARIO}>Limpiar</button>

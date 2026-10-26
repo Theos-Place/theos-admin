@@ -6,6 +6,7 @@ import { SalaryBadge } from '@/components/employees/SalaryBadge'
 import { cn } from '@/lib/utils'
 import { formatCRC } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
 interface StepContractFormProps {
@@ -150,12 +151,7 @@ export function StepContractForm({
           >
             Fecha de inicio <span className="text-coral-deep">*</span>
           </label>
-          <input id="fecha-de-inicio"
-            type="date"
-            className={cn(inputCls, 'font-body')}
-            value={startDate}
-            onChange={e => onStartDateChange(e.target.value)}
-          />
+          <DatePicker id="fecha-de-inicio" className={cn(inputCls, 'font-body')} value={startDate} onChange={v => onStartDateChange(v)} />
         </div>
       </div>
 

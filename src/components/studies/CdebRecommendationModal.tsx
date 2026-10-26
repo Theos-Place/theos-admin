@@ -13,6 +13,7 @@ import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { useStudyPlans } from '@/hooks/useStudyPlans'
 import { cn } from '@/lib/utils'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   HEADER_TEXT, COMPLETION_DATE_LABEL, COMPLETION_DATE_HINT,
   CONVICTIONS_INSTRUCTION, CONVICTION_TOPICS, CONVICTION_STANCES,
@@ -156,7 +157,7 @@ export function CdebRecommendationModal({
         {/* Fecha de finalización (prellenada con la del cierre) */}
         <div>
           <label htmlFor="cdeb-date" className={LABEL}>{COMPLETION_DATE_LABEL}</label>
-          <input id="cdeb-date" type="date" value={f.completion_date ?? ''} onChange={e => set('completion_date', e.target.value)} className={INPUT} />
+          <DatePicker id="cdeb-date" value={f.completion_date ?? ''} onChange={v => set('completion_date', v)} className={INPUT} />
           <p className="mt-1 text-[13px] text-navy-light/80 font-body">{COMPLETION_DATE_HINT}</p>
         </div>
 

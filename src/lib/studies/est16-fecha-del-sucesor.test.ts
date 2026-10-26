@@ -28,7 +28,8 @@ describe('EST-16 · la fecha del sucesor viaja de punta a punta', () => {
   it('la pantalla de cierre manda successor_starts_at', () => {
     const src = sinComentarios(PANTALLA)
     expect(src).toContain('successor_starts_at')
-    expect(src).toContain('type="date"')
+    // Desde el 2026-10-26 el campo es el selector propio de Theos, no el nativo.
+    expect(src).toContain('<DatePicker')
   })
 
   it('la pantalla no deja cerrar con una fecha imposible', () => {

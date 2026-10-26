@@ -2,6 +2,7 @@ import { cn } from '@/lib/utils'
 import { ScaleField } from './ScaleField'
 import type { FormFieldNew } from '@/data/form-config'
 
+import { DatePicker } from '@/components/events/DatePicker'
 interface FieldPreviewProps {
   field: FormFieldNew
   compact?: boolean
@@ -73,11 +74,7 @@ export function FieldPreview({ field, compact }: FieldPreviewProps) {
 
   if (field.type === 'date') {
     return (
-      <input aria-label={field.label || 'Fecha'}
-        disabled
-        type="date"
-        className={inputBase}
-      />
+      <DatePicker ariaLabel={field.label || 'Fecha'} disabled value="" onChange={() => {}} className={inputBase} />
     )
   }
 

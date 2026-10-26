@@ -15,15 +15,24 @@ interface DatePickerProps {
   onChange: (v: string) => void
   /** Fecha mínima seleccionable (YYYY-MM-DD). */
   min?: string
+  /** Fecha máxima seleccionable (YYYY-MM-DD). */
+  max?: string
   error?: boolean
   placeholder?: string
+  /** Para que un <label htmlFor> lo alcance (el botón lleva el id). */
+  id?: string
+  disabled?: boolean
+  /** Solo informativo (data-required): el control no valida; la pantalla sí. */
+  required?: boolean
+  /** Clases extra del botón (las de layout de la pantalla: ancho, alto). */
+  className?: string
+  style?: React.CSSProperties
   /** AUD-1 · Nombre accesible del disparador. Hace falta porque el control es un
    *  <button>, no un <input>: un <label> de al lado no lo alcanza ni con htmlFor.
    *  Pasale el mismo texto del label visible. */
   ariaLabel?: string
 }
 
-const MESES = ['enero', 'febrero', 'marzo', 'abril', 'mayo', 'junio', 'julio', 'agosto', 'septiembre', 'octubre', 'noviembre', 'diciembre']
 
 /** YYYY-MM-DD → Date local (sin corrimiento de zona horaria). */
 function ymdToDate(s: string): Date | undefined {
@@ -33,9 +42,12 @@ function ymdToDate(s: string): Date | undefined {
   return new Date(y, m - 1, d)
 }
 
+/** Lo que muestra el botón: dd/mm/aaaa (formato tico, 2026-10-26). */
 function labelOf(d: Date | undefined): string {
   if (!d) return ''
-  return `${d.getDate()} de ${MESES[d.getMonth()]} ${d.getFullYear()}`
+  const dd = String(d.getDate()).padStart(2, '0')
+  const mm = String(d.getMonth() + 1).padStart(2, '0')
+  return `${dd}/${mm}/${d.getFullYear()}`
 }
 
 /** Altura típica del calendario (un mes de 6 filas con padding), para el primer render. */
@@ -60,13 +72,14 @@ export function posicionDelPopover(
   return { top, left }
 }
 
-export function DatePicker({ value, onChange, min, error, placeholder = 'Seleccionar fecha', ariaLabel }: DatePickerProps) {
+export function DatePicker({ value, onChange, min, max, error, placeholder = 'dd/mm/aaaa', ariaLabel, id, disabled, required, className, style }: DatePickerProps) {
   const [open, setOpen] = useState(false)
   const ref = useRef<HTMLDivElement>(null)
   const popRef = useRef<HTMLDivElement>(null)
   const [rect, setRect] = useState<{ top: number; left: number } | null>(null)
   const selected = ymdToDate(value)
   const minDate = ymdToDate(min ?? '')
+  const maxDate = ymdToDate(max ?? '')
 
   // Posiciona el popover (fixed, vía portal) bajo el botón — visible aunque el
   // contenedor del filtro tenga overflow.
@@ -115,15 +128,21 @@ export function DatePicker({ value, onChange, min, error, placeholder = 'Selecci
     <div ref={ref} className="relative">
       <button
         type="button"
+        id={id}
         onClick={openPicker}
+        disabled={disabled}
         aria-label={ariaLabel}
+        data-required={required || undefined}
         aria-haspopup="dialog"
         aria-expanded={open}
+        style={style}
         className={cn(
           'w-full flex items-center justify-between gap-2 rounded-xl bg-surface-low px-3 py-2 text-sm text-left outline-none transition-all font-body',
           'focus:ring-1 focus:ring-coral/30',
+          'disabled:opacity-50 disabled:cursor-not-allowed',
           error ? 'ring-1 ring-coral border-coral' : 'border border-transparent',
           selected ? 'text-navy' : 'text-navy-light/80',
+          className,
         )}
       >
         <span className="truncate">{selected ? labelOf(selected) : placeholder}</span>
@@ -141,7 +160,7 @@ export function DatePicker({ value, onChange, min, error, placeholder = 'Selecci
             locale={es}
             selected={selected}
             defaultMonth={selected}
-            disabled={minDate ? { before: minDate } : undefined}
+            disabled={[...(minDate ? [{ before: minDate }] : []), ...(maxDate ? [{ after: maxDate }] : [])]}
             onSelect={(d) => { if (d) { onChange(toYmdLocal(d)); setOpen(false) } }}
           />
         </div>,

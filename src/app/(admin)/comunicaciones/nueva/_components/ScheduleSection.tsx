@@ -1,5 +1,6 @@
 import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   TICK_MINUTES, HORAS_EN_PUNTO, partesDeLaProgramacion, componerProgramacion,
 } from '@/lib/communications/schedule'
@@ -75,14 +76,7 @@ export function ScheduleSection({
                 Con una lista de 24 horas, el minuto no existe en la pantalla.
                 El servidor sigue validando aparte (minutos_no_cero). */}
             <div className="flex gap-2">
-              <input
-                id="fecha-envio"
-                type="date"
-                aria-label="Día del envío"
-                className="flex-1 min-w-0 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                value={dia}
-                onChange={e => setScheduledAt(componerProgramacion(e.target.value, hora))}
-              />
+              <DatePicker id="fecha-envio" ariaLabel="Día del envío" className="flex-1 min-w-0 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" value={dia} onChange={v => setScheduledAt(componerProgramacion(v, hora))} />
               <select
                 id="hora-envio"
                 aria-label="Hora del envío"

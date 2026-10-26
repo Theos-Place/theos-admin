@@ -2,6 +2,7 @@
 
 import { Search } from 'lucide-react'
 import { cn } from '@/lib/utils'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   GRUPO_FILTRO, ETIQUETA_FILTRO, CAMPO, CAMPO_FECHA, BOTON_SECUNDARIO,
 } from '@/components/finance/reporte-ui'
@@ -24,11 +25,11 @@ export function RangoDeFechas({ id, etiqueta, desde, hasta, onDesde, onHasta }: 
     <>
       <label htmlFor={`${id}-desde`} className={GRUPO_FILTRO}>
         <span className={ETIQUETA_FILTRO}>{etiqueta}</span>
-        <input id={`${id}-desde`} type="date" value={desde} max={hasta || undefined} onChange={e => onDesde(e.target.value)} className={CAMPO_FECHA} />
+        <DatePicker id={`${id}-desde`} value={desde} max={hasta || undefined} onChange={v => onDesde(v)} className={CAMPO_FECHA} />
       </label>
       <label htmlFor={`${id}-hasta`} className={GRUPO_FILTRO}>
         <span className={ETIQUETA_FILTRO}>Hasta</span>
-        <input id={`${id}-hasta`} type="date" value={hasta} min={desde || undefined} onChange={e => onHasta(e.target.value)} className={CAMPO_FECHA} />
+        <DatePicker id={`${id}-hasta`} value={hasta} min={desde || undefined} onChange={v => onHasta(v)} className={CAMPO_FECHA} />
       </label>
       {(desde || hasta) && (
         <button type="button" onClick={() => { onDesde(''); onHasta('') }} className={BOTON_SECUNDARIO}>Limpiar</button>

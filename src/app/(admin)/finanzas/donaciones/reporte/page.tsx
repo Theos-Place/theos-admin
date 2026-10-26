@@ -35,6 +35,7 @@ import {
 } from '@/lib/finance/reporte-de-donantes'
 import { nombreDelMes } from '@/lib/servers/resumen-del-mes'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type Vista = 'anio' | 'mes' | 'sede'
 
 const dinero = (m: number, c: string) => formatMoney(m, c)
@@ -122,17 +123,13 @@ function Contenido() {
           <label htmlFor="don-desde" className="mb-1 block text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
             Desde
           </label>
-          <input id="don-desde" type="date" value={desde} max={hasta || undefined}
-            onChange={e => { setDatos(null); setDesde(e.target.value) }}
-            className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+          <DatePicker id="don-desde" value={desde} max={hasta || undefined} onChange={v => { setDatos(null); setDesde(v) }} className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
         </div>
         <div>
           <label htmlFor="don-hasta" className="mb-1 block text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
             Hasta
           </label>
-          <input id="don-hasta" type="date" value={hasta} min={desde || undefined}
-            onChange={e => { setDatos(null); setHasta(e.target.value) }}
-            className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+          <DatePicker id="don-hasta" value={hasta} min={desde || undefined} onChange={v => { setDatos(null); setHasta(v) }} className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
         </div>
         {(desde || hasta) && (
           <button type="button"

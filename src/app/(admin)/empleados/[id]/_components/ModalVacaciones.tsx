@@ -5,6 +5,7 @@ import { cn } from '@/lib/utils'
 import { Check, Clock } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 
+import { DatePicker } from '@/components/events/DatePicker'
 const inputCls = 'w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30'
 
 const VACATION_TYPE_LABELS: Record<VacationRecordType, string> = {
@@ -78,21 +79,11 @@ export function ModalVacaciones({
             <div className="grid grid-cols-2 gap-3">
               <div className="space-y-1">
                 <label htmlFor="desde" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Desde</label>
-                <input id="desde"
-                  type="date"
-                  className={cn(inputCls, 'font-body')}
-                  value={vacFrom}
-                  onChange={e => onVacFromChange(e.target.value)}
-                />
+                <DatePicker id="desde" className={cn(inputCls, 'font-body')} value={vacFrom} onChange={v => onVacFromChange(v)} />
               </div>
               <div className="space-y-1">
                 <label htmlFor="hasta" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">Hasta</label>
-                <input id="hasta"
-                  type="date"
-                  className={cn(inputCls, 'font-body')}
-                  value={vacTo}
-                  onChange={e => onVacToChange(e.target.value)}
-                />
+                <DatePicker id="hasta" className={cn(inputCls, 'font-body')} value={vacTo} onChange={v => onVacToChange(v)} />
               </div>
             </div>
             {vacFrom && vacTo && (

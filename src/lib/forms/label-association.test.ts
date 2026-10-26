@@ -40,6 +40,10 @@ describe('asociación de labels', () => {
         if (attrs.includes('htmlFor')) continue
         // Un label que ENVUELVE su control es válido sin htmlFor.
         if (/<input|<select|<textarea|<button/.test(inner)) continue
+        // El selector de fechas de Theos es un <button> adentro de otro
+        // componente: el <label> que lo envuelve NO le llega, así que tiene
+        // que traer su propio nombre (ariaLabel). Vale solo con él.
+        if (/<DatePicker\b[\s\S]*?\bariaLabel=/.test(inner)) continue
         huerfanos.push(`${f}:${txt.slice(0, m.index!).split('\n').length}`)
       }
     }
@@ -55,9 +59,12 @@ describe('asociación de labels', () => {
         // Con htmlFor está asociado; envolviendo su input, también.
         if (attrs.includes('htmlFor')) continue
         if (/<input|<select|<textarea/.test(inner)) continue
-        // ¿lo que sigue es un input NATIVO adyacente?
+        if (/<DatePicker\b[\s\S]*?\bariaLabel=/.test(inner)) continue
+        // ¿lo que sigue es un input NATIVO adyacente? (Un <DatePicker> que
+        // siga trae su propio nombre o su id: no cuenta como huérfano.)
         const despues = txt.slice(m.index! + m[0].length)
-        const sig = /<(input|select|textarea)\b/.exec(despues)
+        const sig = /<(input|select|textarea|DatePicker)\b/.exec(despues)
+        if (sig && sig[1] === 'DatePicker') continue
         if (!sig) continue
         const entre = despues.slice(0, sig.index)
         if (!/^\s*(?:<(?:div|span)\b[^>]*>\s*)?$/.test(entre)) continue

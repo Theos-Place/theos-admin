@@ -13,6 +13,7 @@ import { textoDeBorrado } from '@/lib/studies/correccion-de-asistencia'
 import { Modal } from '@/components/shared/Modal'
 import { Button } from '@/components/shared/Button'
 
+import { DatePicker } from '@/components/events/DatePicker'
 /**
  * Pasar lista — y, con `?sesion=<id>`, CORREGIR una lista ya pasada.
  *
@@ -228,13 +229,7 @@ export default function AsistenciaPage({ params }: { params: Promise<{ id: strin
             sesión pasada que quedó sin pasar lista ese día. */}
         <label className="mt-1 flex items-center gap-2 text-sm text-navy-light/80 font-body">
           Fecha de la sesión
-          <input
-            type="date"
-            value={sessionDate}
-            max={todayYmd}
-            onChange={e => setSessionDate(e.target.value)}
-            className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-          />
+          <DatePicker ariaLabel="Fecha de la sesión" value={sessionDate} max={todayYmd} onChange={v => setSessionDate(v)} className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
         </label>
         {corrigiendo && (
           /* Que quede dicho que esto PISA lo que ya estaba. Al abrir desde la

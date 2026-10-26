@@ -5,6 +5,7 @@ import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { Search, X, Users, BookOpen, UsersRound, Megaphone, List } from 'lucide-react'
 import { cn } from '@/lib/utils'
 import { useSedes } from '@/lib/sedes'
+import { formatDate } from '@/lib/format'
 type MemberLite = { id: string; first_name: string; last_name: string; email: string | null }
 // La audiencia de un evento son sus ASISTENTES (check-ins), no inscripciones.
 type EventLite = { id: string; title: string; status: string; starts_at: string }
@@ -444,7 +445,7 @@ export function RecipientSelector({ value, onChange, onOpenListModal, fromList =
               <option value="">Seleccionar evento...</option>
               {upcomingEvents.map(e => (
                 <option key={e.id} value={e.id}>
-                  {e.title}{e.starts_at ? ` · ${new Date(e.starts_at).toLocaleDateString('es-CR', { day: '2-digit', month: 'short', year: '2-digit' })}` : ''}
+                  {e.title}{e.starts_at ? ` · ${formatDate(e.starts_at)}` : ''}
                 </option>
               ))}
             </select>

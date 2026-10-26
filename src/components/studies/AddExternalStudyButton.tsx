@@ -8,6 +8,7 @@ import { useStudies } from '@/hooks/useStudies'
 import { useAuth } from '@/hooks/useAuth'
 import { EXTERNAL_STUDY_ROLES } from '@/lib/auth/roles'
 
+import { DatePicker } from '@/components/events/DatePicker'
 /**
  * "Agregar estudio" en el tab de Administración del expediente.
  *
@@ -161,7 +162,7 @@ function AddStudyModal({ memberId, onClose, onAdded }: {
         <div className="grid grid-cols-2 gap-3">
           <div className="space-y-1">
             <label htmlFor="hist-fecha" className="text-[13px] text-navy-light/80 font-display">Fecha</label>
-            <input id="hist-fecha" type="date" className={inputCls} value={date} onChange={e => setDate(e.target.value)} />
+            <DatePicker id="hist-fecha" className={inputCls} value={date} onChange={v => setDate(v)} />
           </div>
           <div className="space-y-1">
             <label htmlFor="hist-estado" className="text-[13px] text-navy-light/80 font-display">Estado</label>

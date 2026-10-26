@@ -5,6 +5,7 @@ import { ImageAnswerField } from '@/components/forms/ImageAnswerField'
 import { ScaleField } from './ScaleField'
 import type { FormFieldNew } from '@/data/form-config'
 
+import { DatePicker } from '@/components/events/DatePicker'
 interface PublicFieldProps {
   /** Ruta de subida del campo de imagen; la página pública pasa la suya (sin sesión). */
   uploadUrl?: string
@@ -70,13 +71,7 @@ export function PublicField({ field, value, onChange, uploadUrl }: PublicFieldPr
 
   if (field.type === 'date') {
     return (
-      <input
-        id={controlId}
-        type="date"
-        value={stringVal}
-        onChange={e => onChange(e.target.value)}
-        className={inputBase}
-      />
+      <DatePicker id={controlId} value={stringVal} onChange={v => onChange(v)} className={inputBase} />
     )
   }
 

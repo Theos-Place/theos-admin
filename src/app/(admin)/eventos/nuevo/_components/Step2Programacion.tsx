@@ -77,7 +77,7 @@ export function Step2Programacion({
         <div className="form-row">
           <div>
             <FieldLabel>Fecha inicio</FieldLabel>
-            <DatePicker value={start_date} onChange={onStartDateChange} />
+            <DatePicker ariaLabel="Fecha inicio" value={start_date} onChange={onStartDateChange} />
           </div>
           <div>
             <FieldLabel>Hora inicio</FieldLabel>
@@ -85,7 +85,7 @@ export function Step2Programacion({
           </div>
           <div>
             <FieldLabel>Fecha fin</FieldLabel>
-            <DatePicker value={end_date} onChange={onEndDateChange} min={start_date || undefined} error={endBeforeStart} />
+            <DatePicker ariaLabel="Fecha fin" value={end_date} onChange={onEndDateChange} min={start_date || undefined} error={endBeforeStart} />
           </div>
           <div>
             <FieldLabel>Hora fin</FieldLabel>

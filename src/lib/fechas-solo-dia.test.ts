@@ -58,8 +58,8 @@ describe('fechas sin hora · la víspera no vuelve', () => {
     expect(formatDate('2026-09-23')).toContain('23')
     expect(formatDate('2026-09-23')).not.toContain('22')
     // El 1 de un mes es donde muerde cuando solo se ve mes y año.
-    expect(formatMonthYear('2026-10-01')).toContain('oct')
-    expect(formatMonthYear('2026-10-01')).not.toContain('sep')
+    expect(formatMonthYear('2026-10-01')).toBe('10/2026')
+    expect(formatMonthYear('2026-10-01')).not.toContain('09')
   })
 
   for (const p of PANTALLAS) {

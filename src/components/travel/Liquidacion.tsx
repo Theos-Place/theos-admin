@@ -17,6 +17,7 @@ import { Button } from '@/components/shared/Button'
 import { useToast } from '@/components/shared/Toast'
 import { formatDate, formatMoney } from '@/lib/format'
 import { RUBROS, NOMBRE_DEL_RUBRO, MONEDAS, type Moneda, type Rubro } from '@/lib/travel/presupuesto'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   saldos, revisarGastos, aReintegrar, aReembolsar,
   TEXTO_DECLARACION_JURADA, type GastoEjecutado,
@@ -131,8 +132,7 @@ export function Liquidacion({ viajeId, editable, gastosIniciales, anticipo, fech
               <div className="grid grid-cols-1 gap-2 sm:grid-cols-12">
                 <div className="space-y-1 sm:col-span-2">
                   <label htmlFor={`g-fecha-${i}`} className={etiqueta}>Fecha</label>
-                  <input id={`g-fecha-${i}`} type="date" className={campo} value={g.fecha}
-                    onChange={e => set(i, { fecha: e.target.value })} />
+                  <DatePicker id={`g-fecha-${i}`} className={campo} value={g.fecha} onChange={v => set(i, { fecha: v })} />
                 </div>
                 <div className="space-y-1 sm:col-span-2">
                   <label htmlFor={`g-rubro-${i}`} className={etiqueta}>Rubro</label>

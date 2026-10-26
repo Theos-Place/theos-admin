@@ -36,6 +36,7 @@ import { formatDate, formatDateTime, CURRENCIES, type Currency } from '@/lib/for
 import { useAuth } from '@/hooks/useAuth'
 import { usePermissions } from '@/hooks/usePermissions'
 import { cn } from '@/lib/utils'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   paymentDescription, paymentEntityName, paymentKindLabel, type PaymentForLabel,
 } from '@/lib/finance/payment-label'
@@ -305,13 +306,11 @@ function PagosContent() {
           <div className={BARRA_IZQ}>
             <label htmlFor="pago-desde" className={GRUPO_FILTRO}>
               <span className={ETIQUETA_FILTRO}>Pagado desde</span>
-              <input id="pago-desde" type="date" value={desde} max={hasta || undefined} onChange={e => setDesde(e.target.value)}
-                aria-label="Pagado desde" className={CAMPO_FECHA} />
+              <DatePicker id="pago-desde" value={desde} max={hasta || undefined} onChange={v => setDesde(v)} ariaLabel="Pagado desde" className={CAMPO_FECHA} />
             </label>
             <label htmlFor="pago-hasta" className={GRUPO_FILTRO}>
               <span className={ETIQUETA_FILTRO}>Hasta</span>
-              <input id="pago-hasta" type="date" value={hasta} min={desde || undefined} onChange={e => setHasta(e.target.value)}
-                aria-label="Pagado hasta" className={CAMPO_FECHA} />
+              <DatePicker id="pago-hasta" value={hasta} min={desde || undefined} onChange={v => setHasta(v)} ariaLabel="Pagado hasta" className={CAMPO_FECHA} />
             </label>
             {(desde || hasta) && (
               <button type="button" onClick={() => { setDesde(''); setHasta('') }} className={BOTON_SECUNDARIO}>
@@ -698,12 +697,7 @@ function PagosContent() {
                 <label htmlFor="fecha-de-transferencia" className="text-[13px] uppercase tracking-widest mb-1.5 block font-display text-navy-light/80">
                   Fecha de transferencia
                 </label>
-                <input id="fecha-de-transferencia"
-                  type="date"
-                  value={sinpeDate}
-                  onChange={e => setSinpeDate(e.target.value)}
-                  className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy"
-                />
+                <DatePicker id="fecha-de-transferencia" value={sinpeDate} onChange={v => setSinpeDate(v)} className="w-full rounded-xl border px-4 py-2.5 text-sm outline-none focus:ring-1 focus:ring-coral/30 border-[var(--outline-variant)] font-body text-navy" />
               </div>
             </div>
             <div className="px-6 py-4 border-t flex gap-3 border-[var(--outline-variant)]">

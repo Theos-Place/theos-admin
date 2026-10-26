@@ -6,6 +6,7 @@ import { type CommitteeGoal } from '@/types/server'
 import { cn } from '@/lib/utils'
 import { formatDate } from '@/lib/format'
 
+import { DatePicker } from '@/components/events/DatePicker'
 type Props = {
   goals: CommitteeGoal[]
   onToggleGoal: (id: string) => void
@@ -93,12 +94,7 @@ export function GoalsTab({
             <label htmlFor="fecha-limite-opcional" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">
               Fecha límite (opcional)
             </label>
-            <input id="fecha-limite-opcional"
-              type="date"
-              className={inputCls}
-              value={newGoalDate}
-              onChange={e => onNewGoalDateChange(e.target.value)}
-            />
+            <DatePicker id="fecha-limite-opcional" className={inputCls} value={newGoalDate} onChange={v => onNewGoalDateChange(v)} />
           </div>
           <div className="flex gap-2">
             <button

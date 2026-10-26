@@ -27,6 +27,7 @@ import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { motivoQueImpideCrear } from '@/lib/members/menor-protegido'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
 import { todayCR } from '@/lib/format'
+import { DatePicker } from '@/components/events/DatePicker'
 import {
   encolarPendientes, MENSAJE_MENOR_SIN_ADULTO, type PendienteDeContacto,
 } from '@/lib/events/contacto-en-la-puerta'
@@ -1593,7 +1594,7 @@ function NewPersonModal({ eventId, initialName, onClose, onCreated, onCheckedIn,
           <label htmlFor="np-birth" className={labelCls} style={labelStyle}>
             Fecha de nacimiento {menorProtegido ? '*' : ''}
           </label>
-          <input id="np-birth" type="date" className={fieldCls} style={fieldStyle} value={birthDate} onChange={e => setBirthDate(e.target.value)} />
+          <DatePicker id="np-birth" className={fieldCls} style={fieldStyle} value={birthDate} onChange={v => setBirthDate(v)} />
         </div>
 
         {/* EVE-12 · España: de un menor con datos protegidos no se puede
