@@ -45,23 +45,49 @@ export async function GET() {
     headerRow.height = 22
     ws.views = [{ state: 'frozen', ySplit: 1 }]
 
-    // Hoja oculta de listas para los dropdowns.
-    const lists = wb.addWorksheet('_listas', { state: 'veryHidden' })
-    const fillCol = (colNum: number, header: string, items: string[]) => {
-      lists.getRow(1).getCell(colNum).value = header
+    /**
+     * LOS DESPLEGABLES (2026-10-26). Antes apuntaban a una hoja `veryHidden`
+     * con una fórmula entre hojas, y a Ari (Estudios) no se le cargaban: Numbers,
+     * Google Sheets, LibreOffice y el Excel de celular ignoran esa combinación,
+     * mientras que el Excel de escritorio sí la lee. Ahora:
+     *  · Lo que cabe en 255 caracteres va EN LÍNEA («"N1,N2,…"»), que lo
+     *    entiende todo el mundo: planes y días siempre; zonas mientras quepan.
+     *  · Lo que no cabe va a una hoja «Listas» normal (oculta, no veryHidden),
+     *    con la referencia sin «=», que es la forma canónica de exceljs.
+     *  · Una sola validación por COLUMNA (rango A2:A500) y no una por celda:
+     *    1.500 validaciones sueltas también tumbaban a algún lector.
+     */
+    const LIMITE_EN_LINEA = 255
+    const lists = wb.addWorksheet('Listas', { state: 'hidden' })
+    let col = 0
+    const formulaDe = (header: string, items: string[]): string => {
+      const enLinea = `"${items.join(',')}"`
+      if (enLinea.length <= LIMITE_EN_LINEA && !items.some(i => i.includes(',') || i.includes('"'))) return enLinea
+      col += 1
+      lists.getRow(1).getCell(col).value = header
       const used = items.length ? items : ['']
-      used.forEach((v, i) => { lists.getRow(i + 2).getCell(colNum).value = v })
-      const letter = lists.getColumn(colNum).letter
-      return `_listas!$${letter}$2:$${letter}$${1 + used.length}`
+      used.forEach((v, i) => { lists.getRow(i + 2).getCell(col).value = v })
+      const letter = lists.getColumn(col).letter
+      return `Listas!$${letter}$2:$${letter}$${1 + used.length}`
     }
-    const planRange = fillCol(1, 'PLANES', planCodes)
-    const zonaRange = fillCol(2, 'ZONAS', zonas)
-
-    for (let r = 2; r <= MAX_ROWS; r++) {
-      ws.getCell(`A${r}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`=${planRange}`] }
-      ws.getCell(`B${r}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`=${zonaRange}`] }
-      ws.getCell(`C${r}`).dataValidation = { type: 'list', allowBlank: true, formulae: [`"${DIAS.join(',')}"`] }
+    const reglas: Array<[string, string]> = [
+      ['A', formulaDe('PLANES', planCodes)],
+      ['B', formulaDe('ZONAS', zonas)],
+      ['C', formulaDe('DIAS', DIAS)],
+    ]
+    // `dataValidations.add` existe en exceljs (lib/doc/data-validations.js)
+    // pero no está en sus tipos: se tipa acá.
+    const validaciones = (ws as unknown as { dataValidations: { add: (rango: string, v: ExcelJS.DataValidation) => void } }).dataValidations
+    for (const [columna, formula] of reglas) {
+      validaciones.add(`${columna}2:${columna}${MAX_ROWS}`, {
+        type: 'list', allowBlank: true, showErrorMessage: true,
+        errorTitle: 'Valor fuera de la lista', error: 'Elegí una opción del desplegable.',
+        formulae: [formula],
+      })
     }
+    // Si la hoja de listas quedó vacía (todo cupo en línea), no se deja una
+    // pestaña oculta de más.
+    if (col === 0) wb.removeWorksheet(lists.id)
 
     const buf = await wb.xlsx.writeBuffer()
     return new NextResponse(buf as ArrayBuffer, {
