@@ -61,12 +61,15 @@ describe('un grupo LEGACY cobra y entrega POR NIVEL', () => {
   })
 
   it('lo que no es un nivel se comporta igual en las dos', () => {
-    // Discípulos, prematrimonial y capacitaciones nunca entraron en bloques.
+    // Discípulos, prematrimonial y capacitaciones nunca entraron en bloques:
+    // se COBRAN por nivel en las dos modalidades.
     for (const code of ['DIS1', 'DIS2', 'PREMAT', 'CAP-X']) {
       expect(nivelesACobrar(code, 'legacy'), code).toEqual([code])
       expect(nivelesACobrar(code, 'bloques'), code).toEqual([code])
-      expect(folletosQuePide(code, 'bloques'), code).toEqual([code])
     }
+    for (const code of ['PREMAT', 'CAP-X']) expect(folletosQuePide(code, 'bloques'), code).toEqual([code])
+    // Los FOLLETOS de discípulos tienen su propia regla (los tres al crear
+    // DIS1), igual en las dos modalidades: ver corte-de-bloque.test.ts.
   })
 })
 

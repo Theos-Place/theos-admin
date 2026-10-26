@@ -109,6 +109,14 @@ virtual, conteo de reubicaciones, enlaces de la demanda) quedó en staging.
    (`esPuestoDeDireccion` → `tienePuestoDeDireccion`), no por rol: el rol
    `reportes` abre solo cuatro, que era el bug (Melissa Acón no veía
    Estudios ni Dirigentes).
+ · **FOL-DIS** — folletos de DISCÍPULOS (2026-10-26, Floriana): los tres
+   —1, 2 y 3— se piden JUNTOS al crear el grupo de Discípulos 1, una sola
+   vez; los cierres 1→2 y 2→3 no crean tiquete ni mandan «folletos listos».
+   Estaban creando tiquetes y avisando al dirigente en cada cierre (el de
+   Fernando Gutiérrez, DIS2→DIS3 del 24-oct, 10 juegos). Regla en
+   `folletosQuePide` (`FOLLETOS_DE_DISCIPULOS`, vale en legacy y bloques);
+   `cierrePideFolletos` separa «hay sucesor» de «pide folletos» en el
+   endpoint y la pantalla de cierre; DIS1 entra a los folletos anticipados.
  · **REP-19** — el ROL `reportes` ve los nueve reportes (2026-10-21). El módulo
    de paso (comunicaciones, coordinaciones) sigue abriendo solo los cuatro
    generales. Caso: la cuenta de Finanzas no veía Servidores.

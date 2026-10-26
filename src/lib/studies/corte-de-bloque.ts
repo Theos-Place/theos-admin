@@ -219,17 +219,31 @@ export function montoDelBloque(
  * cobrar y repartir folletos son dos decisiones distintas, y el día que una
  * cambie no tiene por qué arrastrar a la otra.
  */
+/**
+ * DISCÍPULOS (decisión de Floriana, 2026-10-26): los tres folletos —1, 2 y
+ * 3— se entregan JUNTOS cuando se crea el grupo de Discípulos 1, una única
+ * vez. Los cierres 1→2 y 2→3 NO piden nada ni avisan a nadie: estaban
+ * creando tiquetes y mandando «folletos listos» a los dirigentes en cada
+ * cierre. Vale en las DOS modalidades: en producción todos los grupos de
+ * discípulos son `legacy`, y la regla no depende de cómo se cobren los
+ * niveles.
+ */
+export const FOLLETOS_DE_DISCIPULOS: readonly string[] = ['DIS1', 'DIS2', 'DIS3']
+
 export function folletosQuePide(
   planCode: string | null | undefined,
   modalidad: Modalidad,
 ): readonly string[] {
   if (!planCode) return []
+  if (FOLLETOS_DE_DISCIPULOS.includes(planCode)) {
+    return planCode === FOLLETOS_DE_DISCIPULOS[0] ? FOLLETOS_DE_DISCIPULOS : []
+  }
   // LEGACY: su propio folleto y nada más. Un grupo de N4 legacy SÍ pide el
   // folleto de N4 — su gente recibió el de N3 cuando entró a N3, no el par.
   if (modalidad === 'legacy') return [planCode]
   const b = bloqueDe(planCode)
-  // Lo que no está en un bloque pide SU propio folleto, como siempre: DIS1
-  // pide DIS1. Si devolviera [], los discípulos se quedarían sin folletos.
+  // Lo que no está en un bloque pide SU propio folleto, como siempre:
+  // PREMAT pide PREMAT. Si devolviera [], se quedarían sin folletos.
   if (!b) return [planCode]
   return b[0] === planCode ? b : []
 }

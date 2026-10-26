@@ -6,7 +6,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { allowsCloseRecommendations } from '@/lib/studies/close-recommendations'
 import { autoEnrollApprovedToNextLevel } from '@/lib/supabase/queries/payments'
 import { PREMAT_PLAN_CODE, getRequestsForGroup, getParticipantesDelGrupo, savePrematEvaluations } from '@/lib/supabase/queries/prematrimonial'
-import { isFolletoEligible, OTRO_LUGAR } from '@/lib/studies/folletos'
+import { isFolletoEligible, cierrePideFolletos, OTRO_LUGAR } from '@/lib/studies/folletos'
 import { validatePrematEvaluation, type PrematEvaluationInput } from '@/lib/studies/premat-evaluation'
 import { reportarError } from '@/lib/observabilidad'
 import { motivoParaRechazarInicio } from '@/lib/studies/successor-dates'
@@ -72,9 +72,10 @@ export async function POST(
   try {
     const supabase = createAdminClient()
     const { data: g } = await supabase
-      .from('study_groups').select('plan:study_plans(code)').eq('id', id).maybeSingle()
+      .from('study_groups').select('modalidad, plan:study_plans(code)').eq('id', id).maybeSingle()
     const planEmbed = (g as { plan: { code: string | null } | { code: string | null }[] | null } | null)?.plan
     const sourceCode = (Array.isArray(planEmbed) ? planEmbed[0] : planEmbed)?.code ?? null
+    const sourceModalidad = (g as { modalidad?: string | null } | null)?.modalidad ?? null
 
     // PRE-8: los grupos PREMAT exigen la evaluación de CADA pareja del grupo
     // antes de cerrar (una por prematrimonial_request). Se guarda ANTES del
@@ -188,8 +189,11 @@ export async function POST(
     }
 
     // Sin sucesor no hay a quién entregarle folletos: no se piden ni se
-    // exige el lugar de entrega.
+    // exige el lugar de entrega. Y con sucesor, solo si ESE sucesor pide
+    // folletos (`cierrePideFolletos`): un cierre 1→2 de discípulos tiene
+    // sucesor y no pide nada (2026-10-26).
     const pideFolletos = isFolletoEligible(sourceCode) && aprobados > 0 && habraSucesor
+      && cierrePideFolletos(sourceCode, sourceModalidad)
     const lugarEntrega = (body.folletos_sede ?? '').trim()
     if (pideFolletos && (!lugarEntrega || lugarEntrega === OTRO_LUGAR)) {
       return NextResponse.json(

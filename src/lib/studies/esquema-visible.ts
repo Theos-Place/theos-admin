@@ -65,7 +65,10 @@ export function folletosDelTiquete(input: {
   // prefijo, que es el caso de todos los niveles.
   const etiqueta = legible.length === 2 && comparten(legible[0], legible[1])
     ? `${legible[0]} y ${ultimaPalabra(legible[1])}`
-    : legible.join(' y ')
+    : legible.length === 3 && comparten(legible[0], legible[1]) && comparten(legible[0], legible[2])
+      // Discípulos: «Discípulos 1, 2 y 3».
+      ? `${legible[0]}, ${ultimaPalabra(legible[1])} y ${ultimaPalabra(legible[2])}`
+      : legible.join(' y ')
   return { codigos, etiqueta }
 }
 

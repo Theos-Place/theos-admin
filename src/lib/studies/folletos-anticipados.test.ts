@@ -50,10 +50,23 @@ describe('quién puede pedirlos', () => {
     expect(puedePedirFolletosAnticipados({ planCode: null, status: 'en_matricula', modalidad: 'bloques' }).puede).toBe(false)
   })
 
-  it('una capacitación tampoco: esto es de la cadena de niveles', () => {
-    const v = puedePedirFolletosAnticipados(enMatricula('DIS1'))
+  it('una capacitación tampoco: esto es de quien abre la cadena', () => {
+    const v = puedePedirFolletosAnticipados(enMatricula('CDEB'))
     expect(v.puede).toBe(false)
     expect(v.puede === false && v.code).toBe('nivel_no_aplica')
+  })
+
+  it('un DIS2 o DIS3 ya los tiene: se pidieron los tres al crear DIS1', () => {
+    for (const c of ['DIS2', 'DIS3']) {
+      const v = puedePedirFolletosAnticipados(enMatricula(c))
+      expect(v.puede, c).toBe(false)
+      expect(v.puede === false && v.code, c).toBe('ya_los_tiene_del_bloque')
+    }
+  })
+
+  it('DIS1 sí: pide los tres folletos de discípulos de una vez (2026-10-26)', () => {
+    expect(puedePedirFolletosAnticipados(enMatricula('DIS1')).puede).toBe(true)
+    expect(puedePedirFolletosAnticipados({ planCode: 'DIS1', status: 'en_matricula', modalidad: 'legacy' }).puede).toBe(true)
   })
 })
 

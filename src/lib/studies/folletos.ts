@@ -19,7 +19,25 @@ export function nextLevelCode(planCode: string | null | undefined): string | nul
 
 /** Etiqueta legible del código de nivel (N2 → "Nivel 2", DIS2 → "Discípulos 2"). */
 import { folletosQuePide } from './corte-de-bloque'
-import type { Modalidad } from './modalidad-de-bloques'
+import { modalidadDe, type Modalidad } from './modalidad-de-bloques'
+
+/**
+ * ¿El CIERRE de un grupo de este plan va a pedir folletos?
+ *
+ * Son dos preguntas distintas que estaban pegadas: «¿hay sucesor?»
+ * (`isFolletoEligible`, que además mueve la matrícula y el cobro) y «¿el
+ * sucesor pide folletos?» (`folletosQuePide`). Un cierre 1→2 de discípulos
+ * tiene sucesor y NO pide folletos: la pantalla de cierre exigía el lugar de
+ * entrega igual, y el tiquete se creaba (2026-10-26). Acá se pregunta por el
+ * SUCESOR, que es quien recibe los folletos.
+ */
+export function cierrePideFolletos(
+  sourceCode: string | null | undefined,
+  modalidad: string | null | undefined,
+): boolean {
+  const next = nextLevelCode(sourceCode)
+  return !!next && folletosQuePide(next, modalidadDe(modalidad)).length > 0
+}
 
 export function levelLabel(code: string | null | undefined): string {
   if (!code) return ''
@@ -91,7 +109,13 @@ export function etiquetaDeFolletos(
 ): string {
   const codes = folletosQuePide(planCode, modalidad)
   if (codes.length === 0) return ''
-  return codes.map(levelLabel).join(' y ')
+  const nombres = codes.map(levelLabel)
+  // «Discípulos 1, 2 y 3» y no «Discípulos 1 y Discípulos 2 y Discípulos 3».
+  if (nombres.length === 3 && nombres.every(n => n.split(' ')[0] === nombres[0].split(' ')[0])) {
+    const ultima = (n: string) => n.split(' ').slice(-1)[0]
+    return `${nombres[0]}, ${ultima(nombres[1])} y ${ultima(nombres[2])}`
+  }
+  return nombres.join(' y ')
 }
 
 /**

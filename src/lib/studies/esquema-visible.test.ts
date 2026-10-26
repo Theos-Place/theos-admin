@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { esquemaDelGrupo, folletosDelTiquete, porQueImporta, NOMBRE_DEL_ESQUEMA } from './esquema-visible'
 
-const NOMBRES = { N1: 'Nivel 1', N2: 'Nivel 2', N3: 'Nivel 3', N4: 'Nivel 4', DIS1: 'Discípulos 1' }
+const NOMBRES = { N1: 'Nivel 1', N2: 'Nivel 2', N3: 'Nivel 3', N4: 'Nivel 4', DIS1: 'Discípulos 1', DIS2: 'Discípulos 2', DIS3: 'Discípulos 3' }
 
 describe('EST-28 · cómo se nombra el esquema', () => {
   it('legacy se dice «viejo» y bloques «nuevo»', () => {
@@ -57,10 +57,12 @@ describe('EST-28 · qué folletos dice el tiquete', () => {
       .toBe('Nivel 2')
   })
 
-  it('lo que no es nivel pide el suyo en los dos esquemas', () => {
+  it('discípulos: DIS1 pide los tres en los dos esquemas, y DIS2 no pide nada', () => {
     for (const m of ['legacy', 'bloques']) {
       expect(folletosDelTiquete({ planCode: 'DIS1', modalidad: m, nombres: NOMBRES }).etiqueta,
-        m).toBe('Discípulos 1')
+        m).toBe('Discípulos 1, 2 y 3')
+      expect(folletosDelTiquete({ planCode: 'DIS2', modalidad: m, nombres: NOMBRES }).etiqueta,
+        m).toBe('No pide folletos')
     }
   })
 

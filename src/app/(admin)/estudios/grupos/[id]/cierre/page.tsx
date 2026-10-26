@@ -7,7 +7,7 @@ import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useGroup } from '@/hooks/useGroup'
 import { useSedes } from '@/lib/sedes'
-import { OTRO_LUGAR, isFolletoEligible, nextLevelCode, levelLabel } from '@/lib/studies/folletos'
+import { OTRO_LUGAR, isFolletoEligible, cierrePideFolletos, nextLevelCode, levelLabel } from '@/lib/studies/folletos'
 import { avisoDeAnticipacion, fechasDelSucesor, sumarDias, MESES_DE_HOLGURA, motivoParaRechazarInicio } from '@/lib/studies/successor-dates'
 import { ymdCR, formatDateLong } from '@/lib/format'
 import type { StudyGroup, StudyType } from '@/types/study'
@@ -215,7 +215,9 @@ function CierreForm({ group, studyType }: { group: StudyGroup; studyType: StudyT
   // Con corte, el sucesor (y sus folletos) dependen de la respuesta.
   const haySucesor = isFolletoEligible(group.study_type_id) && aprobados > 0
     && (!hayCorte || continuaElGrupo === true)
-  const pideFolletos = haySucesor
+  // Hay sucesor ≠ pide folletos: un cierre 1→2 de discípulos tiene sucesor
+  // y no pide nada (los tres folletos se pidieron al crear DIS1, 2026-10-26).
+  const pideFolletos = haySucesor && cierrePideFolletos(group.study_type_id, group.modalidad)
   const faltaLugarEntrega = pideFolletos && !lugarEntrega
 
   /**

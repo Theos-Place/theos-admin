@@ -7,8 +7,10 @@
 import { folletosQuePide } from './corte-de-bloque'
 import type { Modalidad } from './modalidad-de-bloques'
 
-/** Los niveles que abren un bloque: son los que piden el par completo. */
-export const NIVELES_QUE_PIDEN_POR_ADELANTADO = ['N1', 'N3'] as const
+/** Los niveles que abren un bloque: son los que piden el juego completo.
+ *  DIS1 desde el 2026-10-26: los tres folletos de discípulos se piden al
+ *  crear el grupo de Discípulos 1 (ver `FOLLETOS_DE_DISCIPULOS`). */
+export const NIVELES_QUE_PIDEN_POR_ADELANTADO = ['N1', 'N3', 'DIS1'] as const
 
 export type Veredicto =
   | { puede: true }
@@ -49,7 +51,7 @@ export function puedePedirFolletosAnticipados(
       code: yaLosTiene ? 'ya_los_tiene_del_bloque' : 'nivel_no_aplica',
       motivo: yaLosTiene
         ? 'Los estudiantes de este nivel ya recibieron sus folletos al entrar al bloque.'
-        : 'Solo los grupos de Nivel 1 y Nivel 3 piden folletos por adelantado.',
+        : 'Solo los grupos de Nivel 1, Nivel 3 y Discípulos 1 piden folletos por adelantado.',
     }
   }
   if (g.status !== 'en_matricula') {

@@ -5,7 +5,7 @@ import {
 } from './folletos-del-bloque'
 
 const NOMBRES: Record<string, string> = {
-  N1: 'Nivel 1', N2: 'Nivel 2', N3: 'Nivel 3', N4: 'Nivel 4', DIS1: 'Discípulos 1',
+  N1: 'Nivel 1', N2: 'Nivel 2', N3: 'Nivel 3', N4: 'Nivel 4', DIS1: 'Discípulos 1', DIS2: 'Discípulos 2', DIS3: 'Discípulos 3',
 }
 const nombre = (c: string) => NOMBRES[c]
 const grupo = (over: Partial<MatriculadosPorGrupo>): MatriculadosPorGrupo => ({
@@ -60,13 +60,20 @@ describe('N3 se comporta como N1', () => {
 })
 
 describe('lo que NO está en un bloque sigue igual', () => {
-  it('discípulos pide su propio folleto, uno por persona', () => {
-    // El cebo caro de EST-14: si esto devolviera [], las capacitaciones se
-    // quedarían sin folletos en silencio.
-    const filas = expandirAFolletos([grupo({ nivel_code: 'DIS1', nivel: 'Discípulos 1', cantidad: 12 })], nombre)
+  it('prematrimonial pide su propio folleto, uno por persona', () => {
+    // El cebo caro de EST-14: si esto devolviera [], se quedarían sin
+    // folletos en silencio.
+    const filas = expandirAFolletos([grupo({ nivel_code: 'PREMAT', nivel: 'Prematrimonial', cantidad: 12 })], nombre)
     expect(filas).toHaveLength(1)
-    expect(filas[0].folleto).toBe('Discípulos 1')
+    expect(filas[0].folleto).toBe('Prematrimonial')
     expect(totalDeFolletos(filas)).toBe(12)
+  })
+
+  it('DISCÍPULOS 1 pide los TRES folletos por persona; DIS2 y DIS3 no piden (2026-10-26)', () => {
+    const filas = expandirAFolletos([grupo({ nivel_code: 'DIS1', nivel: 'Discípulos 1', cantidad: 12 })], nombre)
+    expect(filas.map(f => f.folleto)).toEqual(['Discípulos 1', 'Discípulos 2', 'Discípulos 3'])
+    expect(totalDeFolletos(filas)).toBe(36)
+    expect(expandirAFolletos([grupo({ nivel_code: 'DIS2', nivel: 'Discípulos 2', cantidad: 12 })], nombre)).toHaveLength(0)
   })
 })
 
@@ -116,8 +123,9 @@ describe('la etiqueta de la orden', () => {
 
   it('lo que no es par se nombra solo', async () => {
     const { etiquetaDeFolletos } = await import('./folletos')
-    expect(etiquetaDeFolletos('DIS1', 'bloques')).toBe('Discípulos 1')
     expect(etiquetaDeFolletos('PREMAT', 'bloques')).toBe('Prematrimonial')
+    expect(etiquetaDeFolletos('DIS1', 'legacy')).toBe('Discípulos 1, 2 y 3')
+    expect(etiquetaDeFolletos('DIS2', 'legacy')).toBe('')
   })
 
   it('se deriva, no se escribe a mano', async () => {

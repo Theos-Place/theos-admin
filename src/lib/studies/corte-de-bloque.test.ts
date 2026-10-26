@@ -364,9 +364,16 @@ describe('EST-14 · qué folletos pide cada grupo', () => {
   })
 
   it('lo que no es nivel pide SU folleto, como siempre', () => {
-    // Si devolviera [], los discípulos se quedarían sin folletos.
-    for (const c of ['DIS1', 'DIS2', 'DIS3', 'PREMAT']) {
-      expect(folletosQuePide(c, 'bloques'), c).toEqual([c])
+    expect(folletosQuePide('PREMAT', 'bloques')).toEqual(['PREMAT'])
+    expect(folletosQuePide('PREMAT', 'legacy')).toEqual(['PREMAT'])
+  })
+
+  it('DISCÍPULOS: los tres juntos al crear DIS1, y nada en 1→2 ni 2→3 (decisión 2026-10-26)', () => {
+    // En las DOS modalidades: en producción todos los grupos de discípulos son legacy.
+    for (const m of ['bloques', 'legacy'] as const) {
+      expect(folletosQuePide('DIS1', m), m).toEqual(['DIS1', 'DIS2', 'DIS3'])
+      expect(folletosQuePide('DIS2', m), m).toEqual([])
+      expect(folletosQuePide('DIS3', m), m).toEqual([])
     }
   })
 
