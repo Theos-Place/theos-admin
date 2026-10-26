@@ -80,14 +80,22 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
      * con 0 o 1 segundo de diferencia (2026-09-03). Acá todavía no había
      * pasado, y se cierra antes de que pase.
      */
-    const { submitResponse, hasGuestResponded } = await import('@/lib/supabase/queries/forms')
+    const { submitResponse, lastGuestResponseAt } = await import('@/lib/supabase/queries/forms')
+    const { puedeResponderDeNuevo, mensajeDeEspera } = await import('@/lib/forms/reanswer')
     const correo = String(body.guest_email).trim().toLowerCase()
     const { data: formCfg } = await supabase
-      .from('forms').select('allow_multiple_responses').eq('id', id).maybeSingle()
-    const permiteVarias = (formCfg as { allow_multiple_responses: boolean } | null)?.allow_multiple_responses === true
-    if (!permiteVarias && await hasGuestResponded(id, correo)) {
+      .from('forms').select('allow_multiple_responses, reanswer_after_days').eq('id', id).maybeSingle()
+    const cfg = formCfg as { allow_multiple_responses: boolean | null; reanswer_after_days: number | null } | null
+    const permiteVarias = cfg?.allow_multiple_responses === true
+    // FRM-7 · Con varias respuestas, otra pasados N días de la última.
+    const veredicto = puedeResponderDeNuevo({
+      permiteVarias, dias: cfg?.reanswer_after_days, ultimaRespuesta: await lastGuestResponseAt(id, correo),
+    })
+    if (!veredicto.ok) {
       return NextResponse.json(
-        { error: 'Ya recibimos una respuesta con ese correo.', code: 'ya_respondido' },
+        permiteVarias
+          ? { error: mensajeDeEspera(veredicto.desde), code: 'ya_respondido', puede_desde: veredicto.desde }
+          : { error: 'Ya recibimos una respuesta con ese correo.', code: 'ya_respondido' },
         { status: 409 },
       )
     }

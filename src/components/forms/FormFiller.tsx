@@ -385,6 +385,10 @@ export function FormFiller({ formId, mode }: { formId: string; mode: 'fill' | 'p
         // guardada. Mostrar un error rojo haría creer que se perdió, así que
         // se trata como éxito.
         if (res.status === 409 && detail?.code === 'ya_respondido') {
+          // FRM-7 · Si trae `puede_desde`, NO es un duplicado del mismo envío:
+          // es alguien que quiere inscribirse otra vez antes de tiempo. Se le
+          // dice cuándo podrá, no se le finge éxito.
+          if (detail?.puede_desde) { setSubmitError(String(detail.error)); return }
           setSubmitted(true)
           return
         }

@@ -3133,3 +3133,74 @@ servidores ("¿quién tiene don de enseñanza y pasión por jóvenes en Heredia?
 probablemente condiciones del padrón (PAR-5/PAR-7 pattern) restringidas a los
 roles de lectura de la etapa 1. **No se corre hasta validar con el equipo qué
 buscan.**
+
+### [x] FRM-7 · Formularios de actividades sociales: el link viejo pide login + no dejan reinscribirse (pedido 2026-10-26) — HECHO 2026-10-26 (staging; prod al desplegar)
+
+**Diagnóstico y lo hecho (2026-10-26):**
+- BUG 1: la publicidad salió con `/formularios/<id>/responder` (el módulo, que
+  el proxy manda al login siempre) y la página pública vive en
+  `/formulario/<id>`. No había caché ni «link nuevo»: eran dos rutas. Ahora el
+  proxy, SIN sesión, traduce `/formularios/<id>` y `/formularios/<id>/responder`
+  a `/formulario/<id>`; si el formulario pide cuenta, la página pública ofrece
+  «Ingresá para contestarlo» y vuelve al llenado con sesión. Regla pura en
+  `lib/forms/reanswer.ts` (`rutaPublicaDesdeModulo`). Con sesión nada cambia.
+  Al medir, 9 de los 10 ya estaban abiertos sin cuenta; «Carnet Cárceles»
+  sigue pidiendo cuenta (no se tocó: confirmar si es a propósito).
+- BUG 2: columna `forms.reanswer_after_days` (default 2, migración
+  `20261026120000`); con `allow_multiple_responses` se acepta otra respuesta
+  pasados N días de la última de la misma persona (miembro o correo), como
+  registro NUEVO; antes de eso 409 con `puede_desde` y «podrás volver a
+  inscribirte después del <fecha>». Builder: casilla «Permitir responder más
+  de una vez» + días. Pendiente al desplegar: activar en los 10 formularios
+  (`scripts/frm7/activar-reenvio.cjs`).
+
+
+Dos bugs reportados por la encargada de eventos, afectan ayuda social y sports:
+
+Prompt para Claude Code:
+
+```
+FIX URGENTE · Formularios públicos: el enlace ya publicado exige login + bloqueo de
+respuestas repetidas en eventos recurrentes
+
+BUG 1 — EL MISMO LINK DEBE SERVIR, CON O SIN CHECK DE PÚBLICO:
+La encargada creó formularios con login requerido, la publicidad salió con esos enlaces,
+y DESPUÉS les marcó el check de "público sin login" — pero el enlace ya impreso/publicado
+sigue pidiendo login.
+1. Diagnosticar por qué: ¿la ruta /formularios/[id]/responder evalúa el flag al momento o
+   quedó cacheado? ¿hay una ruta pública distinta de la autenticada (y el check genera
+   OTRO link en vez de cambiar el existente)? ¿PUBLIC_PREFIXES no cubre esta ruta?
+2. ARREGLO: el enlace canónico /formularios/[id]/responder (con o sin /responder — ambas
+   formas aparecen en la publicidad, ver lista abajo: unificar/redirigir) respeta SIEMPRE
+   el estado ACTUAL del check: si el formulario es público, se responde sin login con ese
+   mismo URL; si no, pide login. Nunca debe existir "el link viejo" vs "el link nuevo".
+3. Verificar los 10 formularios afectados (ids):
+   Abuelitos 3d60d1ff-a21b-4c6a-9911-860263db7a6f · Abuelitos Guana
+   7647e12d-691b-491f-883c-12803465bbbe · Calles AM 1b58cd13-c9fe-49c3-be9e-7231ca6fbd86 ·
+   Calles PM af0a33f8-359f-4407-9eb2-17f91d52d682 · Calles Guana
+   4c74325e-45d9-4b8e-9144-678ddf917947 · Calles Pérez a536c932-f140-4bf4-8a7f-38b4950aee7a ·
+   Semillitas f4ba8c49-b7d3-422d-80a5-3d955487b97a · Valientes
+   30b0c4c9-8bd4-490e-bcb4-7abc46acb4c4 · Renuevos 99aba2b1-ccf1-43c5-8473-0f08166f5166 ·
+   Cárceles 5362437c-45a0-47ba-b15c-cae0bc804d4c
+   — probar cada uno SIN sesión (ventana incógnita) y confirmar que abre y guarda.
+
+BUG 2 — EVENTOS RECURRENTES: PODER RESPONDER DE NUEVO:
+El mismo formulario se reutiliza para cada edición de la actividad (Calles de febrero,
+Calles de octubre…) y el sistema dice "ya respondiste" y bloquea.
+1. Agregar al formulario la opción "Permitir responder más de una vez" con ventana
+   configurable "se puede responder de nuevo después de N días de la última respuesta".
+   DEFAULT: 2 días — hay actividades con DOS ediciones en el mismo mes, así que la
+   ventana solo debe impedir el doble envío accidental de la misma inscripción, no
+   bloquear la edición siguiente. N configurable por formulario para quien quiera una
+   ventana mayor.
+2. Cada respuesta queda como registro NUEVO con su fecha (no sobreescribir — la lista de
+   respuestas del evento de octubre no debe mezclarse con la de febrero: verificar que
+   el consumo de respuestas/export distinga por fecha).
+3. Activar la opción en los 10 formularios de la lista.
+4. El mensaje al que aún no puede: decir CUÁNDO podrá ("Ya te inscribiste a esta
+   actividad; podrás volver a inscribirte después del [fecha]"), no un rechazo seco.
+   Con el default de 2 días el mensaje casi solo aparecerá en reenvíos inmediatos.
+Tests: público sin login responde con el link canónico; privado exige login con el mismo
+link; segunda respuesta tras N días se acepta y queda como registro aparte; antes de N
+días mensaje con fecha. tsc/lint/vitest. DESPLEGAR PRONTO: la publicidad ya circula.
+```

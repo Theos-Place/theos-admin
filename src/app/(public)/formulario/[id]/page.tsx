@@ -2,7 +2,9 @@
 
 import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
+import Link from 'next/link'
 import { PublicFormFiller } from '@/components/forms/PublicFormFiller'
+import { rutaConCuenta } from '@/lib/forms/reanswer'
 
 /**
  * Página PÚBLICA de un formulario: se contesta sin cuenta.
@@ -44,6 +46,15 @@ export default function FormularioPublicoPage() {
         <h1 className="text-xl font-bold text-navy font-display">Este formulario no está disponible</h1>
         <p className="text-sm text-navy-light/80 font-body">
           {motivo || 'Puede que el link esté vencido o que ya no se estén recibiendo respuestas.'}
+        </p>
+        {/* FRM-7 · El mismo link sirve con cuenta: si este formulario pide
+            sesión, por acá se entra y se vuelve al llenado. No se dice si
+            «existe pero pide cuenta» o «no existe»: la oferta es genérica. */}
+        <p className="pt-2 text-sm text-navy-light/80 font-body">
+          ¿Tenés cuenta de Theos Place?{' '}
+          <Link href={`/login?redirect=${encodeURIComponent(rutaConCuenta(id))}`} className="text-coral-deep underline">
+            Ingresá para contestarlo
+          </Link>
         </p>
       </main>
     )

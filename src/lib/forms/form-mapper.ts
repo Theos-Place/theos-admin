@@ -25,6 +25,8 @@ export function formToWriteInput(body: Record<string, unknown>): FormWriteInput 
     // Abierto a cualquiera con el link. Por defecto NO: un formulario sin
     // audiencia definida no es para cualquiera (2026-08-06).
     is_public: Boolean(body.is_public),
+    allow_multiple_responses: Boolean(body.allow_multiple_responses),
+    reanswer_after_days: diasEntreRespuestas(body.reanswer_after_days),
     // FRM-5 · A quién se le ofrece. Se manda siempre —incluso null— para que
     // crear sin restricción deje la columna limpia; la query normaliza y, si
     // hay condiciones, fuerza requires_auth.
@@ -47,6 +49,12 @@ function heroFrom(body: Record<string, unknown>): Pick<FormWriteInput, 'hero_ima
   }
 }
 
+/** FRM-7 · Entero ≥ 0; lo que no se entienda cae al default (2). */
+function diasEntreRespuestas(v: unknown): number {
+  const n = Number(v)
+  return Number.isInteger(n) && n >= 0 ? n : 2
+}
+
 export function formToPartialWriteInput(body: Record<string, unknown>): Partial<FormWriteInput> {
   const out: Partial<FormWriteInput> = {}
   if ('name' in body || 'title' in body) out.title = String(body.name ?? body.title)
@@ -63,6 +71,9 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
   // desde el principio y nadie la mandaba, así que quedaba en true para
   // siempre y el formulario público no se podía abrir nunca.
   if ('requires_auth' in body) out.requires_auth = Boolean(body.requires_auth)
+  // FRM-7 · Varias respuestas y la ventana entre ellas.
+  if ('allow_multiple_responses' in body) out.allow_multiple_responses = Boolean(body.allow_multiple_responses)
+  if ('reanswer_after_days' in body) out.reanswer_after_days = diasEntreRespuestas(body.reanswer_after_days)
   // FRM-5: solo si viene la clave. `undefined` (no se tocó) y `null` (quitar la
   // restricción) son cosas distintas y la query las distingue.
   if ('audience_restrictions' in body) out.audience_restrictions = body.audience_restrictions ?? null

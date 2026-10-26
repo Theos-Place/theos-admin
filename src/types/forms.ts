@@ -116,6 +116,8 @@ export interface FormTemplate {
   audience_restrictions: unknown
   /** EST-10: si es false, una respuesta por persona (el llenado lo verifica). */
   allow_multiple_responses: boolean
+  /** FRM-7 · Con varias respuestas: días desde la última para aceptar otra. */
+  reanswer_after_days: number
   created_at: string
   created_by: string
   /** ¿Lo creó quien está viendo la lista? Lo resuelve el API. */

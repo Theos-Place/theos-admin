@@ -105,6 +105,9 @@ export function PublicFormFiller({ formId, form, fields }: {
       // envío se duplicó, la primera SÍ quedó guardada, y decirle que falló
       // haría que lo intente otra vez. Se muestra la pantalla de listo con el
       // texto que corresponde, sin mentir sobre lo que pasó.
+      // FRM-7 · Con `puede_desde` no es un duplicado: quiere inscribirse de
+      // nuevo antes de tiempo. Se le dice cuándo podrá.
+      if (res.status === 409 && d?.code === 'ya_respondido' && d?.puede_desde) { setError(String(d.error)); return }
       if (res.status === 409 && d?.code === 'ya_respondido') { setYaEstaba(true); setListo(true); return }
       if (!res.ok) { setError(d.error ?? 'No se pudo enviar el formulario.'); return }
       setListo(true)

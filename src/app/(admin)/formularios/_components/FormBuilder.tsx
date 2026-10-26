@@ -142,6 +142,10 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   const [pideCuenta, setPideCuenta]   = useState(true)
   /** FRM-5 · A quién se le ofrece este formulario. null = a todos. */
   const [audiencia, setAudiencia]     = useState<Restriccion | null>(null)
+  /** FRM-7 · Varias respuestas por persona (actividades recurrentes) y cada
+   *  cuántos días. Default 2: frena el doble envío, no la edición siguiente. */
+  const [permiteVarias, setPermiteVarias] = useState(false)
+  const [diasEntreRespuestas, setDiasEntreRespuestas] = useState(2)
   /** El link que se comparte. Se arma con el origen real y no con una constante
    *  para que en Preview no se copie el de producción. */
   const linkPublico = typeof window !== 'undefined' && formId
@@ -172,6 +176,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
         setStatus(f.is_active ? 'active' : 'draft')
         setIsPublic(f.is_public)
         setPideCuenta(f.requires_auth ?? true)
+        setPermiteVarias(f.allow_multiple_responses === true)
+        setDiasEntreRespuestas(f.reanswer_after_days ?? 2)
         setAudiencia(normalizeRestriction((db as { audience_restrictions?: unknown }).audience_restrictions))
         setWindowStart(isoToWindowYmd(f.starts_at))
         setWindowEnd(isoToWindowYmd(f.ends_at))
@@ -239,6 +245,8 @@ export function FormBuilder({ formId }: FormBuilderProps) {
       // igual; acá se hace para que lo guardado y lo que se ve digan lo mismo.
       requires_auth: exigeIdentificarse(audiencia) ? true : (isPublic ? pideCuenta : true),
       audience_restrictions: audiencia,
+      allow_multiple_responses: permiteVarias,
+      reanswer_after_days: diasEntreRespuestas,
       starts_at: windowStart || null,
       ends_at: windowEnd || null,
       hero_image_url: hero.hero_image_url ?? null,
@@ -492,6 +500,41 @@ export function FormBuilder({ formId }: FormBuilderProps) {
                   </span>
                 </span>
               </label>
+            )}
+
+            {/* FRM-7 · Actividades recurrentes: el mismo formulario sirve para
+                cada edición. Sin esto decía «ya respondiste» y bloqueaba. */}
+            <label className="mt-2.5 flex items-start gap-2.5 cursor-pointer">
+              <input
+                type="checkbox"
+                className="mt-0.5 accent-coral"
+                checked={permiteVarias}
+                onChange={e => setPermiteVarias(e.target.checked)}
+              />
+              <span>
+                <span className="block text-sm text-navy font-body">Permitir responder más de una vez</span>
+                <span className="block text-[13px] text-navy-light/80 font-body mt-0.5">
+                  Para actividades que se repiten (Calles de febrero, Calles de octubre…): cada respuesta queda como un registro nuevo con su fecha.
+                </span>
+              </span>
+            </label>
+            {permiteVarias && (
+              <div className="mt-2 pl-6 flex flex-wrap items-center gap-2 text-sm text-navy font-body">
+                <span>Se puede responder de nuevo después de</span>
+                <input
+                  type="number"
+                  min={0}
+                  max={365}
+                  aria-label="Días que deben pasar desde la última respuesta"
+                  value={diasEntreRespuestas}
+                  onChange={e => setDiasEntreRespuestas(Math.max(0, Math.min(365, Math.trunc(Number(e.target.value) || 0))))}
+                  className="w-20 rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
+                />
+                <span>{diasEntreRespuestas === 1 ? 'día' : 'días'} de la última respuesta.</span>
+                <span className="basis-full text-[13px] text-navy-light/80">
+                  Con 2 días solo se frena el doble envío accidental; subilo si querés una ventana mayor entre ediciones.
+                </span>
+              </div>
             )}
 
             {/* El link para compartir: solo cuando de verdad se puede abrir sin

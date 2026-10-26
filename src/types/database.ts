@@ -1904,6 +1904,7 @@ export type Database = {
       forms: {
         Row: {
           allow_multiple_responses: boolean | null
+          reanswer_after_days: number
           assignment_notified_key: string | null
           audience_restrictions: Json | null
           category: string | null
@@ -1927,6 +1928,7 @@ export type Database = {
         }
         Insert: {
           allow_multiple_responses?: boolean | null
+          reanswer_after_days?: number
           assignment_notified_key?: string | null
           audience_restrictions?: Json | null
           category?: string | null
@@ -1950,6 +1952,7 @@ export type Database = {
         }
         Update: {
           allow_multiple_responses?: boolean | null
+          reanswer_after_days?: number
           assignment_notified_key?: string | null
           audience_restrictions?: Json | null
           category?: string | null

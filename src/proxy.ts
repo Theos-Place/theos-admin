@@ -2,6 +2,7 @@ import { NextResponse, type NextRequest } from 'next/server'
 import { updateSession } from '@/lib/supabase/middleware'
 import { buildCsp, newNonce } from '@/lib/csp'
 import { loginUrlWithDest, safeDest } from '@/lib/auth/redirect-target'
+import { rutaPublicaDesdeModulo } from '@/lib/forms/reanswer'
 
 // Rutas accesibles sin sesión.
 // '/ayuda' es público a propósito: los correos de invitación linkean ahí y el
@@ -59,6 +60,14 @@ export async function proxy(request: NextRequest) {
   //
   // Va el pathname Y el search: `/mis-pagos?pago=<id>` sin el search abre la
   // página pero no el pago.
+  // FRM-7 · El link del módulo a UN formulario, sin sesión, va a la página
+  // pública: la publicidad salió con /formularios/<id>/responder y el check de
+  // «sin cuenta» se marcó después. Si el formulario sigue pidiendo cuenta, la
+  // página pública ofrece el login y vuelve acá.
+  if (!user) {
+    const publica = rutaPublicaDesdeModulo(pathname)
+    if (publica) return redirectTo(request, response, publica)
+  }
   if (!user && !isPublic(pathname)) {
     const destino = loginUrlWithDest(pathname, request.nextUrl.search)
     const [ruta, query = ''] = destino.split('?')

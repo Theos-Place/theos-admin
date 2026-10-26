@@ -194,11 +194,21 @@ export async function POST(
      */
     if (memberId) {
       const { data: form } = await createAdminClient()
-        .from('forms').select('allow_multiple_responses').eq('id', id).maybeSingle()
-      const permiteVarias = (form as { allow_multiple_responses: boolean } | null)?.allow_multiple_responses === true
-      if (!permiteVarias && await hasMemberResponded(id, memberId)) {
+        .from('forms').select('allow_multiple_responses, reanswer_after_days').eq('id', id).maybeSingle()
+      const cfg = form as { allow_multiple_responses: boolean | null; reanswer_after_days: number | null } | null
+      const permiteVarias = cfg?.allow_multiple_responses === true
+      // FRM-7 · Con varias respuestas, se acepta otra pasados N días de la
+      // última; antes de eso se le dice CUÁNDO (code igual, con `puede_desde`).
+      const { puedeResponderDeNuevo, mensajeDeEspera } = await import('@/lib/forms/reanswer')
+      const { lastMemberResponseAt } = await import('@/lib/supabase/queries/forms')
+      const veredicto = puedeResponderDeNuevo({
+        permiteVarias, dias: cfg?.reanswer_after_days, ultimaRespuesta: await lastMemberResponseAt(id, memberId),
+      })
+      if (!veredicto.ok) {
         return NextResponse.json(
-          { error: 'Ya enviaste una respuesta a este formulario.', code: 'ya_respondido' },
+          permiteVarias
+            ? { error: mensajeDeEspera(veredicto.desde), code: 'ya_respondido', puede_desde: veredicto.desde }
+            : { error: 'Ya enviaste una respuesta a este formulario.', code: 'ya_respondido' },
           { status: 409 },
         )
       }

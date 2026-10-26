@@ -68,6 +68,7 @@ export function toDomainFormTemplate(db: DbFormTemplate): FormTemplate {
     requires_auth: db.requires_auth ?? true,
     audience_restrictions: (db as { audience_restrictions?: unknown }).audience_restrictions ?? null,
     allow_multiple_responses: db.allow_multiple_responses ?? false,
+    reanswer_after_days: (db as { reanswer_after_days?: number | null }).reanswer_after_days ?? 2,
     created_at: db.created_at,
     created_by: db.created_by ?? '',
     // Lo calcula el API contra la sesión; sin él, el filtro «creados por mí»
