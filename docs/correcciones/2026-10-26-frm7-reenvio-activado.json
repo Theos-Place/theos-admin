@@ -1,0 +1,65 @@
+{
+  "motivo": "FRM-7: activar responder más de una vez (2 días) en los formularios de actividades sociales",
+  "antes": [
+    {
+      "id": "3d60d1ff-a21b-4c6a-9911-860263db7a6f",
+      "title": "Ayuda Social - Abuelitos",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "7647e12d-691b-491f-883c-12803465bbbe",
+      "title": "Ayuda Social - Abuelitos Guana",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "1b58cd13-c9fe-49c3-be9e-7231ca6fbd86",
+      "title": "Ayuda Social - Calles AM",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "4c74325e-45d9-4b8e-9144-678ddf917947",
+      "title": "Ayuda Social - Calles Guana",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "a536c932-f140-4bf4-8a7f-38b4950aee7a",
+      "title": "Ayuda Social - Calles Pérez",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "af0a33f8-359f-4407-9eb2-17f91d52d682",
+      "title": "Ayuda Social - Calles PM",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "5362437c-45a0-47ba-b15c-cae0bc804d4c",
+      "title": "Ayuda Social - Carnet Cárceles",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "99aba2b1-ccf1-43c5-8473-0f08166f5166",
+      "title": "Ayuda Social - Renuevos",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "f4ba8c49-b7d3-422d-80a5-3d955487b97a",
+      "title": "Ayuda Social - Semillitas",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    },
+    {
+      "id": "30b0c4c9-8bd4-490e-bcb4-7abc46acb4c4",
+      "title": "Ayuda Social - Valientes",
+      "allow_multiple_responses": false,
+      "reanswer_after_days": 2
+    }
+  ]
+}
