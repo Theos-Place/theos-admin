@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { ymdCR } from '@/lib/format'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { GROUP_ADMIN_ROLES } from '@/lib/auth/roles'
@@ -146,7 +147,24 @@ export async function PUT(
       }
     }
 
+    // EST-30 · Si alguien abre el grupo a mano (en matrícula → en curso), el
+    // tiquete anticipado recibe su número final igual que cuando lo abre el
+    // cron. Se lee el estado ANTES de escribir; después ya no se sabe.
+    const abreAMano = parsed.data.status === 'en_curso'
+      ? (await getGroupById(id))?.status === 'en_matricula'
+      : false
+
     await updateGroup(id, patch)
+
+    if (abreAMano) {
+      try {
+        const { actualizarFolletoAlAbrir } = await import('@/lib/supabase/queries/folletos')
+        await actualizarFolletoAlAbrir(id, ymdCR())
+      } catch (e) {
+        // El grupo ya cambió de estado; esto es un aviso, no parte del cambio.
+        reportarError('PUT /api/studies/groups/[id]: folleto al abrir:', e)
+      }
+    }
     return NextResponse.json({ ok: true })
   } catch (error) {
     if (error instanceof Error && error.message.startsWith('PREMAT_PAREJA: ')) {

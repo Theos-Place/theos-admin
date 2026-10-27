@@ -33,6 +33,7 @@ export function etiquetaTipo(tipo: string): string {
     case 'cierre': return 'se cerró el grupo anterior y la gente pasó de nivel'
     case 'manual': return 'solicitud manual (caso especial)'
     case 'anticipado': return 'el equipo de estudios los pidió por adelantado, antes de que el grupo arranque'
+    case 'anticipado_auto': return 'el grupo de Nivel 1 está a dos semanas del fin de matrícula (se imprime al cupo máximo; el número final llega cuando el grupo abra)'
     case 'reubicacion': return 'reubicación'
     default: return tipo.replace(/_/g, ' ')
   }
@@ -181,7 +182,7 @@ export function cuerpoFolleto(d: FolletoDetalle): string {
 
 ${cierreBloque}
 
-${d.note ? `<p style="font-size:14px; color:#555;"><strong>Nota de quien lo pidió:</strong> ${d.note}</p>` : ''}
+${d.note ? `<p style="font-size:14px; color:#555;"><strong>${d.tipo === 'anticipado_auto' ? 'Nota' : 'Nota de quien lo pidió'}:</strong> ${d.note}</p>` : ''}
 
 <p style="text-align:center; margin:28px 0;">
   <a class="btn" href="${BASE}/estudios/folletos/${d.id}">Ver el detalle completo</a>

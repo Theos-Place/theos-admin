@@ -136,6 +136,10 @@ export async function createAutoFolletoIfNeeded(
    *  a usar los folletos; sin este enlace el tiquete no puede decir cuántos
    *  aprobaron, reprobaron o se retiraron. */
   originGroupId?: string | null,
+  /** EST-30 · El automático pide al CUPO, no a los matriculados, y nace con
+   *  una nota que dice de dónde sale el número. Solo lo usa
+   *  `pedirFolletosAnticipadosAutomaticos`. */
+  extras?: { cantidadFija?: number; note?: string },
   // `id` sale también cuando el tiquete YA existía: quien llama lo necesita
   // para enlazarle los pagos, y ese enlace tiene que ser idempotente igual que
   // la creación.
@@ -207,8 +211,9 @@ export async function createAutoFolletoIfNeeded(
   if (aPedir.length === 0) return { created: false, reason: 'ya_los_tiene_del_bloque' }
 
   // Cuántos juegos se imprimen de verdad: los matriculados MENOS los que ya
-  // recibieron el par. Nunca negativo.
-  const aImprimir = Math.max(0, enrolled - (conPar ?? 0))
+  // recibieron el par. Nunca negativo. El automático de EST-30 trae la
+  // cantidad decidida (el cupo): acá no se recalcula.
+  const aImprimir = extras?.cantidadFija ?? Math.max(0, enrolled - (conPar ?? 0))
   if (aImprimir === 0) return { created: false, reason: 'ya_los_tiene_del_bloque' }
 
   const { data: creado, error } = await supabase.from('folleto_requests').insert({
@@ -222,12 +227,13 @@ export async function createAutoFolletoIfNeeded(
     sede,
     close_date: todayIso,
     available_at: estimatedAvailableDate(todayIso),
+    note: extras?.note ?? null,
   }).select('id').single()
   if (error) {
     if ((error as { code?: string }).code !== '23505') throw error
     const { data: previo } = await supabase.from('folleto_requests')
       .select('id').eq('source_group_id', groupId)
-      .in('tipo', ['cupo_lleno', 'fin_matricula', 'cierre']).maybeSingle()
+      .in('tipo', TIPOS_UNA_ORDEN_POR_GRUPO).maybeSingle()
     const id = (previo as { id: string } | null)?.id
     if (!id) return { created: false, reason: 'ya_existe' }
     return { created: false, id, reason: 'ya_existe' }
@@ -292,6 +298,156 @@ export async function createAutoFolletoIfNeeded(
     reportarError('folletos: tiquete creado pero NADIE fue avisado:', e)
   }
   return { created: true, id: folletoId }
+}
+
+/**
+ * Los tipos que entran en «una orden por grupo» (índice único parcial
+ * `folleto_requests_auto_por_grupo`). Espejo de la migración
+ * 20261027120000: si se agrega un tipo allá, va acá.
+ */
+export const TIPOS_UNA_ORDEN_POR_GRUPO = ['cupo_lleno', 'fin_matricula', 'cierre', 'anticipado', 'anticipado_auto'] as const
+
+/** Las matrículas de un grupo con sus pagos, para contar confirmados y
+ *  pendientes con `contarMatricula`. */
+async function matriculaConPagos(groupId: string) {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('study_enrollments')
+    .select('status, payments!payments_enrollment_id_fkey(status)')
+    .eq('group_id', groupId)
+  if (error) throw error
+  return (data ?? []) as unknown as Array<{ status: string | null; payments: Array<{ status: string | null }> | null }>
+}
+
+export type ResumenAnticipadosAuto = {
+  creados: Array<{ group_id: string; folleto_id: string; cantidad: number }>
+  /** Ya tenían tiquete (EST-21 o cierre): se les subió la cantidad al cupo. */
+  actualizados: Array<{ group_id: string; folleto_id: string; de: number; a: number }>
+  omitidos: Array<{ group_id: string; motivo: string }>
+}
+
+/**
+ * EST-30 · Recorre los grupos de Nivel 1 en matrícula y, a los que están a
+ * dos semanas (o menos) del fin de matrícula y no tienen tiquete, les pide
+ * los folletos AL CUPO MÁXIMO. Lo llama el cron diario de ventanas.
+ *
+ * IDEMPOTENTE: el índice único por grupo hace que la segunda corrida no
+ * cree nada; y la convivencia con un tiquete previo (botón de EST-21,
+ * cierre del grupo anterior) solo levanta la cantidad si el tiquete sigue
+ * en «creada» y pedía menos — una vez.
+ */
+export async function pedirFolletosAnticipadosAutomaticos(hoy: string): Promise<ResumenAnticipadosAuto> {
+  const {
+    tocaPedirAutomatico, cantidadAnticipada, contarMatricula, totalMatriculados,
+    notaInicial, cantidadAlConvivir, anexarNota, NIVELES_CON_TIQUETE_AUTOMATICO,
+  } = await import('@/lib/studies/folletos-anticipados-auto')
+  const supabase = createAdminClient()
+  const out: ResumenAnticipadosAuto = { creados: [], actualizados: [], omitidos: [] }
+
+  const { data, error } = await supabase
+    .from('study_groups')
+    .select('id, status, max_students, modalidad, enrollment_end_date, plan:study_plans!inner(code)')
+    .eq('status', 'en_matricula')
+    .not('enrollment_end_date', 'is', null)
+    .in('plan.code', [...NIVELES_CON_TIQUETE_AUTOMATICO])
+  if (error) throw error
+  type Row = { id: string; status: string; max_students: number | null; modalidad: string | null; enrollment_end_date: string | null; plan: { code: string | null } | { code: string | null }[] | null }
+
+  for (const g of (data ?? []) as Row[]) {
+    const plan = Array.isArray(g.plan) ? g.plan[0] : g.plan
+    if (!tocaPedirAutomatico({ planCode: plan?.code, status: g.status, enrollment_end_date: g.enrollment_end_date, modalidad: modalidadDe(g.modalidad) }, hoy)) continue
+
+    const conteo = contarMatricula(await matriculaConPagos(g.id))
+    const cupo = cantidadAnticipada({ max_students: g.max_students, matriculados: totalMatriculados(conteo) })
+    if (cupo === 0) { out.omitidos.push({ group_id: g.id, motivo: 'sin cupo ni matriculados' }); continue }
+
+    // Convivencia: ¿ya hay orden para este grupo?
+    const { data: previo } = await supabase.from('folleto_requests')
+      .select('id, status, quantity, note').eq('source_group_id', g.id)
+      .in('tipo', TIPOS_UNA_ORDEN_POR_GRUPO).maybeSingle()
+    const t = previo as { id: string; status: string; quantity: number; note: string | null } | null
+    if (t) {
+      const nueva = cantidadAlConvivir({ status: t.status, quantity: t.quantity, cupo })
+      if (nueva == null) { out.omitidos.push({ group_id: g.id, motivo: 'ya tiene orden' }); continue }
+      const anexo = `Dos semanas antes del fin de matrícula se sube al cupo máximo. Cantidad: ${t.quantity} → ${nueva}.`
+      const { error: eUp } = await supabase.from('folleto_requests')
+        .update({ quantity: nueva, note: anexarNota(t.note, anexo) })
+        .eq('id', t.id).eq('status', 'creada')
+      if (eUp) throw eUp
+      out.actualizados.push({ group_id: g.id, folleto_id: t.id, de: t.quantity, a: nueva })
+      continue
+    }
+
+    const r = await createAutoFolletoIfNeeded(g.id, 'anticipado_auto', hoy, null, null, {
+      cantidadFija: cupo,
+      note: notaInicial({ hoy, finDeMatricula: g.enrollment_end_date!, cantidad: cupo, maxStudents: g.max_students, conteo }),
+    })
+    if (r.created && r.id) out.creados.push({ group_id: g.id, folleto_id: r.id, cantidad: cupo })
+    else out.omitidos.push({ group_id: g.id, motivo: r.reason ?? 'no se creó' })
+  }
+  return out
+}
+
+/**
+ * EST-30 · Cuando el grupo ABRE (fin de la matrícula, pasa a en curso), el
+ * MISMO tiquete anticipado se actualiza con los números finales y se avisa a
+ * folletos. No se crea un segundo tiquete; la nota deja inicial → final.
+ *
+ * Aplica a los dos anticipados (automático y el botón de EST-21): quien
+ * imprime quiere el número final en los dos casos. Lo llaman el cron de
+ * ventanas y el cambio manual de estado. Idempotente por la marca en la nota.
+ */
+export async function actualizarFolletoAlAbrir(groupId: string, hoy: string): Promise<boolean> {
+  const { contarMatricula, totalMatriculados, notaDeApertura, anexarNota, yaSeActualizoAlAbrir, textoConteo } =
+    await import('@/lib/studies/folletos-anticipados-auto')
+  const supabase = createAdminClient()
+  const { data: previo } = await supabase.from('folleto_requests')
+    .select('id, status, quantity, note, sede, target_level_code, source_plan_code')
+    .eq('source_group_id', groupId).in('tipo', ['anticipado', 'anticipado_auto']).maybeSingle()
+  const t = previo as { id: string; status: string; quantity: number; note: string | null; sede: string | null; target_level_code: string | null; source_plan_code: string | null } | null
+  if (!t || t.status === 'cerrada' || yaSeActualizoAlAbrir(t.note)) return false
+
+  const { data: g } = await supabase.from('study_groups').select('status, name, modalidad').eq('id', groupId).maybeSingle()
+  const grupo = g as { status: string; name: string | null; modalidad: string | null } | null
+  if (!grupo || grupo.status !== 'en_curso') return false
+
+  const filas = await matriculaConPagos(groupId)
+  const conteo = contarMatricula(filas)
+  const final = totalMatriculados(conteo)
+  const note = anexarNota(t.note, notaDeApertura({ hoy, cantidadInicial: t.quantity, cantidadFinal: final, conteo }))
+  const { error } = await supabase.from('folleto_requests').update({ quantity: final, note }).eq('id', t.id)
+  if (error) throw error
+
+  const par = folletosQuePide(t.source_plan_code, modalidadDe(grupo.modalidad)).map(levelLabel).join(' + ')
+    || levelLabel(t.target_level_code)
+  const sede = t.sede ?? 'sede sin definir'
+  const cambio = t.quantity === final ? `se mantiene en ${final}` : `${t.quantity} → ${final}`
+  try {
+    const { renderEmail } = await import('@/lib/email/baseLayout')
+    await notifyFolletoRecipients({
+      title: 'Folletos: número final',
+      body: `${grupo.name ?? 'Grupo'} abrió · ${par}: ${cambio} · ${sede}`,
+      subject: `Folletos de ${par} — número final: ${final} para ${sede}`,
+      link: `/estudios/folletos/${t.id}`,
+      html: renderEmail(`<p class="greeting">El grupo abrió: este es el número final</p>
+<p>El grupo <strong>${grupo.name ?? ''}</strong> cerró su matrícula y arrancó. El tiquete de folletos
+que se pidió por adelantado al cupo máximo queda con los números de hoy:</p>
+<div class="info-box">
+  <p class="info-title">Números finales</p>
+  <p style="font-size:14px; color:#161440; line-height:1.8; margin:0;">
+    <strong>Cantidad de estudiantes: ${cambio}</strong><br/>
+    ${textoConteo(conteo)}<br/>
+    Folletos: ${par} · enviar a ${sede}
+  </p>
+</div>
+<p style="text-align:center; margin:28px 0;">
+  <a class="btn" href="https://admin.theosplace.org/estudios/folletos/${t.id}">Ver el tiquete</a>
+</p>`),
+    })
+  } catch (e) {
+    reportarError('folletos: tiquete actualizado al abrir pero NADIE fue avisado:', e)
+  }
+  return true
 }
 
 /** Enlaza al tiquete de folletos los pagos pendientes de los estudiantes de ese

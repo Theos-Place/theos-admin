@@ -44,6 +44,8 @@ const TIPO_FILTERS: { key: FolletoTipo | 'all'; label: string }[] = [
   { key: 'preapertura_confirmacion', label: 'Confirmación' },
   { key: 'preapertura_final', label: 'Final' },
   { key: 'manual', label: 'Manual' },
+  { key: 'anticipado', label: 'Pedido por adelantado' },
+  { key: 'anticipado_auto', label: 'Automático · 2 semanas antes' },
 ]
 
 

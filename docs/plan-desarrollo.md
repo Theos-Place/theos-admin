@@ -3215,3 +3215,176 @@ Tests: público sin login responde con el link canónico; privado exige login co
 link; segunda respuesta tras N días se acepta y queda como registro aparte; antes de N
 días mensaje con fecha. tsc/lint/vitest. DESPLEGAR PRONTO: la publicidad ya circula.
 ```
+
+### [x] EST-30 · Folletos de Nivel 1: tiquete automático 2 semanas antes del fin de matrícula — HECHO 2026-10-27
+
+Tipo nuevo `anticipado_auto` (migración 20261027120000). Regla en
+`lib/studies/folletos-anticipados-auto.ts` (pura, con tests); enganchado al
+cron diario `group-enrollment-windows` (pide antes de cerrar ventanas y
+actualiza el mismo tiquete al abrir) y al cambio manual a «en curso» en el
+PUT del grupo. Cantidad = cupo máximo (o los matriculados si ya lo pasaron);
+la nota del tiquete guarda «confirmados · con pago pendiente» a la fecha y
+el historial inicial → final. Convivencia: si ya había orden (EST-21 o
+cierre), no duplica; sube la cantidad al cupo solo si sigue en «creada».
+Solo N1 (constante `NIVELES_CON_TIQUETE_AUTOMATICO`); sin fin de matrícula
+no dispara —queda el botón de EST-21—.
+
+La gente de Nivel 1 se anota hasta el último día y la impresión no da tiempo:
+se manda a imprimir por adelantado al CUPO MÁXIMO, y el tiquete se actualiza
+con el número final cuando el grupo abre.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Grupos de Nivel 1 en matrícula: tiquete de folletos automático anticipado
+
+REGLA NUEVA (complementa EST-18, el botón manual, y EST-21):
+1. DISPARADOR AUTOMÁTICO: para todo grupo de NIVEL 1 en estado "en matrícula", DOS
+   SEMANAS antes de que termine su período de matrícula se crea automáticamente el
+   tiquete de folletos (del par 1+2, esquema de bloques) — vía el cron diario de
+   folletos/ventanas existente (folleto-blocks o group-enrollment-windows: engancharse
+   al que ya recorre los grupos, no crear cron nuevo).
+2. CONTENIDO DEL TIQUETE: toda la información del estudio (grupo, zona/ubicación,
+   horario, fecha de inicio), el DIRIGENTE, y la CANTIDAD A IMPRIMIR = CUPO MÁXIMO del
+   grupo (se imprime al máximo aunque haya poca gente — la matrícula se llena al final).
+   Además, informativo a la fecha: "matriculados confirmados: N · con pago pendiente: M"
+   para que Denise sepa cuánta gente hay al momento del tiquete.
+3. ACTUALIZACIÓN DEL MISMO TIQUETE: cuando el grupo pasa a "por iniciar"/abre (fin de la
+   matrícula), el MISMO tiquete se actualiza con los números finales (matriculados
+   confirmados y pendientes a esa fecha) y se notifica a folletos con el resumen
+   actualizado — NO se crea un segundo tiquete. Dejar visible en el tiquete el historial
+   (cifra inicial → cifra final).
+4. CONVIVENCIA: si el tiquete manual (EST-18) ya se disparó para ese grupo, el automático
+   NO duplica — actualiza el existente (misma regla anti-duplicados de EST-18/EST-25).
+   Verificar también el caso de los grupos N3 creados por continuación (EST-21): su
+   tiquete ya nace con el grupo, así que este disparador de 2 semanas aplica solo a los
+   que no tienen tiquete aún.
+5. Correo a folletos en la creación y en la actualización (plantilla/baseLayout de los
+   avisos de folletos existentes; criterio EMAIL_SILENT_MODE de avisos internos).
+Tests: grupo N1 a 14 días del cierre genera tiquete con cantidad = cupo máximo; al abrir
+se actualiza el mismo (no duplica); con tiquete manual previo no duplica; idempotente
+(cron corre dos veces = un tiquete). tsc/lint/vitest.
+```
+
+## Fase 31 — Reunión TI + Finanzas (2026-10-21, Andrés/Meli)
+
+### [ ] FIN-14 · Informe de transparencia: reporte real para Hacienda (beneficiarios finales)
+
+El "informe de transparencia" actual es genérico. El real es el reporte de
+transferencias y beneficiarios finales que se sube a la plataforma de
+Hacienda: Andrés recopila donantes, Mari los beneficiarios (ayuda social).
+**Andrés pasa el reporte del año pasado como referencia del formato.**
+
+Prompt para Claude Code (correr cuando Andrés pase el ejemplo):
+
+```
+FEATURE · Reporte de transparencia (Hacienda): donantes y beneficiarios finales
+
+1. PARTE DONANTES: por rango de fechas y A PARTIR DE UN MONTO configurable (no todas las
+   donaciones — confirmar el umbral con Andrés), listar: nombre completo, CÉDULA, monto
+   total del período, y DIRECCIÓN (verificar si la ficha la tiene; si falta en muchos,
+   reportar el hueco de datos). Export en el formato que calce con la plataforma de
+   Hacienda (del ejemplo de Andrés).
+2. PARTE BENEFICIARIOS: los datos de a quiénes se les dio (ayuda social) — diagnosticar
+   qué existe hoy en el sistema para esto y reportar el gap (probablemente es un registro
+   que aún no se lleva aquí: proponer el mínimo para llevarlo).
+3. Dentro de finanzas (montos = confidencial, roles finanzas/direccion).
+Tests + export verificado contra el ejemplo del año pasado. tsc/lint/vitest.
+```
+
+### [ ] FIN-15 · Arreglos de pago: período de validez + fechas personalizadas
+
+Dos hallazgos en vivo (el arreglo de Floriana no se dejó crear):
+
+Prompt para Claude Code:
+
+```
+FIX + MEJORA · Arreglos de pago: validación de fechas
+
+1. BUG/REGLA: la validación actual exige que los tractos caigan dentro del período de
+   matrícula — incorrecta en dos sentidos (decidido 2026-10-21):
+   a) El arreglo se PACTA dentro de la matrícula, pero el ÚLTIMO tracto puede vencer
+      después de que la matrícula cierre (la matrícula dura ~15 días; un arreglo que
+      quepa entero ahí no tiene sentido). Para eventos sigue la regla FIN-13: todo pagado
+      antes del inicio de la actividad.
+   b) NIVELES no van por bloques: excepción para estudios tipo niveles (sin amarre al
+      calendario de bloques).
+2. TERCERA FRECUENCIA "PERSONALIZADA": además de quincenal/mensual, poder fijar la fecha
+   de CADA tracto a mano (caso Meli: "el 20 le pago") — al elegir personalizada, un date
+   picker por tracto.
+3. Verificar el caso visto en vivo: pago de prematrimonial con comprobante subido que
+   muestra "pendiente" (Macy) — diagnosticar si es por grupo sin abrir o bug de estado.
+Tests: arreglo pactado en matrícula con tracto posterior al cierre se acepta; evento
+rechaza tracto posterior al inicio; personalizada guarda fechas; niveles sin bloque.
+tsc/lint/vitest.
+```
+
+### [ ] PAG-7 · Pagar varios cobros de una vez — también con comprobante (antes de Tilopay)
+
+Extiende PAG-5 (que era solo para Tilopay): la unificación se necesita YA con
+comprobantes.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Mis pagos: seleccionar varios cobros pendientes y pagarlos con UN comprobante
+
+En "Mis pagos pendientes": checkbox por cobro + botón "Pagar seleccionados juntos".
+- HOY (comprobantes): sube UN comprobante que queda asociado a TODOS los cobros
+  seleccionados (los cobros siguen siendo registros separados — no se fusionan; el
+  comprobante los valida en conjunto y finanzas los aprueba de un solo en la revisión:
+  agrupar en la cola los que comparten comprobante para aprobarlos juntos).
+- MAÑANA (Tilopay/FIN-5): el mismo selector genera UNA transacción por la suma (por
+  moneda — jamás mezclar monedas, INT-3).
+- Caso típico: los tractos de un arreglo que la persona decide pagar de un solo (hoy se
+  arregla a mano por detrás — eso desaparece).
+Tests: un comprobante valida N cobros, aprobación conjunta, monedas separadas.
+tsc/lint/vitest.
+```
+
+### [ ] FIN-16 · Presupuestos de sedes: generalizar los adelantos de comida + mejoras de la demo
+
+FIN-12 quedó construido como piloto de comida. Decidido con Meli: se
+generaliza a "Presupuestos de sedes" con múltiples TIPOS de presupuesto.
+
+Prompt para Claude Code:
+
+```
+MEJORAS · De "Adelantos de comida" a "Presupuestos de sedes"
+
+1. GENERALIZAR: el módulo pasa a manejar varios TIPOS de presupuesto por sede — comida,
+   bienvenida, desechables, ideas especiales… (catálogo administrable por finanzas).
+   Cada tipo con su presupuesto mensual por sede. El acceso sigue por ROL/puesto de la
+   sede (como el check-in): el colaborador ve solo su sede y sus tipos.
+2. IMPORTAR PRESUPUESTOS DESDE EL EXCEL DE ANDRÉS: botón para cargar el archivo de
+   control (nombre de sede + monto depositado del mes) y fijar los presupuestos del mes
+   de un solo — match por nombre de sede, dry-run con diferencias.
+3. DOS LÍNEAS VISIBLES al abrir el mes: "saldo del mes anterior: ₡X" + "depósito del
+   mes: ₡Y" = presupuesto total disponible (pedido de Andrés — así queda claro por qué
+   se depositó menos cuando sobró).
+4. FOTO DE LA FACTURA: adjuntarla al registrar (mecanismo de comprobantes) y botón "ver
+   detalle" con la imagen en cada factura de la lista — Andrés deja de buscar números de
+   factura en el correo.
+5. SELECTOR DE MES: lista simple "mes + año" (el control actual es poco usable), pensado
+   para varios años.
+6. Export XLSX ya existe — verificar que incluya los campos nuevos.
+Tests: tipos múltiples por sede, acceso por sede/tipo, import con dry-run, saldo
+arrastrado. tsc/lint/vitest.
+```
+
+### Notas que actualizan ítems existentes (2026-10-21):
+- **FIN-11 (viáticos)**: la página preliminar ya existe ("nuevo viaje" para
+  empleados/freelancers). Pendiente de esa reunión: la APROBACIÓN DEL JEFE
+  dentro del sistema (cada empleado con jefe asignado; al enviar, el jefe
+  recibe y aprueba/devuelve; aprobado → pasa a la lista de pago de finanzas) —
+  reemplaza el "adjuntar correo de aprobación". Y el de KILOMETRAJE es el
+  siguiente (ya vigente en papel, mismo flujo). Bloqueado por tener EMPLEADOS
+  poblados (hoy la tabla está vacía — nadie puede llenar viáticos).
+- **EMP-1 (empleados)**: sumar al inventario (a) COMPROBANTES DE PAGO self-service:
+  Andrés carga la planilla con un formato definido y el sistema genera los
+  comprobantes; cada empleado descarga los suyos desde su cuenta (login = la
+  clave; Andrés/Lucy con acceso total, dirección NO ve comprobantes); aparte,
+  carta de constancia salarial generable por RRHH. (b) VACACIONES confirmado
+  el flujo: empleado solicita → jefe aprueba → finanzas rebaja los días; hoy
+  se lleva en Excel y "ya no podemos seguir así" (Meli). La reunión de alcance
+  con dirección/Lucy sigue pendiente, pero estos dos van fijos.

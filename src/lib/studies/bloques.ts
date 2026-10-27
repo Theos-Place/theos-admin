@@ -40,7 +40,7 @@ export const MILESTONE_TO_TIPO: Record<BloqueMilestone, string> = {
 // grupo, antes de que arranque. No es `manual` —ese es suelto, sin grupo— y
 // la diferencia importa: éste sí queda atado al grupo y entra en la
 // idempotencia con los automáticos.
-export type FolletoTipo = 'cierre' | 'preapertura_preliminar' | 'preapertura_confirmacion' | 'preapertura_final' | 'manual' | 'cupo_lleno' | 'fin_matricula' | 'anticipado'
+export type FolletoTipo = 'cierre' | 'preapertura_preliminar' | 'preapertura_confirmacion' | 'preapertura_final' | 'manual' | 'cupo_lleno' | 'fin_matricula' | 'anticipado' | 'anticipado_auto'
 
 export const FOLLETO_TIPO_LABEL: Record<FolletoTipo, string> = {
   cierre: 'Cierre',
@@ -51,6 +51,7 @@ export const FOLLETO_TIPO_LABEL: Record<FolletoTipo, string> = {
   cupo_lleno: 'Cupo lleno',
   fin_matricula: 'Fin de matrícula',
   anticipado: 'Pedido por adelantado',
+  anticipado_auto: 'Automático · 2 semanas antes',
 }
 
 export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
@@ -62,6 +63,7 @@ export const FOLLETO_TIPO_BADGE: Record<FolletoTipo, string> = {
   cupo_lleno: 'bg-teal-soft/30 text-teal-ink',
   fin_matricula: 'bg-navy/10 text-navy',
   anticipado: 'bg-teal/15 text-navy',
+  anticipado_auto: 'bg-teal/15 text-navy',
 }
 
 // ── Estado derivado de fechas (no manual) ────────────────────────────────────

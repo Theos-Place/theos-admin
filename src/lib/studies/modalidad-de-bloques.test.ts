@@ -101,7 +101,9 @@ describe('el cableado: nadie decide esto solo', () => {
   it('y tampoco se le imprime folleto', () => {
     const q = sinComentarios('src/lib/supabase/queries/folletos.ts')
     expect(q).toContain("eq('cubre_bloque', true)")
-    expect(q).toContain('const aImprimir = Math.max(0, enrolled - (conPar ?? 0))')
+    // EST-30: el automático trae la cantidad decidida (el cupo); el resto sigue
+    // restando a quien ya tiene el par, que es lo que este test cuida.
+    expect(q).toContain('const aImprimir = extras?.cantidadFija ?? Math.max(0, enrolled - (conPar ?? 0))')
     expect(q).toContain('quantity: aImprimir')
   })
 

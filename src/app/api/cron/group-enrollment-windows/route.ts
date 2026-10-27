@@ -3,6 +3,7 @@ import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { pingHealthcheck } from '@/lib/health'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { shouldCloseEnrollment } from '@/lib/studies/enrollment-window'
+import { pedirFolletosAnticipadosAutomaticos, actualizarFolletoAlAbrir } from '@/lib/supabase/queries/folletos'
 import { ymdCR } from '@/lib/format'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -27,6 +28,21 @@ export async function POST(req: NextRequest) {
   try {
     const supabase = createAdminClient()
     const today = ymdCR()
+
+    /**
+     * EST-30 · ANTES de cerrar ventanas: los Nivel 1 a dos semanas del fin
+     * de matrícula piden sus folletos al cupo máximo. Va primero para que un
+     * grupo que hoy mismo cierra y abre reciba el tiquete y, abajo, su
+     * número final. Si falla, el cierre de ventanas sigue: son cosas
+     * distintas y una no debe tapar la otra.
+     */
+    let anticipados: Awaited<ReturnType<typeof pedirFolletosAnticipadosAutomaticos>> | null = null
+    try {
+      anticipados = await pedirFolletosAnticipadosAutomaticos(today)
+    } catch (e) {
+      reportarError('group-enrollment-windows: folletos anticipados automáticos:', e)
+    }
+
     const { data, error } = await supabase
       .from('study_groups')
       .select('id, status, enrollment_end_date, starts_at')
@@ -52,12 +68,21 @@ export async function POST(req: NextRequest) {
       closed += count ?? 0
     }
 
-    // Este cron ya NO pide folletos. La regla 'fin_matricula' exigía que el
-    // grupo tuviera enrollment_end_date, y de los 93 grupos con folleto propio
-    // que estaban abiertos solo 15 la tenían: el cron recorría una lista casi
-    // vacía. Decisión 2026-09-02: los folletos se piden AL CERRAR el grupo.
+    // Este cron ya NO pide folletos por 'fin_matricula' (decisión 2026-09-02:
+    // exigía enrollment_end_date y casi ningún grupo la tenía). Lo que SÍ hace
+    // desde EST-30 es cerrar el ciclo del anticipado: el grupo abrió, el
+    // tiquete que se pidió al cupo recibe su número final.
+    let folletosActualizados = 0
+    for (const id of toClose) {
+      try {
+        if (await actualizarFolletoAlAbrir(id, today)) folletosActualizados++
+      } catch (e) {
+        reportarError(`group-enrollment-windows: folleto al abrir ${id}:`, e)
+      }
+    }
+
     await pingHealthcheck('HEALTHCHECK_URL_GROUP_WINDOWS')
-    return NextResponse.json({ closed })
+    return NextResponse.json({ closed, anticipados, folletosActualizados })
   } catch (error) {
     reportarError('POST /api/cron/group-enrollment-windows:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

@@ -29,7 +29,10 @@ export const FIN_MATRICULA_MIN_ENROLLED = 5
  *  imprenta tarda y los folletos del par tienen que estar el primer día, así
  *  que esperar a un disparador automático llega tarde — y de los automáticos
  *  solo queda vivo el del CIERRE del grupo anterior. */
-export type AutoFolletoTipo = 'cupo_lleno' | 'fin_matricula' | 'cierre' | 'anticipado'
+/** 'anticipado_auto' (EST-30, 2026-10-27): lo pide EL SISTEMA para los grupos
+ *  de Nivel 1 dos semanas antes del fin de matrícula, al cupo máximo. No es
+ *  'anticipado': ese lo apretó una persona y queda auditado con su nombre. */
+export type AutoFolletoTipo = 'cupo_lleno' | 'fin_matricula' | 'cierre' | 'anticipado' | 'anticipado_auto'
 
 /** Planes con folleto propio: las cadenas de niveles y discípulos, y
  *  prematrimonial (la pareja recibe su folleto al crearse el grupo). */
@@ -50,6 +53,10 @@ export function shouldCreateAutoFolleto(
   // arranca — un juicio que acá ya lo hizo alguien. Lo único que se exige es
   // que haya a quién entregarle.
   if (tipo === 'anticipado') return g.enrolled > 0
+  // 'anticipado_auto': se imprime al CUPO aunque todavía no haya nadie — la
+  // matrícula de Nivel 1 se llena el último día, que es el punto de EST-30.
+  // La cantidad la decide `cantidadAnticipada`, no este umbral.
+  if (tipo === 'anticipado_auto') return true
   if (tipo === 'cupo_lleno') return g.max_students != null && g.max_students > 0 && g.enrolled >= g.max_students
   return g.enrolled >= FIN_MATRICULA_MIN_ENROLLED
 }
