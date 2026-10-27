@@ -1,0 +1,42 @@
+{
+  "fecha": "2026-10-27T03:18:12.830Z",
+  "motivo": "FIN-9c: vencimiento alineado al bloque siguiente (Floriana, 2026-10-27)",
+  "bloque": {
+    "id": "41a0ad19-b33f-46df-8b09-4200fad292ee",
+    "nombre": "Bloque 1 2027",
+    "cierre": "2027-01-22"
+  },
+  "nuevo_expires_at": "2027-01-22T23:59:59.999-06:00",
+  "antes": [
+    {
+      "id": "73d8f2a8-9e57-4b52-b529-21d17b1615b1",
+      "persona": "Raquel Ávalos Alfaro",
+      "discount_value": "15000.00",
+      "expires_at": "2027-10-08T05:59:59.999Z"
+    },
+    {
+      "id": "c4896551-19c9-4c48-ad8f-05ac081c5eae",
+      "persona": "Maria Fernanda Valverde Dominguez",
+      "discount_value": "25000.00",
+      "expires_at": "2027-10-08T05:59:59.999Z"
+    },
+    {
+      "id": "8db865f8-1d13-4d37-aa7a-f7f2ad0f0301",
+      "persona": "Ana María Murillo Varela",
+      "discount_value": "5000.00",
+      "expires_at": "2027-10-08T05:59:59.999Z"
+    },
+    {
+      "id": "dfc6b290-1cab-47be-8173-77af20075998",
+      "persona": "Dennise Castañeda Umaña",
+      "discount_value": "5000.00",
+      "expires_at": "2027-10-08T05:59:59.999Z"
+    },
+    {
+      "id": "dabc3a2e-dd17-4ccf-b81f-7e92dd98bb2e",
+      "persona": "Raquel Ulate Blanco",
+      "discount_value": "5000.00",
+      "expires_at": "2027-10-08T05:59:59.999Z"
+    }
+  ]
+}

@@ -111,6 +111,50 @@ export function vencimientoDelCredito(input: {
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
+ * 3b · SI NO LO USÓ, SE CORRE AL BLOQUE SIGUIENTE
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Un crédito que llega al cierre de su bloque SIN USARSE no se pierde: se
+ * corre al bloque siguiente (Floriana, 2026-10-27: «si el bloque termina y no
+ * son utilizados debemos expandirlos»).
+ *
+ * El vencimiento de un bloque es la FECHA LÍMITE PARA USARLO EN ESE BLOQUE,
+ * no el día en que la persona pierde su plata. La plata la pagó. Lo que
+ * cambia es que hay que esperar a la siguiente apertura, y por eso la fecha
+ * se corre al cierre de matrícula del bloque que sigue; sin uno cargado, un
+ * año más (`vencimientoDelCredito`).
+ *
+ * Solo se corren los ACTIVOS: uno usado ya se gastó en una matrícula y uno
+ * revocado lo decidió finanzas a mano. Y solo cuando el día ya PASÓ: el
+ * mismo día del cierre todavía se puede matricular, así que todavía vale.
+ */
+export function tocaCorrerElCredito(c: { status: string; vence: string | null }, hoy: string): boolean {
+  if (c.status !== 'active' || !c.vence) return false
+  return c.vence.slice(0, 10) < hoy.slice(0, 10)
+}
+
+export const TIPO_CREDITO_CORRIDO = 'credito_corrido'
+export const TITULO_CREDITO_CORRIDO = 'Tu crédito sigue guardado'
+
+/** Lo que lee la persona cuando su crédito se corre: que no perdió nada y la
+ *  nueva fecha. */
+export function cuerpoDelCorrimiento(input: { monto: string; vence: string }): string {
+  return `No usaste los ${input.monto} que te guardamos, así que los seguimos guardando `
+    + `para el siguiente bloque: los podés usar hasta el ${input.vence}. No tenés que hacer nada.`
+}
+
+/** La campana a finanzas, para que el movimiento no pase callado. */
+export function avisoDeCorrimiento(i: {
+  member_name: string; monto: string; venciaEl: string; venceAhora: string
+}): { title: string; body: string } {
+  return {
+    title: `Crédito corrido al siguiente bloque: ${i.member_name}`,
+    body: `Su crédito de ${i.monto} llegó al ${i.venciaEl} sin usarse y se corrió: ahora vence el ${i.venceAhora}.`,
+  }
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
  * 4 · LA ESCALERA
  * ──────────────────────────────────────────────────────────────────────────── */
 

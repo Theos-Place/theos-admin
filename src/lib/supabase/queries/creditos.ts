@@ -8,9 +8,12 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import {
   montoDelCredito, motivoQueImpideCongelar, vencimientoDelCredito,
   TIPO_CREDITO_EMITIDO, TITULO_CREDITO_EMITIDO, cuerpoDelCredito,
+  tocaCorrerElCredito, TIPO_CREDITO_CORRIDO, TITULO_CREDITO_CORRIDO, cuerpoDelCorrimiento, avisoDeCorrimiento,
 } from '@/lib/finance/credito-por-congelar'
+import { formatDate } from '@/lib/format'
+import { plata } from '@/lib/finance/saldo-a-favor'
 import type { FilaDeReclasificacion } from '@/lib/finance/reporte-de-reclasificaciones'
-import { avisoAFinanzas, TIPO_AVISO_FINANZAS, type CreditoResumen } from '@/lib/finance/credito-visible'
+import { avisoAFinanzas, TIPO_AVISO_FINANZAS, diaEnCostaRica, type CreditoResumen } from '@/lib/finance/credito-visible'
 
 export class NoSePuedeCongelar extends Error {}
 
@@ -179,24 +182,112 @@ async function avisarAFinanzasDelCredito(i: {
   actorUserId: string
 }): Promise<void> {
   const supabase = createAdminClient()
-  const [{ data: roles }, { data: actor }] = await Promise.all([
-    supabase.from('member_roles')
-      .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
-      .in('role', ['admin', 'finanzas']).eq('is_active', true),
+  const [destinatarios, { data: actor }] = await Promise.all([
+    destinatariosDeFinanzas(),
     supabase.from('members').select('first_name, last_name').eq('auth_user_id', i.actorUserId).maybeSingle(),
   ])
-  const destinatarios = [...new Set(((roles ?? []) as Array<{ member_id: string; member: { is_active: boolean } | { is_active: boolean }[] | null }>)
-    .filter(r => (Array.isArray(r.member) ? r.member[0] : r.member)?.is_active === true)
-    .map(r => r.member_id))]
   if (destinatarios.length === 0) return
   const a = actor as { first_name: string | null; last_name: string | null } | null
   const quien = [a?.first_name, a?.last_name].filter(Boolean).join(' ').trim() || null
   const aviso = avisoAFinanzas({ ...i, quien })
-  const { error } = await supabase.from('internal_notifications').insert(destinatarios.map(memberId => ({
-    recipient_member_id: memberId, type: TIPO_AVISO_FINANZAS,
+  await campanaAFinanzas(destinatarios, TIPO_AVISO_FINANZAS, aviso)
+}
+
+/** Miembros activos con rol finanzas o admin. */
+async function destinatariosDeFinanzas(): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data: roles } = await supabase.from('member_roles')
+    .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
+    .in('role', ['admin', 'finanzas']).eq('is_active', true)
+  return [...new Set(((roles ?? []) as Array<{ member_id: string; member: { is_active: boolean } | { is_active: boolean }[] | null }>)
+    .filter(r => (Array.isArray(r.member) ? r.member[0] : r.member)?.is_active === true)
+    .map(r => r.member_id))]
+}
+
+async function campanaAFinanzas(destinatarios: string[], type: string, aviso: { title: string; body: string }): Promise<void> {
+  if (destinatarios.length === 0) return
+  const { error } = await createAdminClient().from('internal_notifications').insert(destinatarios.map(memberId => ({
+    recipient_member_id: memberId, type,
     title: aviso.title, body: aviso.body, link: '/finanzas/saldos#creditos',
   })))
   if (error) throw error
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Si no lo usó, se corre (FIN-9c, 2026-10-27)
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+/**
+ * Barrido diario (va dentro de `payment-holds-expire`, que ya mira pagos de
+ * estudio): todo crédito ACTIVO cuyo vencimiento ya pasó se corre al cierre
+ * de matrícula del bloque siguiente. La regla está en
+ * `credito-por-congelar.ts` (3b); acá solo se lee, se escribe y se avisa.
+ *
+ * Avisa a la persona (su primera campana decía «hasta el X», y X cambió) y a
+ * finanzas. Deja rastro en `audit_log` sin actor, como los otros crons.
+ */
+export async function correrCreditosSinUsar(
+  hoy: string = new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date()),
+  opts: { dryRun?: boolean } = {},
+): Promise<{ corridos: number; detalle: Array<{ credito_id: string; persona: string; vencia: string; vence: string }> }> {
+  const supabase = createAdminClient()
+  const dia = hoy.slice(0, 10)
+  const [{ data: filas, error }, { data: bloque }] = await Promise.all([
+    supabase.from('scholarships')
+      .select(`${SELECT_RESUMEN}, member:members!scholarships_member_id_fkey(first_name, last_name)`)
+      .eq('kind', 'credito').eq('status', 'active')
+      .lt('expires_at', `${dia}T00:00:00-06:00`),
+    supabase.from('capacitacion_bloques')
+      .select('fecha_cierre_matricula')
+      .gt('fecha_cierre_matricula', dia)
+      .order('fecha_cierre_matricula', { ascending: true })
+      .limit(1).maybeSingle(),
+  ])
+  if (error) throw error
+  const vence = vencimientoDelCredito({
+    fechaDeCierreDelBloqueSiguiente: (bloque as { fecha_cierre_matricula: string } | null)?.fecha_cierre_matricula,
+    hoy: dia,
+  })
+
+  type Fila = FilaDeCredito & { member: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null }
+  const detalle: Array<{ credito_id: string; persona: string; vencia: string; vence: string }> = []
+  const destinatarios = opts.dryRun ? [] : await destinatariosDeFinanzas()
+
+  for (const f of (filas ?? []) as Fila[]) {
+    const c = aResumen(f)
+    // El filtro de la consulta ya lo garantiza; la regla pura es la que manda.
+    if (!tocaCorrerElCredito(c, dia) || !c.vence) continue
+    const m = Array.isArray(f.member) ? f.member[0] : f.member
+    const persona = [m?.first_name, m?.last_name].filter(Boolean).join(' ').trim() || f.member_id
+    detalle.push({ credito_id: c.id, persona, vencia: c.vence, vence })
+    if (opts.dryRun) continue
+
+    const { error: uErr } = await supabase.from('scholarships')
+      .update({ expires_at: `${vence}T23:59:59.999-06:00` })
+      .eq('id', c.id).eq('status', 'active')
+    if (uErr) throw uErr
+
+    await supabase.from('audit_log').insert({
+      action: 'UPDATE', entity_type: 'scholarships', entity_id: c.id,
+      old_data: { expires_at: f.expires_at },
+      new_data: { op: 'credito_corrido_al_bloque_siguiente', expires_at: `${vence}T23:59:59.999-06:00`, persona },
+    }).then(({ error: e }) => { if (e) console.warn('audit crédito corrido:', e.message) })
+
+    const monto = plata(c.monto, c.currency)
+    const { error: nErr } = await supabase.from('internal_notifications').insert({
+      recipient_member_id: f.member_id, type: TIPO_CREDITO_CORRIDO, title: TITULO_CREDITO_CORRIDO,
+      body: cuerpoDelCorrimiento({ monto, vence: formatDate(vence) }), link: '/mis-pagos',
+    })
+    if (nErr) console.warn('correrCreditosSinUsar: aviso a la persona falló:', nErr.message)
+    try {
+      await campanaAFinanzas(destinatarios, TIPO_AVISO_FINANZAS, avisoDeCorrimiento({
+        member_name: persona, monto, venciaEl: formatDate(c.vence), venceAhora: formatDate(vence),
+      }))
+    } catch (e) {
+      console.warn('correrCreditosSinUsar: aviso a finanzas falló:', e instanceof Error ? e.message : e)
+    }
+  }
+  return { corridos: opts.dryRun ? 0 : detalle.length, detalle }
 }
 
 /* ────────────────────────────────────────────────────────────────────────────
@@ -216,7 +307,7 @@ function aResumen(f: FilaDeCredito): CreditoResumen {
   const sep = (f.reason ?? '').indexOf(' · ')
   return {
     id: f.id, status: f.status, monto: Number(f.discount_value) || 0, currency: f.currency ?? 'CRC',
-    vence: f.expires_at ? f.expires_at.slice(0, 10) : null,
+    vence: diaEnCostaRica(f.expires_at),
     motivo: f.freeze_reason, origen: sep >= 0 ? (f.reason ?? '').slice(sep + 3).trim() || null : null,
     origin_payment_id: f.origin_payment_id,
   }
@@ -314,8 +405,7 @@ export async function reclasificacionesDelPeriodo(input: {
     }
   }
 
-  const dia = (iso: string | null): string | null =>
-    iso ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(iso)) : null
+  const dia = diaEnCostaRica
   const uno = <T,>(x: T | T[] | null): T | null => (Array.isArray(x) ? x[0] ?? null : x)
 
   return ((data ?? []) as Array<Record<string, unknown>>).map(r => {

@@ -35,6 +35,16 @@ export type CreditoResumen = {
 export type EstadoDelCredito = 'vigente' | 'usado' | 'vencido' | 'revocado'
 
 /**
+ * El día en Costa Rica de un timestamp. `expires_at` se guarda como las
+ * 23:59:59 de Costa Rica, que en UTC ya es el día SIGUIENTE: recortar los
+ * primeros 10 caracteres daba «vence 23/01/2027» para un crédito que vence
+ * el 22 (bug visto el 2026-10-27 al probar el corrimiento).
+ */
+export function diaEnCostaRica(iso: string | null): string | null {
+  return iso ? new Intl.DateTimeFormat('en-CA', { timeZone: 'America/Costa_Rica' }).format(new Date(iso)) : null
+}
+
+/**
  * Qué le pasa hoy al crédito. El vencimiento se DERIVA: un `active` con la
  * fecha pasada ya no sirve aunque la fila no lo diga.
  */

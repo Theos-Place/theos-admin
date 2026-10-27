@@ -3279,6 +3279,24 @@ de finanzas y en «Pagos y cobros» del perfil y de Mis pagos, con la línea
 todos los créditos con estado derivado; y congelar avisa por campana a
 finanzas y admin, no solo a la persona.
 
+### [x] FIN-9c · El crédito vence con el bloque siguiente y, si no se usa, se corre — HECHO 2026-10-27
+
+Decisión de Floriana (2026-10-27): todo crédito por congelamiento vence al
+cierre de matrícula del bloque siguiente, y si llega a esa fecha sin usarse
+NO se pierde: se corre al bloque que sigue (sin bloque cargado, un año más).
+
+Datos: los cinco créditos del 7-oct vencían el 07/10/2027 por el respaldo de
+12 meses (ese día no existía Bloque 1 2027); se alinearon al 22/01/2027 con
+`scripts/creditos-2026-10-27/alinear-vencimiento.cjs` (respaldo en
+`docs/correcciones/2026-10-27-creditos-vencimiento-bloque-1-2027.json`,
+rastro en `audit_log`). Código: regla pura `tocaCorrerElCredito` en
+`lib/finance/credito-por-congelar.ts` (3b); `correrCreditosSinUsar` en
+`queries/creditos.ts`, dentro del barrido diario `payment-holds-expire`
+(`?dry=1` lo simula; responde `creditos_corridos`); avisa a la persona
+(«Tu crédito sigue guardado») y a finanzas por campana, y audita sin actor.
+De paso: la fecha de vencimiento se mostraba un día corrida (recorte UTC de
+un timestamp que es 23:59 de Costa Rica); ahora `diaEnCostaRica`.
+
 ## Fase 31 — Reunión TI + Finanzas (2026-10-21, Andrés/Meli)
 
 ### [ ] FIN-14 · Informe de transparencia: reporte real para Hacienda (beneficiarios finales)

@@ -4,6 +4,7 @@ import { pingHealthcheck } from '@/lib/health'
 import { expirePendingEventRegistrations } from '@/lib/supabase/queries/events'
 import { expirePendingStudyEnrollments, avisarMatriculasPorVencer } from '@/lib/supabase/queries/studies'
 import { reportarError } from '@/lib/observabilidad'
+import { correrCreditosSinUsar } from '@/lib/supabase/queries/creditos'
 
 /** Autorizado con el CRON_SECRET (edge function diaria) o sesión de dirección. */
 async function authorize(req: NextRequest): Promise<NextResponse | null> {
@@ -44,11 +45,14 @@ export async function POST(req: NextRequest) {
      * suplantado la corrida de verdad.
      */
     if (new URL(req.url).searchParams.get('dry') === '1') {
-      const [estudios, avisos] = await Promise.all([
+      const [estudios, avisos, creditos] = await Promise.all([
         expirePendingStudyEnrollments(new Date(), { dryRun: true }),
         avisarMatriculasPorVencer(new Date(), { dryRun: true }),
+        correrCreditosSinUsar(undefined, { dryRun: true }),
       ])
-      return NextResponse.json({ dry_run: true, soltaria_el_cupo: estudios.detalle, avisaria: avisos.detalle })
+      return NextResponse.json({
+        dry_run: true, soltaria_el_cupo: estudios.detalle, avisaria: avisos.detalle, correria_creditos: creditos.detalle,
+      })
     }
     const events = await expirePendingEventRegistrations()
     const estudios = await expirePendingStudyEnrollments()
@@ -69,12 +73,22 @@ export async function POST(req: NextRequest) {
     } catch (e) {
       console.warn('aviso de cobros huérfanos:', e instanceof Error ? e.message : e)
     }
+    // FIN-9c · Un crédito por congelamiento que llegó al cierre de su bloque
+    // sin usarse se corre al siguiente, no se pierde. Mismo barrido diario.
+    // Best-effort por la misma razón que lo de arriba.
+    let creditos = 0
+    try {
+      creditos = (await correrCreditosSinUsar()).corridos
+    } catch (e) {
+      console.warn('créditos sin usar:', e instanceof Error ? e.message : e)
+    }
     await pingHealthcheck('HEALTHCHECK_URL_PAYMENT_HOLDS_EXPIRE')
     return NextResponse.json({
       events_expired: events.expired,
       matriculas_expiradas: estudios.expired,
       avisos_enviados: avisos.avisados,
       aviso_huerfanos: huerfanos,
+      creditos_corridos: creditos,
     })
   } catch (error) {
     reportarError('POST /api/cron/payment-holds-expire:', error)
