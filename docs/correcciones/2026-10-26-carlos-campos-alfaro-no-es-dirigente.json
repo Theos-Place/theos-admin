@@ -1,0 +1,76 @@
+{
+ "fecha": "2026-10-27T00:01:37.628Z",
+ "motivo": "Carlos Campos Alfaro no es dirigente (Floriana, 26/10/2026); su único grupo ya pasó a Carlos Campos Monge",
+ "study_leaders": [
+  {
+   "id": "b3118c90-8885-433c-9094-96e5c8bfe905",
+   "member_id": "2afcd5aa-53f3-4247-9867-7327597019b2",
+   "zone_preference": [],
+   "availability_status": "available",
+   "is_active": true,
+   "qualified_study_codes": [
+    "PREMAT"
+   ],
+   "created_at": "2026-06-09T18:59:03.299Z",
+   "updated_at": "2026-10-26T23:57:22.288Z",
+   "formation_study_codes": [],
+   "available_slots": [],
+   "offers_home": false,
+   "available_as_substitute": false,
+   "available_from": null,
+   "available_to": null,
+   "folleto_location": null,
+   "interested_study_codes": [],
+   "availability_confirmed_at": null,
+   "estado_base": "activo",
+   "razon_inactivo": null,
+   "detalle_no_ejerce": null,
+   "situacion_cdeb": null,
+   "disponibilidad": "disponible",
+   "razon_no_disponible": null,
+   "pausa_hasta": null,
+   "revision": [
+    "no_confirmo_datos"
+   ],
+   "nota_revision": "Lista de revisión (26/10/2026): No sabemos ni quién es. REVISAR, está confundiéndolo como Carlos Campos Monge que sí es el dirigente de Prematrimonial.",
+   "nota_cdeb": null,
+   "nota_decision_propia": null,
+   "nota_pausa": null,
+   "nota_general": null,
+   "en_grupo_whatsapp": false,
+   "comunidades": [],
+   "revision_auto_faltan": [
+    "donacion",
+    "asistencia"
+   ],
+   "revision_auto_desde": "2026-10-16T21:35:38.716Z"
+  }
+ ],
+ "volunteers": [
+  {
+   "id": "e256af74-dac8-479a-8a3d-a6f3f0b97eab",
+   "member_id": "2afcd5aa-53f3-4247-9867-7327597019b2",
+   "position_id": "ca56c3ec-cb60-4a62-99d7-42a3a2175c42",
+   "status": "active",
+   "start_date": null,
+   "end_date": null,
+   "notes": null,
+   "created_at": "2026-10-01T20:08:38.529Z",
+   "updated_at": "2026-10-01T20:08:38.529Z"
+  }
+ ],
+ "member_roles": [
+  {
+   "id": "74967bb4-5803-4804-b3b3-bb4302dbe7ab",
+   "member_id": "2afcd5aa-53f3-4247-9867-7327597019b2",
+   "role": "dirigente",
+   "granted_by": null,
+   "granted_at": "2026-10-01T20:08:38.631Z",
+   "is_active": true,
+   "revoked_at": null,
+   "revoked_by": null,
+   "status_detail": null,
+   "origen": "manual"
+  }
+ ]
+}
