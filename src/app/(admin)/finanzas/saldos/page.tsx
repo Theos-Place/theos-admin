@@ -2,7 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import Link from 'next/link'
-import { Wallet, Loader2, ChevronRight, Download, Search } from 'lucide-react'
+import { Wallet, Loader2, ChevronRight, Download, Search, ExternalLink } from 'lucide-react'
 import { BotonMostrarMontos } from '@/components/finance/BotonMostrarMontos'
 import { AmountDisplay } from '@/components/finance/AmountDisplay'
 import {
@@ -18,8 +18,10 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useAuth } from '@/hooks/useAuth'
 import { hasModulePermission } from '@/lib/auth/roles'
 import { plata, type SaldoAFavor, type DetalleDelSaldo } from '@/lib/finance/saldo-a-favor'
-import { estadoDelCredito, ETIQUETA_ESTADO, creditosVigentes, totalPorMoneda } from '@/lib/finance/credito-visible'
-import type { CreditoListado } from '@/lib/supabase/queries/creditos'
+import {
+  unificarSaldos, totalVigentePorMoneda, personasConSaldo, coincide, ETIQUETA_TIPO, ETIQUETA_ESTADO_DE_SALDO,
+  type FilaDeSaldo, type CreditoEnLista,
+} from '@/lib/finance/saldos-unificados'
 import { ymdCR } from '@/lib/format'
 
 import { DatePicker } from '@/components/events/DatePicker'
@@ -97,68 +99,107 @@ function DetalleDeSaldo({ s, onClose }: { s: SaldoAFavor; onClose: () => void })
 }
 
 /**
- * Quién tiene plata a favor.
+ * FIN-9 · El detalle de un crédito por matrícula congelada: de qué pago
+ * salió, por qué, hasta cuándo y en qué estado está.
+ */
+function DetalleDeCredito({ c, hoy, onClose, revealAll }: { c: CreditoEnLista; hoy: string; onClose: () => void; revealAll: boolean }) {
+  const [fila] = unificarSaldos([], [c], hoy)
+  return (
+    <Modal onClose={onClose} titleId="detalle-credito-titulo" width={560}>
+      <div className="p-6 space-y-5 font-body">
+        <div>
+          <h2 id="detalle-credito-titulo" className="text-lg font-bold text-navy font-display">{c.member_name}</h2>
+          <p className="text-[13px] text-navy-light/80">Matrícula congelada{c.origen ? ` · ${c.origen}` : ''}</p>
+        </div>
+
+        <div className="grid grid-cols-3 gap-3 text-center">
+          <div className="rounded-xl bg-teal-soft/30 p-3"><p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">A favor</p><p className="text-base font-bold text-teal-deep font-display"><AmountDisplay amount={c.monto} currency={c.currency} defaultHidden={false} revealed={revealAll} /></p></div>
+          <div className="rounded-xl bg-surface-low p-3"><p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Estado</p><p className="text-base font-bold text-navy font-display">{ETIQUETA_ESTADO_DE_SALDO[fila.estado]}</p></div>
+          <div className="rounded-xl bg-surface-low p-3"><p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Vence</p><p className="text-base font-bold text-navy font-display">{c.vence ? formatDate(c.vence) : '—'}</p></div>
+        </div>
+
+        <section className="space-y-1.5">
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">De dónde salió</p>
+          <p className="text-[13px] text-navy">
+            Se congeló la matrícula{c.origen ? ` de ${c.origen}` : ''} el {formatDate(c.created_at)} y lo pagado quedó guardado a su nombre.
+            Se aplica solo cuando vuelva a matricularse o pague una actividad grande; si llega al vencimiento sin usarse, se corre al bloque siguiente.
+          </p>
+          {c.motivo && <p className="text-[13px] text-navy-light/80">Motivo: {c.motivo}</p>}
+        </section>
+
+        <section className="space-y-2">
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">El pago de origen</p>
+          {c.origin_payment_id ? (
+            <Link href={`/finanzas/pagos/${c.origin_payment_id}`}
+              className="flex items-center justify-between gap-3 rounded-xl border border-[var(--outline-variant)] px-4 py-3 hover:bg-surface-low">
+              <span className="text-[13px] font-medium text-navy">{c.pago_descripcion ?? c.origen ?? 'Ver pago'}</span>
+              <span className="inline-flex items-center gap-1 text-[13px] text-navy-light/80">Abrir <ExternalLink size={13} aria-hidden /></span>
+            </Link>
+          ) : <p className="text-[13px] text-navy-light/80">Sin pago de origen registrado.</p>}
+        </section>
+
+        <Link href={`/miembros/${c.member_id}?open=pagos`} className="inline-flex items-center gap-1 text-[13px] text-navy hover:underline">
+          Ver pagos y cobros de la persona <ChevronRight size={13} aria-hidden />
+        </Link>
+      </div>
+    </Modal>
+  )
+}
+
+/**
+ * A quién le debemos plata, en UNA lista (Floriana, 2026-10-27).
  *
- * Aparece cuando a alguien se le mueve la matrícula a un estudio más barato o
- * gratis: su pago viaja con ella y lo que sobra queda a su nombre. Sin esta
- * pantalla esa plata existe pero no la ve nadie.
- *
- * El número no está guardado: es lo pagado menos lo que cuesta la matrícula,
- * calculado en el momento. Por eso no puede quedar desactualizado.
+ * Dos fuentes con una columna que dice cuál es:
+ *  · SOBRANTE DE MATRÍCULA: se le movió la matrícula a un estudio más barato
+ *    o gratis y su pago viajó con ella. No está guardado: es lo pagado menos
+ *    lo que cuesta, calculado en el momento, y por eso no se desactualiza.
+ *  · MATRÍCULA CONGELADA (FIN-9): plata que pagó por un estudio que no llevó
+ *    y se le guardó como crédito. Tiene estado y vencimiento; si llega sin
+ *    usarse, se corre al bloque siguiente.
  */
 export default function SaldosAFavorPage() {
   const { user, loaded } = useAuth()
   const puede = hasModulePermission(user?.roles ?? [], 'finanzas', 'view')
 
-  const [items, setItems] = useState<SaldoAFavor[]>([])
-  const [totales, setTotales] = useState<Array<{ currency: string; total: number }>>([])
+  const [sobrantes, setSobrantes] = useState<SaldoAFavor[]>([])
+  const [creditos, setCreditos] = useState<CreditoEnLista[]>([])
   const [revisadas, setRevisadas] = useState(0)
   const [cargando, setCargando] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [busqueda, setBusqueda] = useState('')
-  const [detalle, setDetalle] = useState<SaldoAFavor | null>(null)
+  const [detalle, setDetalle] = useState<FilaDeSaldo | null>(null)
   const [revealAll, setRevealAll] = useState(false)
-  // El rango es por la fecha en que se GENERÓ el saldo (ver llegadaDelPago).
+  // El rango es por la fecha en que se GENERÓ el saldo (ver llegadaDelPago)
+  // o se emitió el crédito.
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
-  // FIN-9 · Los créditos por matrícula congelada. Son otra cosa que el saldo
-  // a favor —plata guardada a propósito, no un sobrante— pero viven en la
-  // misma pantalla porque la pregunta de finanzas es la misma: ¿a quién le
-  // debemos plata?
-  const [creditos, setCreditos] = useState<CreditoListado[] | null>(null)
-  const [errorCreditos, setErrorCreditos] = useState<string | null>(null)
-
-  useEffect(() => {
-    if (!puede) return
-    let vivo = true
-    fetch('/api/finance/creditos')
-      .then(r => r.ok ? r.json() : Promise.reject(new Error('No se pudieron cargar los créditos.')))
-      .then(d => vivo && setCreditos(d.items ?? []))
-      .catch(e => vivo && setErrorCreditos(e.message))
-    return () => { vivo = false }
-  }, [puede])
+  const hoy = ymdCR()
 
   useEffect(() => {
     // Sin permiso la pantalla ya devuelve AccessDenied, así que el estado
     // de carga no se llega a mirar: no hace falta tocarlo acá.
     if (!puede) return
     let vivo = true
-    fetch('/api/finance/credits')
-      .then(r => r.ok ? r.json() : Promise.reject(new Error('No se pudieron cargar los saldos.')))
-      .then(d => {
+    Promise.all([
+      fetch('/api/finance/credits').then(r => r.ok ? r.json() : Promise.reject(new Error('No se pudieron cargar los saldos.'))),
+      fetch('/api/finance/creditos').then(r => r.ok ? r.json() : Promise.reject(new Error('No se pudieron cargar los créditos.'))),
+    ])
+      .then(([s, c]) => {
         if (!vivo) return
-        setItems(d.items ?? []); setTotales(d.totales ?? []); setRevisadas(d.matriculas_revisadas ?? 0)
+        setSobrantes(s.items ?? []); setRevisadas(s.matriculas_revisadas ?? 0); setCreditos(c.items ?? [])
       })
       .catch(e => vivo && setError(e.message))
       .finally(() => vivo && setCargando(false))
     return () => { vivo = false }
   }, [puede])
 
-  const filtrados = useMemo(() => {
-    const q = busqueda.trim().toLowerCase()
-    return items.filter(i => enRango(i.generado_en, desde, hasta)
-      && (!q || i.member_name.toLowerCase().includes(q) || (i.group_name ?? '').toLowerCase().includes(q)))
-  }, [items, busqueda, desde, hasta])
+  const filas = useMemo(() => unificarSaldos(sobrantes, creditos, hoy), [sobrantes, creditos, hoy])
+  const totales = useMemo(() => totalVigentePorMoneda(filas), [filas])
+  const personas = useMemo(() => personasConSaldo(filas), [filas])
+  const filtrados = useMemo(
+    () => filas.filter(f => enRango(f.generado_en, desde, hasta) && coincide(f, busqueda)),
+    [filas, busqueda, desde, hasta],
+  )
 
   if (!loaded) return null
   if (!puede) return <AccessDenied />
@@ -168,8 +209,8 @@ export default function SaldosAFavorPage() {
       <div>
         <h1 className="text-2xl font-extrabold text-navy font-display">Saldos a favor</h1>
         <p className="text-sm text-navy-light/80 font-body mt-1">
-          Plata que la persona ya pagó y que su matrícula actual no consume. Pasa cuando se
-          le mueve la matrícula a un estudio más barato o gratis: el pago viaja con ella.
+          Plata que la persona ya pagó y que Theos le debe: lo que sobró al moverla a un estudio
+          más barato, o lo que se le guardó al congelarle una matrícula. Hacé clic en una fila para ver de dónde salió.
         </p>
       </div>
 
@@ -192,8 +233,9 @@ export default function SaldosAFavorPage() {
         <div className={BARRA_DER}>
           <BotonMostrarMontos visibles={revealAll} onCambio={() => setRevealAll(r => !r)} />
           <button type="button" disabled={filtrados.length === 0} className={BOTON_PRIMARIO}
-            onClick={() => void descargarExcel('saldos-a-favor', ['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor', 'Moneda', 'Generado'],
-              filtrados.map(s => [s.member_name, s.group_name ?? '', s.pagado, s.costo, s.saldo, s.currency ?? 'CRC', s.generado_en ? formatDate(s.generado_en) : '']))}>
+            onClick={() => void descargarExcel('saldos-a-favor', ['Persona', 'Tipo', 'Origen', 'A favor', 'Moneda', 'Estado', 'Generado', 'Vence'],
+              filtrados.map(f => [f.member_name, ETIQUETA_TIPO[f.tipo], f.origen ?? '', f.monto, f.currency, ETIQUETA_ESTADO_DE_SALDO[f.estado],
+                f.generado_en ? formatDate(f.generado_en) : '', f.vence ? formatDate(f.vence) : '']))}>
             <Download size={14} aria-hidden /> Descargar Excel
           </button>
         </div>
@@ -210,7 +252,7 @@ export default function SaldosAFavorPage() {
         </div>
         <div className={TARJETA}>
           <p className={TARJETA_ETIQUETA}>Personas con saldo</p>
-          <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{items.length.toLocaleString('es-CR')}</p>
+          <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{personas.toLocaleString('es-CR')}</p>
         </div>
       </div>
 
@@ -221,25 +263,25 @@ export default function SaldosAFavorPage() {
         </div>
       ) : error ? (
         <p className="text-sm text-coral-deep font-body" role="alert">{error}</p>
-      ) : items.length === 0 ? (
+      ) : filas.length === 0 ? (
         <EmptyState
           icon={Wallet}
           title="Nadie tiene saldo a favor"
-          description={`Se revisaron ${revisadas.toLocaleString('es-CR')} matrículas activas y en todas lo pagado calza con lo que cuesta el estudio.`}
+          description={`Se revisaron ${revisadas.toLocaleString('es-CR')} matrículas activas y en todas lo pagado calza con lo que cuesta el estudio, y no hay créditos por congelamiento.`}
         />
       ) : (
-        <>
+        <div id="creditos" className="space-y-4 scroll-mt-24">
           <div className={cn('focus-within:ring-1 focus-within:ring-coral/30 flex items-center gap-2', CAMPO)}>
             <Search size={14} className="text-navy-light/80 shrink-0" aria-hidden="true" />
             <input type="search" value={busqueda} onChange={e => setBusqueda(e.target.value)}
-              placeholder="Buscar por persona o grupo…" aria-label="Buscar en los saldos a favor"
+              placeholder="Buscar por persona, estudio o tipo…" aria-label="Buscar en los saldos a favor"
               className="flex-1 bg-transparent text-[13px] outline-none font-body text-navy" />
           </div>
           <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden overflow-x-auto">
-            <table className="w-full border-collapse text-sm min-w-[640px]">
+            <table className="w-full border-collapse text-sm min-w-[760px]">
               <thead>
                 <tr className="border-b border-[var(--outline-variant)]">
-                  {['Persona', 'Su estudio actual', 'Pagó', 'Cuesta', 'A favor', 'Generado', ''].map(h => (
+                  {['Persona', 'Tipo', 'Origen', 'A favor', 'Estado', 'Generado', 'Vence', ''].map(h => (
                     <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 whitespace-nowrap font-display">
                       {h}
                     </th>
@@ -247,124 +289,50 @@ export default function SaldosAFavorPage() {
                 </tr>
               </thead>
               <tbody>
-                {filtrados.map(s => (
-                  <tr key={s.enrollment_id} className="border-b border-[var(--outline-variant)] hover:bg-surface-low transition-colors">
+                {filtrados.map(f => (
+                  <tr key={f.key} onClick={() => setDetalle(f)}
+                    className="border-b border-[var(--outline-variant)] hover:bg-surface-low transition-colors cursor-pointer">
                     <td className="px-4 py-3">
-                      <Link href={`/miembros/${s.member_id}`} className="text-[13px] text-navy hover:underline font-body">
-                        {s.member_name}
+                      <Link href={`/miembros/${f.member_id}${f.tipo === 'congelado' ? '?open=pagos' : ''}`} onClick={e => e.stopPropagation()}
+                        className="text-[13px] text-navy hover:underline font-body">
+                        {f.member_name}
                       </Link>
                     </td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{s.group_name ?? '—'}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body"><AmountDisplay amount={s.pagado} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body"><AmountDisplay amount={s.costo} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
-                    <td className="px-4 py-3 text-[13px] font-bold text-teal-deep font-body"><AmountDisplay amount={s.saldo} currency={s.currency ?? 'CRC'} defaultHidden={false} revealed={revealAll} /></td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{s.generado_en ? formatDate(s.generado_en) : '—'}</td>
+                    <td className="px-4 py-3">
+                      <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display whitespace-nowrap',
+                        f.tipo === 'congelado' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/5 text-navy')}>
+                        {ETIQUETA_TIPO[f.tipo]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">{f.origen ?? '—'}</td>
+                    <td className={cn('px-4 py-3 text-[13px] font-bold font-body', f.estado === 'vigente' ? 'text-teal-deep' : 'text-navy-light/80 line-through')}>
+                      <AmountDisplay amount={f.monto} currency={f.currency} defaultHidden={false} revealed={revealAll} />
+                    </td>
+                    <td className="px-4 py-3">
+                      <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', f.estado === 'vigente' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/5 text-navy-light/80')}>
+                        {ETIQUETA_ESTADO_DE_SALDO[f.estado]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{f.generado_en ? formatDate(f.generado_en) : '—'}</td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{f.vence ? formatDate(f.vence) : '—'}</td>
                     <td className="px-4 py-3 text-right">
-                      <button type="button" onClick={() => setDetalle(s)}
-                        className="inline-flex items-center gap-1 rounded-full border border-navy/15 px-3 py-1 text-[13px] text-navy hover:bg-surface-low font-body">
+                      <button type="button" onClick={e => { e.stopPropagation(); setDetalle(f) }}
+                        className="inline-flex items-center gap-1 rounded-full border border-navy/15 px-3 py-1 text-[13px] text-navy hover:bg-surface-low font-body whitespace-nowrap">
                         Ver detalle <ChevronRight size={13} aria-hidden />
                       </button>
                     </td>
                   </tr>
                 ))}
                 {filtrados.length === 0 && (
-                  <tr><td colSpan={7} className="px-4 py-6 text-[13px] text-navy-light/80 font-body">Nadie con esos filtros.</td></tr>
+                  <tr><td colSpan={8} className="px-4 py-6 text-[13px] text-navy-light/80 font-body">Nadie con esos filtros.</td></tr>
                 )}
               </tbody>
             </table>
           </div>
-        </>
+        </div>
       )}
-      {detalle && <DetalleDeSaldo s={detalle} onClose={() => setDetalle(null)} />}
-
-      <SeccionDeCreditos creditos={creditos} error={errorCreditos} revealAll={revealAll} />
+      {detalle?.fuente.tipo === 'sobrante' && <DetalleDeSaldo s={detalle.fuente.saldo} onClose={() => setDetalle(null)} />}
+      {detalle?.fuente.tipo === 'congelado' && <DetalleDeCredito c={detalle.fuente.credito} hoy={hoy} revealAll={revealAll} onClose={() => setDetalle(null)} />}
     </div>
-  )
-}
-
-/**
- * FIN-9 · Créditos por matrícula congelada (2026-10-27).
- *
- * Tres créditos de SCJ existían desde el 7 de octubre y esta pantalla no los
- * listaba: finanzas se enteró por correo. Acá están todos, con su estado
- * derivado (un «activo» con la fecha pasada es un vencido) y el porqué.
- */
-function SeccionDeCreditos({ creditos, error, revealAll }: {
-  creditos: CreditoListado[] | null
-  error: string | null
-  revealAll: boolean
-}) {
-  const hoy = ymdCR()
-  const vigentes = creditos ? creditosVigentes(creditos, hoy) : []
-  const totales = totalPorMoneda(vigentes)
-  return (
-    <section id="creditos" className="space-y-4 pt-4 scroll-mt-24">
-      <div>
-        <h2 className="text-xl font-extrabold text-navy font-display">Créditos por matrícula congelada</h2>
-        <p className="text-sm text-navy-light/80 font-body mt-1">
-          Plata que la persona pagó por un estudio que no llevó y se le guardó para la próxima
-          matrícula o actividad grande. Se aplica sola al pagar; vence con la matrícula del bloque siguiente.
-        </p>
-      </div>
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        <div className={TARJETA}>
-          <p className={TARJETA_ETIQUETA}>Créditos vigentes</p>
-          <div className={cn(TARJETA_VALOR, VALOR_DINERO)}>
-            {totales.length === 0
-              ? <AmountDisplay amount={0} defaultHidden={false} revealed={revealAll} />
-              : totales.map(t => <p key={t.currency}><AmountDisplay amount={t.total} currency={t.currency} defaultHidden={false} revealed={revealAll} /></p>)}
-          </div>
-        </div>
-        <div className={TARJETA}>
-          <p className={TARJETA_ETIQUETA}>Personas con crédito vigente</p>
-          <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{new Set(vigentes.map(c => c.member_id)).size.toLocaleString('es-CR')}</p>
-        </div>
-      </div>
-      {error ? (
-        <p className="text-sm text-coral-deep font-body" role="alert">{error}</p>
-      ) : creditos === null ? (
-        <p className="text-sm text-navy-light/80 font-body">Cargando…</p>
-      ) : creditos.length === 0 ? (
-        <p className="text-sm text-navy-light/80 font-body">Nadie tiene un crédito por congelamiento.</p>
-      ) : (
-        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden overflow-x-auto">
-          <table className="w-full border-collapse text-sm min-w-[720px]">
-            <thead>
-              <tr className="border-b border-[var(--outline-variant)]">
-                {['Persona', 'De qué pago', 'Monto', 'Estado', 'Vence', 'Emitido', 'Motivo'].map(h => (
-                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 whitespace-nowrap font-display">{h}</th>
-                ))}
-              </tr>
-            </thead>
-            <tbody>
-              {creditos.map(c => {
-                const estado = estadoDelCredito(c, hoy)
-                return (
-                  <tr key={c.id} className="border-b border-[var(--outline-variant)] hover:bg-surface-low transition-colors">
-                    <td className="px-4 py-3">
-                      <Link href={`/miembros/${c.member_id}?open=pagos`} className="text-[13px] text-navy hover:underline font-body">{c.member_name}</Link>
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
-                      {c.origin_payment_id
-                        ? <Link href={`/finanzas/pagos/${c.origin_payment_id}`} className="hover:underline">{c.pago_descripcion ?? c.origen ?? 'Ver pago'}</Link>
-                        : (c.origen ?? '—')}
-                    </td>
-                    <td className="px-4 py-3 text-[13px] font-bold text-teal-deep font-body"><AmountDisplay amount={c.monto} currency={c.currency} defaultHidden={false} revealed={revealAll} /></td>
-                    <td className="px-4 py-3">
-                      <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', estado === 'vigente' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/5 text-navy-light/80')}>
-                        {ETIQUETA_ESTADO[estado]}
-                      </span>
-                    </td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{c.vence ? formatDate(c.vence) : '—'}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{formatDate(c.created_at)}</td>
-                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body max-w-[320px]">{c.motivo ?? '—'}</td>
-                  </tr>
-                )
-              })}
-            </tbody>
-          </table>
-        </div>
-      )}
-    </section>
   )
 }

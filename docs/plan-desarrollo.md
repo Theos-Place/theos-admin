@@ -3297,6 +3297,18 @@ rastro en `audit_log`). Código: regla pura `tocaCorrerElCredito` en
 De paso: la fecha de vencimiento se mostraba un día corrida (recorte UTC de
 un timestamp que es 23:59 de Costa Rica); ahora `diaEnCostaRica`.
 
+### [x] FIN-9d · Saldos a favor y créditos congelados en UNA lista, con tipo y detalle — HECHO 2026-10-27
+
+Pedido de Floriana: en `/finanzas/saldos` una sola tabla con columna «Tipo»
+(Sobrante de matrícula / Matrícula congelada), origen, monto, estado,
+generado y vence; los totales suman solo lo vigente de las dos fuentes y
+«Personas con saldo» cuenta cada persona una vez. Clic en la fila (o «Ver
+detalle») abre el detalle de su fuente: el de sobrante ya existía; el del
+crédito muestra estado, vencimiento, motivo, link al pago de origen y a los
+pagos de la persona. Excel con la columna Tipo. Lógica pura en
+`lib/finance/saldos-unificados.ts` con tests; `id="creditos"` se conserva
+para que las campanas a finanzas sigan aterrizando.
+
 ## Fase 31 — Reunión TI + Finanzas (2026-10-21, Andrés/Meli)
 
 ### [ ] FIN-14 · Informe de transparencia: reporte real para Hacienda (beneficiarios finales)
