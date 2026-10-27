@@ -35,6 +35,12 @@ describe('la lista unificada', () => {
     ])
   })
 
+  it('un crédito REVOCADO no sale: es una corrección, no un saldo', () => {
+    // Irene Arias: pago devuelto y crédito encima; «es una devolución únicamente».
+    const filas = unificarSaldos([], [credito({ status: 'revoked' }), credito({ id: 'ok' })], '2026-10-27')
+    expect(filas.map(f => f.key)).toEqual(['congelado:ok'])
+  })
+
   it('el sobrante no vence; el crédito sí, y su «generado» es cuándo se emitió', () => {
     const [s, c] = unificarSaldos([sobrante()], [credito()], '2026-10-27')
     expect(s.vence).toBeNull()

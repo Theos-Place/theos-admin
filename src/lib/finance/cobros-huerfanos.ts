@@ -19,10 +19,16 @@
  *   · `pendiente`  — se le debe cobrar a alguien y nadie lo va a ver.
  *   · `sin_dueno`  — ni siquiera tiene member_id. No se sabe de quién es.
  *   · `anulado`    — cancelado: no hay plata de por medio, solo ruido.
+ *   · `devuelto`   — la plata se devolvió: ya no hay nada que resolver.
+ *
+ * LO RESUELTO NO SE MUESTRA (Floriana, 2026-10-27): un cobro anulado,
+ * devuelto o convertido en crédito ya no es un problema, y dejarlo en la
+ * lista hace que los que sí piden acción se pierdan entre los que no. Se
+ * pueden ver aparte, pero la pantalla abre con lo que falta por hacer.
  */
 import { formatMoney } from '@/lib/format'
 
-export type Gravedad = 'pagado' | 'sin_dueno' | 'pendiente' | 'anulado'
+export type Gravedad = 'pagado' | 'sin_dueno' | 'pendiente' | 'anulado' | 'devuelto'
 
 export type CobroHuerfano = {
   id: string
@@ -41,10 +47,13 @@ export function gravedadDe(c: Pick<CobroHuerfano, 'status' | 'persona'>): Graved
   if (!c.persona) return 'sin_dueno'
   if (c.status === 'paid') return 'pagado'
   if (c.status === 'cancelado') return 'anulado'
+  // Irene Arias (2026-10-21): su pago devuelto salía como «pendiente» y
+  // pedía acción, cuando la devolución ES la resolución.
+  if (c.status === 'refunded' || c.status === 'partial_refund') return 'devuelto'
   return 'pendiente'
 }
 
-const ORDEN: Record<Gravedad, number> = { pagado: 0, sin_dueno: 1, pendiente: 2, anulado: 3 }
+const ORDEN: Record<Gravedad, number> = { pagado: 0, sin_dueno: 1, pendiente: 2, anulado: 3, devuelto: 4 }
 
 /** Lo grave primero; dentro de cada grupo, lo más viejo arriba. */
 export function ordenarPorGravedad(cobros: readonly CobroHuerfano[]): CobroHuerfano[] {
@@ -69,17 +78,23 @@ export function queHacerCon(c: CobroHuerfano): string {
   if (g === 'pendiente') {
     return 'Se le debe cobrar a alguien y no aparece en ninguna pantalla. Reconectalo o anulalo.'
   }
+  if (g === 'devuelto') return 'Ya se resolvió: la plata se devolvió. Solo es una devolución.'
   return 'Anulado: no hay plata de por medio.'
 }
 
 /** ¿Este cobro pide que alguien haga algo? */
 export function pideAccion(c: CobroHuerfano): boolean {
   const g = gravedadDe(c)
-  if (g === 'anulado') return false
+  if (g === 'anulado' || g === 'devuelto') return false
   // Un pagado del que ya salió un crédito está resuelto para la persona:
   // queda suelto solo en la contabilidad del estudio.
   if (g === 'pagado' && c.tieneCredito) return false
   return true
+}
+
+/** Lo que ya no es un problema: anulado, devuelto o convertido en crédito. */
+export function estaResuelto(c: CobroHuerfano): boolean {
+  return !pideAccion(c)
 }
 
 /**

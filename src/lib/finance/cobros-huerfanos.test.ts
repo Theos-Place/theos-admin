@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest'
 import {
-  gravedadDe, ordenarPorGravedad, queHacerCon, avisoDeHuerfanos, type CobroHuerfano,
+  gravedadDe, ordenarPorGravedad, queHacerCon, avisoDeHuerfanos, pideAccion, estaResuelto, type CobroHuerfano,
 } from './cobros-huerfanos'
+import { readFileSync } from 'node:fs'
 import { formatMoney } from '@/lib/format'
 
 const c = (o: Partial<CobroHuerfano> = {}): CobroHuerfano => ({
@@ -91,5 +92,35 @@ describe('el aviso a finanzas', () => {
 
   it('el singular se lee bien', () => {
     expect(avisoDeHuerfanos([c()])!.title).toBe('Hay 1 cobro de estudio sin estudio')
+  })
+})
+
+describe('lo resuelto no es un problema (Floriana, 2026-10-27)', () => {
+  it('un devuelto es una devolución, no un pendiente: no pide acción', () => {
+    // Irene Arias: su ₡15.000 devuelto salía como «Pendiente».
+    expect(gravedadDe(c({ status: 'refunded' }))).toBe('devuelto')
+    expect(gravedadDe(c({ status: 'partial_refund' }))).toBe('devuelto')
+    expect(pideAccion(c({ status: 'refunded' }))).toBe(false)
+    expect(queHacerCon(c({ status: 'refunded' }))).toContain('Solo es una devolución')
+  })
+
+  it('anulado, devuelto o con crédito están resueltos; pagado sin crédito y pendiente, no', () => {
+    expect(estaResuelto(c({ status: 'cancelado' }))).toBe(true)
+    expect(estaResuelto(c({ status: 'refunded' }))).toBe(true)
+    expect(estaResuelto(c({ status: 'paid', tieneCredito: true }))).toBe(true)
+    expect(estaResuelto(c({ status: 'paid' }))).toBe(false)
+    expect(estaResuelto(c({ status: 'pending' }))).toBe(false)
+    expect(estaResuelto(c({ status: 'paid', persona: null, tieneCredito: true }))).toBe(false)
+  })
+
+  it('un devuelto tampoco hace sonar el aviso', () => {
+    expect(avisoDeHuerfanos([c({ status: 'refunded' }), c({ status: 'cancelado' })])).toBeNull()
+  })
+
+  it('la pantalla abre con lo que pide acción y esconde lo resuelto detrás de un botón', () => {
+    const p = readFileSync('src/app/(admin)/finanzas/cobros-sin-estudio/page.tsx', 'utf8')
+    expect(p).toContain('estaResuelto')
+    expect(p).toContain('verResueltos')
+    expect(p).toMatch(/devuelto:\s*\{ texto: 'Devuelto'/)
   })
 })

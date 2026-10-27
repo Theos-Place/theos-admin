@@ -18,7 +18,7 @@ import { useAuth } from '@/hooks/useAuth'
 import { hasModulePermission } from '@/lib/auth/roles'
 import { formatDate } from '@/lib/format'
 import {
-  gravedadDe, queHacerCon, pideAccion, type CobroHuerfano, type Gravedad,
+  gravedadDe, queHacerCon, pideAccion, estaResuelto, type CobroHuerfano, type Gravedad,
 } from '@/lib/finance/cobros-huerfanos'
 
 /**
@@ -44,6 +44,7 @@ const ETIQUETA: Record<Gravedad, { texto: string; clase: string }> = {
   sin_dueno: { texto: 'Sin dueño',   clase: 'bg-coral/10 text-coral-deep' },
   pendiente: { texto: 'Pendiente',   clase: 'bg-teal/15 text-navy' },
   anulado:   { texto: 'Anulado',     clase: 'bg-navy-light/10 text-navy-light/80' },
+  devuelto:  { texto: 'Devuelto',    clase: 'bg-navy-light/10 text-navy-light/80' },
 }
 
 export default function CobrosSinEstudioPage() {
@@ -59,11 +60,16 @@ export default function CobrosSinEstudioPage() {
   const [hasta, setHasta] = useState('')
   const [busqueda, setBusqueda] = useState('')
   const [revealAll, setRevealAll] = useState(false)
+  // Lo resuelto (anulado, devuelto o con crédito) no se muestra: la pantalla
+  // es para lo que falta por hacer (Floriana, 2026-10-27). Se puede abrir.
+  const [verResueltos, setVerResueltos] = useState(false)
+  const resueltos = useMemo(() => items.filter(estaResuelto).length, [items])
   const visibles = useMemo(() => {
     const q = busqueda.trim().toLowerCase()
-    return items.filter(c => enRango(c.huerfanoDesde, desde, hasta)
+    return items.filter(c => (verResueltos || !estaResuelto(c))
+      && enRango(c.huerfanoDesde, desde, hasta)
       && (!q || (c.persona ?? '').toLowerCase().includes(q) || (c.concepto ?? '').toLowerCase().includes(q)))
-  }, [items, desde, hasta, busqueda])
+  }, [items, desde, hasta, busqueda, verResueltos])
 
   useEffect(() => {
     if (!puede) return
@@ -114,9 +120,16 @@ export default function CobrosSinEstudioPage() {
             <p className={cn(TARJETA_VALOR, VALOR_PENDIENTE)}>{porResolver.length}</p>
           </div>
           <div className={TARJETA}>
-            <p className={TARJETA_ETIQUETA}>Cobros sueltos</p>
-            <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{visibles.length}</p>
-            <p className="text-[13px] text-navy-light/80 font-body">El resto está anulado o ya se resolvió con un crédito.</p>
+            <p className={TARJETA_ETIQUETA}>Ya resueltos</p>
+            <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{resueltos}</p>
+            <p className="text-[13px] text-navy-light/80 font-body">
+              Anulados, devueltos o convertidos en crédito.{' '}
+              {resueltos > 0 && (
+                <button type="button" onClick={() => setVerResueltos(v => !v)} className="underline hover:text-navy">
+                  {verResueltos ? 'Ocultarlos' : 'Verlos'}
+                </button>
+              )}
+            </p>
           </div>
         </div>
       )}
@@ -137,6 +150,12 @@ export default function CobrosSinEstudioPage() {
           icon={Unlink}
           title="Ningún cobro quedó suelto"
           description="Todos los cobros de estudio cuelgan de su matrícula y su grupo, que es como tiene que ser."
+        />
+      ) : !verResueltos && items.every(estaResuelto) ? (
+        <EmptyState
+          icon={Unlink}
+          title="Nada pide acción"
+          description={`Los ${resueltos} cobros sueltos que hay ya están anulados, devueltos o convertidos en crédito.`}
         />
       ) : (
         <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden overflow-x-auto">

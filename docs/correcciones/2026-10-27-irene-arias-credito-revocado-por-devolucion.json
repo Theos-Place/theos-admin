@@ -1,0 +1,18 @@
+{
+  "fecha": "2026-10-27T04:36:51.618Z",
+  "motivo": "Crédito revocado: el pago de origen se devolvió (Floriana, 2026-10-27)",
+  "antes": [
+    {
+      "id": "97d19539-d919-4dba-baff-eb942092410b",
+      "status": "active",
+      "discount_value": "15000.00",
+      "expires_at": "2027-01-23T05:59:59.999Z",
+      "freeze_reason": "Theos cerró su grupo de Discípulos 1 y los demás grupos no le servían por horario. Crédito emitido el 2026-10-12 al detectar que su pago había quedado sin estudio ni crédito (MAT-3).",
+      "origin_payment_id": "5e1452b2-2f86-4f46-9215-ffeff8974c5f",
+      "persona": "Irene Arias Vargas",
+      "pago_status": "refunded",
+      "amount": "15000.00",
+      "devuelto_el": "2026-10-21T23:12:38.128Z"
+    }
+  ]
+}

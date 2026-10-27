@@ -50,8 +50,13 @@ export type FilaDeSaldo = {
 
 /**
  * Las dos listas en una. Primero lo VIGENTE de mayor a menor, y al final lo
- * que ya no es plata a favor (usado, vencido, revocado), para que finanzas
- * vea la historia sin que le ensucie el total.
+ * que ya no es plata a favor (usado, vencido), para que finanzas vea la
+ * historia sin que le ensucie el total.
+ *
+ * Un crédito REVOCADO no sale: se revocó porque no debía existir (Irene
+ * Arias, 2026-10-27: su pago se devolvió y el crédito sobre ese pago seguía
+ * activo; «es una devolución únicamente»). No es historia de un saldo, es
+ * una corrección.
  */
 export function unificarSaldos(
   sobrantes: readonly SaldoAFavor[],
@@ -66,7 +71,7 @@ export function unificarSaldos(
       generado_en: s.generado_en ?? null, vence: null,
       fuente: { tipo: 'sobrante', saldo: s },
     })),
-    ...creditos.map<FilaDeSaldo>(c => ({
+    ...creditos.filter(c => c.status !== 'revoked').map<FilaDeSaldo>(c => ({
       key: `congelado:${c.id}`, tipo: 'congelado',
       member_id: c.member_id, member_name: c.member_name, origen: c.origen,
       monto: c.monto, currency: c.currency, estado: estadoDelCredito(c, hoy),
