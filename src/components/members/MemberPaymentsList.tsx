@@ -24,11 +24,20 @@ import { Modal } from '@/components/shared/Modal'
 import { FormularioDeComprobante } from '@/components/finance/FormularioDeComprobante'
 import { BarraDePagoJunto } from '@/components/finance/PagarVariosJuntos'
 import { ofrecerPagoJunto, sePuedeIncluir } from '@/lib/finance/comprobante-multiple'
+import { creditosVigentes, lineaDeCreditoEnPerfil, estadoDelCredito } from '@/lib/finance/credito-visible'
 
 /** Estado visual de un pago del miembro. */
 export function paymentBadge(p: MemberPaymentRow): { label: string; cls: string } {
   if (p.queue_status === 'en_revision') return { label: 'En revisión', cls: 'bg-amber-50 text-amber-700' }
   if (p.queue_status === 'pendiente') return { label: 'Pendiente', cls: 'bg-coral/10 text-coral-deep' }
+  // FIN-9 · La matrícula se congeló: el pago existe, el estudio no. Decirle
+  // «Pagado» a secas esconde que hay plata a favor (o que ya se usó).
+  if (p.credito_origen) {
+    const estado = estadoDelCredito(p.credito_origen, ymdCR())
+    return estado === 'vigente'
+      ? { label: 'Congelado → crédito a favor', cls: 'bg-teal-soft/30 text-teal-ink' }
+      : { label: `Congelado → crédito ${estado}`, cls: 'bg-navy/5 text-navy-light/80' }
+  }
   /**
    * PAG-6 · Acá dice «Pagado» A PROPÓSITO, aunque en las pantallas de
    * finanzas el mismo estado se escriba «Cancelado».
@@ -91,15 +100,36 @@ export function MemberPaymentsList({ memberId, highlightId, onlyActionable = fal
   const ofreceJunto = permitirPagoJunto && ofrecerPagoJunto(visible)
   const enSeleccion = seleccion !== null
   const elegidos = visible.filter(p => seleccion?.has(p.id))
+  const creditosAunSinPendientes = creditosVigentes(rows.flatMap(p => p.credito_origen ? [p.credito_origen] : []), ymdCR())
   if (visible.length === 0) {
-    return <p className="px-4 py-6 text-center text-[13px] text-navy-light/80 font-body">{onlyActionable ? 'Sin pagos pendientes. 🎉' : 'Sin pagos ni cobros registrados.'}</p>
+    return (
+      <>
+        {creditosAunSinPendientes.map(c => (
+          <p key={c.id} className="px-4 pt-3 text-[13px] font-bold text-teal-ink font-body">{lineaDeCreditoEnPerfil(c)}</p>
+        ))}
+        <p className="px-4 py-6 text-center text-[13px] text-navy-light/80 font-body">{onlyActionable ? 'Sin pagos pendientes. 🎉' : 'Sin pagos ni cobros registrados.'}</p>
+      </>
+    )
   }
 
   // Corte en hora de Costa Rica: con UTC un tracto podía verse vencido de noche.
   const todayYmd = ymdCR()
+  // FIN-9 · Los créditos vigentes que nacieron de estos pagos, arriba de
+  // todo: la persona, estudios y finanzas tienen que verlos sin buscar. Se
+  // leen de TODAS las filas, no de las visibles: en Mis pagos la lista
+  // esconde lo cerrado, y el pago congelado está cerrado.
+  const creditos = creditosVigentes(rows.flatMap(p => p.credito_origen ? [p.credito_origen] : []), todayYmd)
 
   return (
     <div className="divide-y divide-[var(--outline-variant)]">
+      {creditos.length > 0 && (
+        <div className="px-4 py-3 bg-teal-soft/20">
+          {creditos.map(c => (
+            <p key={c.id} className="text-[13px] font-bold text-teal-ink font-body">{lineaDeCreditoEnPerfil(c)}</p>
+          ))}
+          <p className="text-[13px] text-navy-light/80 font-body">Se aplica solo al pagar la próxima matrícula o actividad grande.</p>
+        </div>
+      )}
       {/* PAG-5 · La entrada al modo. Solo si de verdad hay dos pendientes:
           un botón que lleva a una pantalla donde no se puede hacer nada es
           peor que no tenerlo. */}

@@ -13,6 +13,7 @@ import { isBlockingStudyPayment } from '@/lib/studies/pending-payments'
 import { revisarReferencia, tieneReferenciaComparable } from '@/lib/finance/referencia-repetida'
 import { nivelesACobrar, montoDelBloque, ventanaDelCorte } from '@/lib/studies/corte-de-bloque'
 import { modalidadDe, type Modalidad } from '@/lib/studies/modalidad-de-bloques'
+import type { CreditoResumen } from '@/lib/finance/credito-visible'
 
 export const PAYMENT_RECEIPTS_BUCKET = 'payment-receipts'
 
@@ -799,6 +800,8 @@ export type MemberPaymentRow = {
   /** FIN-13 · Finanzas le habilitó a ESTA persona acogerse a un arreglo sobre
    *  ESTE cobro. No hay botón público: se habilita caso por caso. */
   payment_plan_enabled: boolean
+  /** FIN-9 · Si este pago se congeló, el crédito que salió de él. */
+  credito_origen?: CreditoResumen | null
   /**
    * Los dos datos que el tiquete de finanzas muestra y este lado no tenía
    * (2026-10-05). La ventana de pago de la ficha enseñaba solo «subí el
@@ -933,6 +936,11 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
     .order('created_at', { ascending: false })
   if (error) throw error
 
+  // FIN-9 · El crédito que nació de cada pago, para que «Pagado» no sea la
+  // única verdad sobre un cobro cuya matrícula se congeló.
+  const { creditosPorPagoDeOrigen } = await import('./creditos')
+  const creditos = await creditosPorPagoDeOrigen(((data ?? []) as Array<{ id: string }>).map(r => r.id))
+
   return ((data ?? []) as Array<Record<string, unknown>>).map(r => {
     const er = Array.isArray(r.event_registration) ? r.event_registration[0] : r.event_registration
     const erRow = er as { event: { title: string; starts_at?: string | null } | { title: string; starts_at?: string | null }[] | null } | null
@@ -973,6 +981,7 @@ export async function getPaymentsByMember(memberId: string): Promise<MemberPayme
       payment_plan_enabled: !!r.payment_plan_enabled_at,
       reference_code: (r.reference_code as string | null) ?? null,
       member_name: nombreDelEmbed(r.member),
+      credito_origen: creditos.get(r.id as string) ?? null,
     }
   })
 }

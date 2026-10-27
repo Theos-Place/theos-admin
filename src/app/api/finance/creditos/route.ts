@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
-import { contextoParaCongelar, congelarMatricula, NoSePuedeCongelar } from '@/lib/supabase/queries/creditos'
+import { contextoParaCongelar, congelarMatricula, NoSePuedeCongelar, listarCreditos } from '@/lib/supabase/queries/creditos'
 import { ROLES_QUE_CONGELAN } from '@/lib/finance/credito-por-congelar'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -26,13 +26,26 @@ const bodySchema = z.object({
   motivo: z.string().trim().min(10, 'Contá por qué se congela, aunque sea en una línea.').max(500),
 }).strict()
 
-/** GET ?enrollment_id= — cuánto se congelaría y si se puede. */
+/**
+ * GET ?enrollment_id= — cuánto se congelaría y si se puede.
+ * GET sin parámetros — la lista de créditos emitidos (FIN-9, pantalla de
+ * finanzas de saldos). Dirección también la ve: es seguimiento, no emisión.
+ */
 export async function GET(req: NextRequest) {
+  const id = req.nextUrl.searchParams.get('enrollment_id')
+  if (!id) {
+    const auth = await requireRoles(...ROLES, 'direccion')
+    if (auth.res) return auth.res
+    try {
+      return NextResponse.json({ items: await listarCreditos() })
+    } catch (error) {
+      reportarError('GET /api/finance/creditos (lista):', error)
+      return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+    }
+  }
   const auth = await requireRoles(...ROLES)
   if (auth.res) return auth.res
   try {
-    const id = req.nextUrl.searchParams.get('enrollment_id')
-    if (!id) return NextResponse.json({ error: 'Falta enrollment_id' }, { status: 400 })
     const ctx = await contextoParaCongelar(id)
     if (!ctx) return NextResponse.json({ error: 'No se encontró la matrícula.' }, { status: 404 })
     return NextResponse.json(ctx)

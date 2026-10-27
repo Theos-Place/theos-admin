@@ -18,6 +18,9 @@ import { EmptyState } from '@/components/shared/EmptyState'
 import { useAuth } from '@/hooks/useAuth'
 import { hasModulePermission } from '@/lib/auth/roles'
 import { plata, type SaldoAFavor, type DetalleDelSaldo } from '@/lib/finance/saldo-a-favor'
+import { estadoDelCredito, ETIQUETA_ESTADO, creditosVigentes, totalPorMoneda } from '@/lib/finance/credito-visible'
+import type { CreditoListado } from '@/lib/supabase/queries/creditos'
+import { ymdCR } from '@/lib/format'
 
 import { DatePicker } from '@/components/events/DatePicker'
 const METODO: Record<string, string> = { sinpe: 'SINPE', cash: 'Efectivo', card: 'Tarjeta', comprobante: 'Comprobante', scholarship: 'Beca' }
@@ -118,6 +121,22 @@ export default function SaldosAFavorPage() {
   // El rango es por la fecha en que se GENERÓ el saldo (ver llegadaDelPago).
   const [desde, setDesde] = useState('')
   const [hasta, setHasta] = useState('')
+  // FIN-9 · Los créditos por matrícula congelada. Son otra cosa que el saldo
+  // a favor —plata guardada a propósito, no un sobrante— pero viven en la
+  // misma pantalla porque la pregunta de finanzas es la misma: ¿a quién le
+  // debemos plata?
+  const [creditos, setCreditos] = useState<CreditoListado[] | null>(null)
+  const [errorCreditos, setErrorCreditos] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (!puede) return
+    let vivo = true
+    fetch('/api/finance/creditos')
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('No se pudieron cargar los créditos.')))
+      .then(d => vivo && setCreditos(d.items ?? []))
+      .catch(e => vivo && setErrorCreditos(e.message))
+    return () => { vivo = false }
+  }, [puede])
 
   useEffect(() => {
     // Sin permiso la pantalla ya devuelve AccessDenied, así que el estado
@@ -257,6 +276,95 @@ export default function SaldosAFavorPage() {
         </>
       )}
       {detalle && <DetalleDeSaldo s={detalle} onClose={() => setDetalle(null)} />}
+
+      <SeccionDeCreditos creditos={creditos} error={errorCreditos} revealAll={revealAll} />
     </div>
+  )
+}
+
+/**
+ * FIN-9 · Créditos por matrícula congelada (2026-10-27).
+ *
+ * Tres créditos de SCJ existían desde el 7 de octubre y esta pantalla no los
+ * listaba: finanzas se enteró por correo. Acá están todos, con su estado
+ * derivado (un «activo» con la fecha pasada es un vencido) y el porqué.
+ */
+function SeccionDeCreditos({ creditos, error, revealAll }: {
+  creditos: CreditoListado[] | null
+  error: string | null
+  revealAll: boolean
+}) {
+  const hoy = ymdCR()
+  const vigentes = creditos ? creditosVigentes(creditos, hoy) : []
+  const totales = totalPorMoneda(vigentes)
+  return (
+    <section id="creditos" className="space-y-4 pt-4 scroll-mt-24">
+      <div>
+        <h2 className="text-xl font-extrabold text-navy font-display">Créditos por matrícula congelada</h2>
+        <p className="text-sm text-navy-light/80 font-body mt-1">
+          Plata que la persona pagó por un estudio que no llevó y se le guardó para la próxima
+          matrícula o actividad grande. Se aplica sola al pagar; vence con la matrícula del bloque siguiente.
+        </p>
+      </div>
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div className={TARJETA}>
+          <p className={TARJETA_ETIQUETA}>Créditos vigentes</p>
+          <div className={cn(TARJETA_VALOR, VALOR_DINERO)}>
+            {totales.length === 0
+              ? <AmountDisplay amount={0} defaultHidden={false} revealed={revealAll} />
+              : totales.map(t => <p key={t.currency}><AmountDisplay amount={t.total} currency={t.currency} defaultHidden={false} revealed={revealAll} /></p>)}
+          </div>
+        </div>
+        <div className={TARJETA}>
+          <p className={TARJETA_ETIQUETA}>Personas con crédito vigente</p>
+          <p className={cn(TARJETA_VALOR, VALOR_NEUTRO)}>{new Set(vigentes.map(c => c.member_id)).size.toLocaleString('es-CR')}</p>
+        </div>
+      </div>
+      {error ? (
+        <p className="text-sm text-coral-deep font-body" role="alert">{error}</p>
+      ) : creditos === null ? (
+        <p className="text-sm text-navy-light/80 font-body">Cargando…</p>
+      ) : creditos.length === 0 ? (
+        <p className="text-sm text-navy-light/80 font-body">Nadie tiene un crédito por congelamiento.</p>
+      ) : (
+        <div className="rounded-2xl bg-surface-card shadow-[var(--shadow-md)] overflow-hidden overflow-x-auto">
+          <table className="w-full border-collapse text-sm min-w-[720px]">
+            <thead>
+              <tr className="border-b border-[var(--outline-variant)]">
+                {['Persona', 'De qué pago', 'Monto', 'Estado', 'Vence', 'Emitido', 'Motivo'].map(h => (
+                  <th key={h} className="px-4 py-3 text-left text-[11px] tracking-widest uppercase text-navy-light/80 whitespace-nowrap font-display">{h}</th>
+                ))}
+              </tr>
+            </thead>
+            <tbody>
+              {creditos.map(c => {
+                const estado = estadoDelCredito(c, hoy)
+                return (
+                  <tr key={c.id} className="border-b border-[var(--outline-variant)] hover:bg-surface-low transition-colors">
+                    <td className="px-4 py-3">
+                      <Link href={`/miembros/${c.member_id}?open=pagos`} className="text-[13px] text-navy hover:underline font-body">{c.member_name}</Link>
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body">
+                      {c.origin_payment_id
+                        ? <Link href={`/finanzas/pagos/${c.origin_payment_id}`} className="hover:underline">{c.pago_descripcion ?? c.origen ?? 'Ver pago'}</Link>
+                        : (c.origen ?? '—')}
+                    </td>
+                    <td className="px-4 py-3 text-[13px] font-bold text-teal-deep font-body"><AmountDisplay amount={c.monto} currency={c.currency} defaultHidden={false} revealed={revealAll} /></td>
+                    <td className="px-4 py-3">
+                      <span className={cn('rounded-full px-2 py-0.5 text-[11px] font-semibold font-display', estado === 'vigente' ? 'bg-teal-soft/30 text-teal-ink' : 'bg-navy/5 text-navy-light/80')}>
+                        {ETIQUETA_ESTADO[estado]}
+                      </span>
+                    </td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{c.vence ? formatDate(c.vence) : '—'}</td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body whitespace-nowrap">{formatDate(c.created_at)}</td>
+                    <td className="px-4 py-3 text-[13px] text-navy-light/80 font-body max-w-[320px]">{c.motivo ?? '—'}</td>
+                  </tr>
+                )
+              })}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </section>
   )
 }

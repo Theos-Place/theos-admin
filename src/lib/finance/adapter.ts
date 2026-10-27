@@ -63,6 +63,8 @@ export function toDomainPayment(db: DbPayment): Payment {
     reference_code: db.reference_code ?? null,
     review_status: db.review_status ?? null,
     scholarship_id: db.scholarship_id,
+    // FIN-9 · Viene colgado por la ruta (conCreditoDeOrigen), no del select.
+    credito_origen: db.credito_origen ?? null,
     paid_at: db.paid_at,
     created_at: db.created_at,
     notes: db.description,

@@ -10,7 +10,8 @@ import { PaymentMethodBadge } from '@/components/finance/PaymentMethodBadge'
 import { PaymentStatusBadge } from '@/components/finance/PaymentStatusBadge'
 import { RefundModal } from '@/components/finance/RefundModal'
 import { useFinance } from '@/hooks/useFinance'
-import { formatDate, formatDateTime } from '@/lib/format'
+import { formatDate, formatDateTime, ymdCR } from '@/lib/format'
+import { etiquetaCongelado } from '@/lib/finance/credito-visible'
 
 export default function PagoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
@@ -201,6 +202,22 @@ export default function PagoDetailPage({ params }: { params: Promise<{ id: strin
                 </p>
               )}
             </div>
+            {/* FIN-9 · «Pagado» a secas es mentira a medias cuando la matrícula se
+                congeló: se pagó, pero el estudio no existió. Acá se dice en qué
+                quedó la plata y a dónde ir a verla. */}
+            {payment.credito_origen && (
+              <div className="rounded-xl p-3 bg-teal-soft/30 border border-teal/30">
+                <p className="text-[13px] font-bold text-teal-ink font-body">
+                  {etiquetaCongelado(payment.credito_origen, ymdCR())}
+                </p>
+                {payment.credito_origen.motivo && (
+                  <p className="mt-1 text-[13px] text-navy-light/80 font-body">Motivo: {payment.credito_origen.motivo}</p>
+                )}
+                <Link href="/finanzas/saldos#creditos" className="mt-1 inline-block text-[13px] text-coral-deep underline decoration-dotted underline-offset-2 font-body">
+                  Ver el crédito en Saldos y créditos
+                </Link>
+              </div>
+            )}
             {payment.scholarship_id && (
               <div className="rounded-xl p-3 bg-[rgba(61,185,122,0.08)] border border-[rgba(61,185,122,0.20)]">
                 <p className="text-[13px] font-medium text-[#1E6B42] font-body">

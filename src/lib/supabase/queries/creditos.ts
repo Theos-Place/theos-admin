@@ -10,6 +10,7 @@ import {
   TIPO_CREDITO_EMITIDO, TITULO_CREDITO_EMITIDO, cuerpoDelCredito,
 } from '@/lib/finance/credito-por-congelar'
 import type { FilaDeReclasificacion } from '@/lib/finance/reporte-de-reclasificaciones'
+import { avisoAFinanzas, TIPO_AVISO_FINANZAS, type CreditoResumen } from '@/lib/finance/credito-visible'
 
 export class NoSePuedeCongelar extends Error {}
 
@@ -157,7 +158,120 @@ export async function congelarMatricula(input: {
   })
   if (nErr) console.warn('congelarMatricula: notificación falló:', nErr.message)
 
+  // FIN-9 · Y la campana a FINANZAS. Hasta el 2026-10-27 solo se avisaba a
+  // la persona: finanzas se enteró de tres congelamientos de SCJ por correo
+  // de estudios, con el crédito ya emitido y sin verlo en ninguna pantalla.
+  try {
+    await avisarAFinanzasDelCredito({
+      member_name: ctx.member_name, monto: ctx.montoPagado, currency: ctx.currency,
+      estudio: ctx.estudio, motivo: input.motivo.trim(), actorUserId: input.actorUserId,
+    })
+  } catch (e) {
+    console.warn('congelarMatricula: aviso a finanzas falló:', e instanceof Error ? e.message : e)
+  }
+
   return { credito_id: creditoId, monto: ctx.montoPagado, vence }
+}
+
+/** Campana a todo miembro activo con rol finanzas o admin. Best-effort. */
+async function avisarAFinanzasDelCredito(i: {
+  member_name: string; monto: number; currency: string; estudio: string | null; motivo: string
+  actorUserId: string
+}): Promise<void> {
+  const supabase = createAdminClient()
+  const [{ data: roles }, { data: actor }] = await Promise.all([
+    supabase.from('member_roles')
+      .select('member_id, member:members!member_roles_member_id_fkey(is_active)')
+      .in('role', ['admin', 'finanzas']).eq('is_active', true),
+    supabase.from('members').select('first_name, last_name').eq('auth_user_id', i.actorUserId).maybeSingle(),
+  ])
+  const destinatarios = [...new Set(((roles ?? []) as Array<{ member_id: string; member: { is_active: boolean } | { is_active: boolean }[] | null }>)
+    .filter(r => (Array.isArray(r.member) ? r.member[0] : r.member)?.is_active === true)
+    .map(r => r.member_id))]
+  if (destinatarios.length === 0) return
+  const a = actor as { first_name: string | null; last_name: string | null } | null
+  const quien = [a?.first_name, a?.last_name].filter(Boolean).join(' ').trim() || null
+  const aviso = avisoAFinanzas({ ...i, quien })
+  const { error } = await supabase.from('internal_notifications').insert(destinatarios.map(memberId => ({
+    recipient_member_id: memberId, type: TIPO_AVISO_FINANZAS,
+    title: aviso.title, body: aviso.body, link: '/finanzas/saldos#creditos',
+  })))
+  if (error) throw error
+}
+
+/* ────────────────────────────────────────────────────────────────────────────
+ * Dónde se VE el crédito (FIN-9, 2026-10-27)
+ * ──────────────────────────────────────────────────────────────────────────── */
+
+const SELECT_RESUMEN = 'id, member_id, status, discount_value, currency, expires_at, freeze_reason, reason, origin_payment_id'
+
+type FilaDeCredito = {
+  id: string; member_id: string; status: string; discount_value: number | string; currency: string | null
+  expires_at: string | null; freeze_reason: string | null; reason: string | null; origin_payment_id: string | null
+}
+
+/** El estudio sale de `reason` («Congelamiento de matrícula · Sirviendo como
+ *  Jesús»): el crédito no guarda plan porque no está atado a un destino. */
+function aResumen(f: FilaDeCredito): CreditoResumen {
+  const sep = (f.reason ?? '').indexOf(' · ')
+  return {
+    id: f.id, status: f.status, monto: Number(f.discount_value) || 0, currency: f.currency ?? 'CRC',
+    vence: f.expires_at ? f.expires_at.slice(0, 10) : null,
+    motivo: f.freeze_reason, origen: sep >= 0 ? (f.reason ?? '').slice(sep + 3).trim() || null : null,
+    origin_payment_id: f.origin_payment_id,
+  }
+}
+
+/**
+ * Los créditos que nacieron de estos pagos, por id de pago. Es lo que deja
+ * decir «Congelado → crédito a favor» encima de un pago que sigue en `paid`.
+ */
+export async function creditosPorPagoDeOrigen(paymentIds: readonly string[]): Promise<Map<string, CreditoResumen>> {
+  const out = new Map<string, CreditoResumen>()
+  if (paymentIds.length === 0) return out
+  const supabase = createAdminClient()
+  for (let i = 0; i < paymentIds.length; i += 200) {
+    const { data, error } = await supabase.from('scholarships').select(SELECT_RESUMEN)
+      .eq('kind', 'credito').in('origin_payment_id', paymentIds.slice(i, i + 200))
+    if (error) throw error
+    for (const f of (data ?? []) as FilaDeCredito[]) if (f.origin_payment_id) out.set(f.origin_payment_id, aResumen(f))
+  }
+  return out
+}
+
+export type CreditoListado = CreditoResumen & {
+  member_id: string
+  member_name: string
+  created_at: string
+  /** De qué pago salió, en una línea («Matrícula · Sirviendo como Jesús»). */
+  pago_descripcion: string | null
+}
+
+/** Todos los créditos por congelamiento, para la pantalla de finanzas. */
+export async function listarCreditos(): Promise<CreditoListado[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('scholarships')
+    .select(`${SELECT_RESUMEN}, created_at,
+      member:members!scholarships_member_id_fkey(first_name, last_name)`)
+    .eq('kind', 'credito').order('created_at', { ascending: false })
+  if (error) throw error
+  type Fila = FilaDeCredito & { created_at: string; member: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null }
+  const filas = (data ?? []) as Fila[]
+  const pagoIds = filas.map(f => f.origin_payment_id).filter((x): x is string => !!x)
+  const descripciones = new Map<string, string | null>()
+  if (pagoIds.length > 0) {
+    const { data: pagos } = await supabase.from('payments').select('id, description').in('id', pagoIds)
+    for (const p of (pagos ?? []) as Array<{ id: string; description: string | null }>) descripciones.set(p.id, p.description)
+  }
+  return filas.map(f => {
+    const m = Array.isArray(f.member) ? f.member[0] : f.member
+    return {
+      ...aResumen(f), member_id: f.member_id,
+      member_name: [m?.first_name, m?.last_name].filter(Boolean).join(' ').trim() || '—',
+      created_at: f.created_at,
+      pago_descripcion: f.origin_payment_id ? descripciones.get(f.origin_payment_id) ?? null : null,
+    }
+  })
 }
 
 /**

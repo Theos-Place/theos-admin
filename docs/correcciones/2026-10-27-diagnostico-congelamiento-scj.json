@@ -1,0 +1,12 @@
+{
+  "fecha": "2026-10-27",
+  "caso": "Congelamiento de SCJ invisible: Raquel Ulate Blanco, Dennise Castañeda Umaña, Ana María Murillo Varela",
+  "hallazgo": "Los tres créditos SÍ existen (scholarships kind=credito, active, ₡5.000 c/u, origin_payment_id al pago pagado), emitidos por estudios@ el 2026-10-07 16:43-16:44 con el botón de FIN-9. Veintiún segundos después se borró el grupo SCJ 70b85261 (antes del guard MAT-3 del 2026-10-12): se fueron sus 4 matrículas ya dadas de baja y los pagos quedaron sin enrollment_id ni study_group_id. La cuarta persona del grupo (Yariela Mena Gómez) nunca pagó: su cobro está 'cancelado'. Ninguna pantalla mostraba el crédito: ese era el bug.",
+  "creditos": [
+    { "id": "8db865f8-1d13-4d37-aa7a-f7f2ad0f0301", "miembro": "c0878467-9b25-45be-bed8-fececd4c754d", "pago": "d6ec158a-1438-4617-a374-338625f62285" },
+    { "id": "dfc6b290-1cab-47be-8173-77af20075998", "miembro": "d8fdffe8-fdc6-4db4-9652-ded081410a8d", "pago": "b9b92c39-1d4a-4a60-9f65-8df3b305fd72" },
+    { "id": "dabc3a2e-dd17-4ccf-b81f-7e92dd98bb2e", "miembro": "b69f10fc-67b2-4c1e-945f-fdf0f644f70e", "pago": "6a308989-d30f-4dd3-a319-3153e49f1f67" }
+  ],
+  "datos_tocados": "ninguno: el crédito, el pago y el vínculo ya estaban bien; lo que faltaba era mostrarlo (ver commit de FIN-9 visibilidad)",
+  "pendiente_de_decision": "expires_at = 2027-10-08 en los 5 créditos del 7-oct (el 12 meses de respaldo: ese día no había bloque futuro cargado). Hoy existe Bloque 1 2027 con cierre 2027-01-22; el crédito de Irene Arias (12-oct) sí vence ahí. Floriana decide si se alinean."
+}

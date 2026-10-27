@@ -3266,6 +3266,19 @@ se actualiza el mismo (no duplica); con tiquete manual previo no duplica; idempo
 (cron corre dos veces = un tiquete). tsc/lint/vitest.
 ```
 
+### [x] FIN-9b · Congelamiento visible: el crédito se ve en el pago, el perfil y finanzas — HECHO 2026-10-27
+
+Diagnóstico de los tres casos de SCJ (Raquel Ulate, Dennise Castañeda, Ana
+María Murillo): los créditos existían y estaban bien atados al pago; lo que
+faltaba era mostrarlos (hipótesis b). Nada que reparar en datos
+(`docs/correcciones/2026-10-27-diagnostico-congelamiento-scj.json`). Lo
+construido: `lib/finance/credito-visible.ts` (puro, con tests); el pago
+congelado dice «Congelado → crédito a favor de ₡X (vence …)» en el detalle
+de finanzas y en «Pagos y cobros» del perfil y de Mis pagos, con la línea
+«Crédito a favor: ₡X (origen: …)» arriba; `/finanzas/saldos#creditos` lista
+todos los créditos con estado derivado; y congelar avisa por campana a
+finanzas y admin, no solo a la persona.
+
 ## Fase 31 — Reunión TI + Finanzas (2026-10-21, Andrés/Meli)
 
 ### [ ] FIN-14 · Informe de transparencia: reporte real para Hacienda (beneficiarios finales)

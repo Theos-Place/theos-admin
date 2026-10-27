@@ -40,6 +40,18 @@ const paymentWriteSchema = z
     path: ['concept'],
   })
 
+/**
+ * FIN-9 · Cuelga de cada pago el crédito que nació de él, si se congeló.
+ * Es un mapa aparte y no un embed: `scholarships.origin_payment_id` apunta
+ * al pago, no al revés, y la lista no debe cambiar de forma por esto.
+ */
+async function conCreditoDeOrigen<T extends { id: string }>(pagos: T[]): Promise<T[]> {
+  const { creditosPorPagoDeOrigen } = await import('@/lib/supabase/queries/creditos')
+  const creditos = await creditosPorPagoDeOrigen(pagos.map(p => p.id))
+  if (creditos.size === 0) return pagos
+  return pagos.map(p => ({ ...p, credito_origen: creditos.get(p.id) ?? null }))
+}
+
 export async function GET(req: NextRequest) {
   try {
     // REV-3: el listado de pagos es la página unificada — lo ven tanto el
@@ -69,7 +81,7 @@ export async function GET(req: NextRequest) {
 
     // Sin paginación ni filtros: array completo (back-compat: dashboard, etc.).
     if (rawPage === null && rawPageSize === null && !hasFilter) {
-      return NextResponse.json(await getPayments())
+      return NextResponse.json(await conCreditoDeOrigen(await getPayments()))
     }
 
     const { rows, total } = await getPaymentsPage({
@@ -82,7 +94,7 @@ export async function GET(req: NextRequest) {
       page: Math.max(1, Math.trunc(Number(rawPage ?? 1) || 1)),
       pageSize: Math.min(200, Math.max(1, Math.trunc(Number(rawPageSize ?? 50) || 50))),
     })
-    return NextResponse.json({ payments: rows, total })
+    return NextResponse.json({ payments: await conCreditoDeOrigen(rows), total })
   } catch (error) {
     reportarError('GET /api/finance/payments:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

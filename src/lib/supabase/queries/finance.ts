@@ -16,6 +16,8 @@ type GroupRef = { name: string; leader?: LeaderRef; plan?: { code: string | null
 
 export type DbPayment = {
   id: string
+  /** FIN-9 · Lo agrega la ruta de la lista, no el select. */
+  credito_origen?: import('@/lib/finance/credito-visible').CreditoResumen | null
   member_id: string | null
   member: MemberRef
   entity_type: 'event' | 'study_group' | null

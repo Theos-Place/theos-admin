@@ -24,6 +24,8 @@ export type Payment = {
   gateway_ref: string | null
   sinpe_confirmation: string | null
   scholarship_id: string | null
+  /** FIN-9 · Si la matrícula de este pago se congeló, el crédito que salió de él. */
+  credito_origen?: import('@/lib/finance/credito-visible').CreditoResumen | null
   paid_at: string | null
   /** Concepto crudo del cobro ('matricula' | 'evento' | …). */
   concept?: string | null
