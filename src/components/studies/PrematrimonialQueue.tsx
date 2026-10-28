@@ -131,7 +131,7 @@ export function PrematrimonialQueue() {
           <button type="button" disabled={items.length === 0} className={BOTON_PRIMARIO}
             onClick={() => void descargarExcel('solicitudes-prematrimonial', ['Pareja', 'Estado', 'Días', 'Horario', 'Zonas', 'Boda', 'Solicitada'],
               items.map(r => [`${nm(r.requester)} y ${nm(r.spouse)}`, STATUS_LABEL[r.status], r.available_days.join(', '), r.available_times.join(' / '),
-                r.zones.join(', '), r.ceremony_date ?? '', formatDate(r.created_at)]))}>
+                r.zones.join(', '), r.ceremony_date ? formatDate(r.ceremony_date) : '', formatDate(r.created_at)]))}>
             <Download size={14} aria-hidden /> Descargar Excel
           </button>
         </div>
@@ -173,7 +173,7 @@ export function PrematrimonialQueue() {
               {r.available_days.length > 0 && <p className="inline-flex flex-wrap items-center gap-1.5"><Calendar size={13} /> {r.available_days.join(', ')} · {r.available_times.join('/')}</p>}
               {r.zones.length > 0 && <p className="flex items-center gap-1.5"><MapPin size={13} /> {r.zones.join(', ')}</p>}
               {r.can_host && <p className="flex items-center gap-1.5"><Home size={13} /> Ofrece casa{r.host_address ? `: ${r.host_address}` : ''}{r.host_maps_url ? ` · ${r.host_maps_url}` : ''}</p>}
-              {(r.ceremony_date || r.officiant) && <p className="flex items-center gap-1.5"><Clock size={13} /> Boda: {r.ceremony_date ? `${r.ceremony_date}${r.ceremony_date_defined ? '' : ' (aprox)'}` : 'sin fecha'}{r.venue_outside_gam ? ' · fuera del GAM' : ''}{/* PRE-10: solo las solicitudes viejas traen oficiante. */}{r.officiant ? ` · oficia: ${r.officiant}` : ''}</p>}
+              {(r.ceremony_date || r.officiant) && <p className="flex items-center gap-1.5"><Clock size={13} /> Boda: {r.ceremony_date ? `${formatDate(r.ceremony_date)}${r.ceremony_date_defined ? '' : ' (aprox)'}` : 'sin fecha'}{r.venue_outside_gam ? ' · fuera del GAM' : ''}{/* PRE-10: solo las solicitudes viejas traen oficiante. */}{r.officiant ? ` · oficia: ${r.officiant}` : ''}</p>}
               {r.comments && <p className="text-navy-light/80">“{r.comments}”</p>}
               {/* PRE-9: antecedentes de la pareja. Las solicitudes viejas no
                   los tienen → se muestran con "—". */}

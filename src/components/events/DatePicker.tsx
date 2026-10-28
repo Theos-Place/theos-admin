@@ -50,6 +50,19 @@ function labelOf(d: Date | undefined): string {
   return `${dd}/${mm}/${d.getFullYear()}`
 }
 
+/**
+ * Rango de los menús de mes y año. Sin menús, llegar a un año de nacimiento es
+ * retroceder mes por mes: en la charla de Meridiano (2026-10-27) siete
+ * personas nuevas quedaron sin fecha de nacimiento porque «el sistema no
+ * permitía agregarla». Con `min`/`max` el rango es ese; si no, 1900 a hoy+10.
+ */
+export function rangoDeMeses(min: Date | undefined, max: Date | undefined, hoy: Date = new Date()): { startMonth: Date; endMonth: Date } {
+  return {
+    startMonth: min ?? new Date(1900, 0, 1),
+    endMonth: max ?? new Date(hoy.getFullYear() + 10, 11, 31),
+  }
+}
+
 /** Altura típica del calendario (un mes de 6 filas con padding), para el primer render. */
 const ALTO_TIPICO = 340
 const ANCHO_TIPICO = 300
@@ -80,6 +93,7 @@ export function DatePicker({ value, onChange, min, max, error, placeholder = 'dd
   const selected = ymdToDate(value)
   const minDate = ymdToDate(min ?? '')
   const maxDate = ymdToDate(max ?? '')
+  const { startMonth, endMonth } = rangoDeMeses(minDate, maxDate)
 
   // Posiciona el popover (fixed, vía portal) bajo el botón — visible aunque el
   // contenedor del filtro tenga overflow.
@@ -160,6 +174,9 @@ export function DatePicker({ value, onChange, min, max, error, placeholder = 'dd
             locale={es}
             selected={selected}
             defaultMonth={selected}
+            captionLayout="dropdown"
+            startMonth={startMonth}
+            endMonth={endMonth}
             disabled={[...(minDate ? [{ before: minDate }] : []), ...(maxDate ? [{ after: maxDate }] : [])]}
             onSelect={(d) => { if (d) { onChange(toYmdLocal(d)); setOpen(false) } }}
           />

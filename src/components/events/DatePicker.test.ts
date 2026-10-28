@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { posicionDelPopover } from './DatePicker'
+import { readFileSync } from 'node:fs'
+import { posicionDelPopover, rangoDeMeses } from './DatePicker'
 
 const vp = { width: 1280, height: 800 }
 
@@ -23,5 +24,25 @@ describe('el calendario del DatePicker se abre donde se vea (2026-10-22)', () =>
     const r = posicionDelPopover({ top: 700, bottom: 736, left: 1200 }, undefined, vp)
     expect(r.top).toBeLessThan(700)
     expect(r.left).toBe(1280 - 300 - 8)
+  })
+})
+
+describe('los menús de mes y año (Meridiano, 2026-10-27)', () => {
+  it('sin min/max el rango va de 1900 a diez años adelante: una fecha de nacimiento se alcanza', () => {
+    const { startMonth, endMonth } = rangoDeMeses(undefined, undefined, new Date(2026, 9, 28))
+    expect(startMonth.getFullYear()).toBe(1900)
+    expect(endMonth.getFullYear()).toBe(2036)
+  })
+
+  it('con min/max el rango es ese', () => {
+    const r = rangoDeMeses(new Date(2026, 0, 1), new Date(2027, 5, 30))
+    expect(r.startMonth.getFullYear()).toBe(2026)
+    expect(r.endMonth.getFullYear()).toBe(2027)
+  })
+
+  it('el calendario los muestra', () => {
+    const src = readFileSync('src/components/events/DatePicker.tsx', 'utf8')
+    expect(src).toContain('captionLayout="dropdown"')
+    expect(src).toContain('startMonth={startMonth}')
   })
 })
