@@ -23,9 +23,13 @@ export function normalizeCedula(raw: string): string {
  * cédula nacional (DIMEX, documentos de otro tipo) se devuelve normalizado.
  */
 export function canonicalCedulaCR(raw: string): string {
-  // Puntos y barras también (2026-10-29): «1.1234.5678» tiene sus 9 dígitos
-  // y se rechazaba por los puntos.
-  const n = raw.replace(/[-\s./]/g, '').trim()
+  // SOLO DÍGITOS (2026-10-29). Una cédula nacional no lleva otra cosa, y lo
+  // que la rechazaba en la práctica no se veía: Ari tecleó «114590610» y
+  // venía con un carácter invisible (marca de dirección o espacio de ancho
+  // cero, de copiar desde WhatsApp o un PDF). Puntos y barras caen en lo
+  // mismo. Si una letra se cuela, igual la cédula queda con menos dígitos y
+  // la validación lo dice.
+  const n = raw.replace(/\D/g, '')
   return /^0\d{9}$/.test(n) ? n.slice(1) : n
 }
 
@@ -85,14 +89,16 @@ export const CEDULA_FORMAT_MESSAGE =
  * mostrárselo.
  */
 export function mensajeDeCedulaInvalida(raw: string | null | undefined): string {
-  const n = canonicalCedulaCR(raw ?? '')
-  if (!n) return CEDULA_FORMAT_MESSAGE
-  const digitos = (n.match(/\d/g) ?? []).length
-  const otros = n.replace(/\d/g, '')
-  const detalle = otros
-    ? `Recibimos «${n}»: ${digitos} dígito${digitos === 1 ? '' : 's'} y además «${otros}», que no es un número.`
-    : `Recibimos «${n}»: ${digitos} dígito${digitos === 1 ? '' : 's'}.`
-  return `${CEDULA_FORMAT_MESSAGE} ${detalle}`
+  const crudo = (raw ?? '').replace(/[-\s./]/g, '')
+  if (!crudo) return CEDULA_FORMAT_MESSAGE
+  const digitos = (crudo.match(/\d/g) ?? []).length
+  const otros = crudo.replace(/\d/g, '')
+  const visibles = otros.replace(/[\u200B-\u200F\u202A-\u202E\u2060\uFEFF]/g, '')
+  const invisibles = otros.length - visibles.length
+  const partes = [`Recibimos ${digitos} dígito${digitos === 1 ? '' : 's'}`]
+  if (visibles) partes.push(`y además «${visibles}», que no es un número`)
+  if (invisibles) partes.push(`y ${invisibles} carácter${invisibles === 1 ? '' : 'es'} invisible${invisibles === 1 ? '' : 's'} (borrá el campo y escribila a mano)`)
+  return `${CEDULA_FORMAT_MESSAGE} ${partes.join(' ')}.`
 }
 
 // FIN-2: ya no hay lista de planes que exigen documento — lo exige TODA

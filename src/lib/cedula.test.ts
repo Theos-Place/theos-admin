@@ -67,8 +67,15 @@ describe('cédula con puntos o cero adelante (Estudios, 2026-10-29)', () => {
     expect(canonicalCedulaCR('155812345678')).toBe('155812345678') // DIMEX no se toca
   })
   it('el mensaje dice qué se recibió', () => {
-    expect(mensajeDeCedulaInvalida('1-1234-567')).toContain('Recibimos «11234567»: 8 dígitos.')
+    expect(mensajeDeCedulaInvalida('1-1234-567')).toContain('Recibimos 8 dígitos.')
     expect(mensajeDeCedulaInvalida('1-1234-5678a')).toContain('y además «a», que no es un número')
     expect(documentFormatMessage('cedula', '')).toBe(CEDULA_FORMAT_MESSAGE)
+  })
+  it('un carácter invisible pegado (copiar de WhatsApp/PDF) no invalida 9 dígitos reales: caso de Ari', () => {
+    expect(isValidCedula('114590610\u200B')).toBe(true)
+    expect(isValidCedula('\u200E114590610')).toBe(true)
+    expect(canonicalCedulaCR('\u200E114590610\u200B')).toBe('114590610')
+    // Y si de todos modos faltan dígitos, el mensaje nombra lo invisible.
+    expect(mensajeDeCedulaInvalida('\u200E11459061')).toContain('1 carácter invisible')
   })
 })
