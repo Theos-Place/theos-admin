@@ -132,6 +132,11 @@ llega alguien sin inscripción, el sistema abre el **cobro en sitio**: le enviá
 llega el correo para subir el comprobante) o marcás el pago como verificado si ya viste el
 comprobante en su teléfono.
 
+**Algo no cuadra y la fila sigue.** Una familia mal unida, un dato equivocado, alguien que
+dice tener ficha y no aparece: levantá un **tiquete de soporte** desde el botón de arriba a
+la derecha y seguí registrando. Está explicado en
+[Levantar un tiquete de soporte desde el check-in](/ayuda/tiquete-de-soporte-desde-el-checkin).
+
 > El check-in lo hace la persona encargada de eventos, no cada asistente. Si necesitás el
 > acceso, escribí a soporte@theosplace.org.
 
