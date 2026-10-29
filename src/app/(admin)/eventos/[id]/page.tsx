@@ -39,6 +39,7 @@ import Link from 'next/link'
 import { ChevronLeft } from 'lucide-react'
 import { getInitials, formatMoney, todayCR, formatDate } from '@/lib/format'
 import { contarPorCalidad } from '@/lib/events/calidad-checkin'
+import { asistenciaPorSubEvento } from '@/lib/events/asistencia-por-sub-evento'
 import { mostrarInscripciones, esInscripcionHistorica, tasaDeAsistencia, textoDeAsistencia, AVISO_INSCRIPCION_HISTORICA } from '@/lib/events/inscripcion-visible'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
 import { hayQuePreguntarElAlcance, esLaPrimeraOcurrencia } from '@/lib/events/alcance-de-edicion'
@@ -586,6 +587,11 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   // Personas cuya ficha se creó el mismo día del evento: las que vinieron por
   // primera vez y se registraron ahí mismo desde el check-in.
   const nuevos = contarPersonasNuevas(event.checkins, event.start_at)
+  // EVE-10 · Solo si el evento tiene sub-eventos (Youth, Kids…): el reporte
+  // sumaba todo y el dato del Youth no aparecía por ningún lado.
+  const porSubEvento = event.sub_events.length > 0
+    ? asistenciaPorSubEvento(event.checkins, event.sub_events, event.start_at)
+    : []
   const circumference = 2 * Math.PI * 40
 
   return (
@@ -888,6 +894,39 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
               )}
             </div>
 
+            {/* EVE-10 · Asistencia por sub-evento */}
+            {porSubEvento.length > 0 && (
+              <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)] lg:col-span-2">
+                <p className="text-[11px] tracking-widest uppercase text-navy-light/80 mb-3 font-display">
+                  Asistencia por sub-evento
+                </p>
+                <div className="overflow-x-auto">
+                  <table className="w-full text-sm font-body">
+                    <thead>
+                      <tr className="text-left text-[11px] uppercase tracking-widest text-navy-light/80 font-display">
+                        <th scope="col" className="py-2 pr-3 font-normal">Sub-evento</th>
+                        <th scope="col" className="py-2 px-3 font-normal text-right">Total</th>
+                        <th scope="col" className="py-2 px-3 font-normal text-right">Asistentes</th>
+                        <th scope="col" className="py-2 px-3 font-normal text-right">Servidores</th>
+                        <th scope="col" className="py-2 pl-3 font-normal text-right">Primera vez</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {porSubEvento.map(f => (
+                        <tr key={f.sub_event_id ?? 'principal'} className="border-t border-[var(--outline-variant)]">
+                          <td className="py-2 pr-3 text-navy">{f.nombre}</td>
+                          <td className="py-2 px-3 text-right font-semibold text-navy tabular-nums">{f.calidad.total}</td>
+                          <td className="py-2 px-3 text-right text-navy tabular-nums">{f.calidad.asistentes}</td>
+                          <td className="py-2 px-3 text-right text-navy tabular-nums">{f.calidad.servidores}</td>
+                          <td className="py-2 pl-3 text-right text-navy tabular-nums">{f.nuevos.nuevas}</td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            )}
+
             {/* Ingresos */}
             {event.requires_payment && event.payment_amount && (
               <div className="rounded-2xl p-5 bg-surface-card shadow-[var(--shadow-md)]">
@@ -930,10 +969,11 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => generateCSV(
-                ['Nombre', 'Tipo de asistencia', 'Fecha de check-in', '¿Primera vez?'],
+                ['Nombre', 'Tipo de asistencia', 'Sub-evento', 'Fecha de check-in', '¿Primera vez?'],
                 event.checkins.map(c => [
                   c.member_name,
                   c.attendance_type === 'server' ? 'Servidor' : 'Participante',
+                  event.sub_events.find(se => se.id === c.sub_event_id)?.name ?? '',
                   c.checked_at ? new Date(c.checked_at).toLocaleString('es-CR') : '',
                   !c.member_created_at ? ''
                     : contarPersonasNuevas([c], event.start_at).nuevas === 1 ? 'Sí' : 'No',
