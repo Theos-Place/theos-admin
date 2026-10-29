@@ -1,4 +1,4 @@
-import { Check, Clock, X as XIcon, UserPlus, Search, Send } from 'lucide-react'
+import { Check, UserPlus, Search, Send } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { RowActionsMenu } from '@/components/shared/RowActionsMenu'
@@ -46,9 +46,9 @@ type Props = {
   presentes?: ServidorPresente[]
   allBookings: VolunteerBooking[]
   groupedBookings: Record<string, VolunteerBooking[]>
-  confirmedCount: number
-  pendingCount: number
-  declinedCount: number
+  /** EVE-16 · Cuántos están asignados. Ya no hay confirmación: nunca existió
+   *  cómo confirmar ni declinar, así que «pendiente» solo decía «asignado». */
+  asignadosCount: number
   isRecurring: boolean
   onRemoveBooking: (id: string) => void
   showAssignModal: boolean
@@ -77,9 +77,7 @@ type Props = {
 export function EventServersTab({
   presentes = [],
   groupedBookings,
-  confirmedCount,
-  pendingCount,
-  declinedCount,
+  asignadosCount,
   isRecurring,
   onRemoveBooking,
   showAssignModal,
@@ -110,13 +108,7 @@ export function EventServersTab({
         {/* Stats pills */}
         <div className="flex items-center gap-2 flex-wrap">
           <span className="inline-flex items-center gap-1.5 rounded-full bg-teal-soft/30 px-3 py-1.5 text-[13px] text-teal-ink font-body">
-            <Check size={12} strokeWidth={2.5} /> {confirmedCount} confirmados
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-100 px-3 py-1.5 text-[13px] text-amber-700 font-body">
-            <Clock size={12} strokeWidth={2} className="animate-pulse" /> {pendingCount} pendientes
-          </span>
-          <span className="inline-flex items-center gap-1.5 rounded-full bg-navy/10 px-3 py-1.5 text-[13px] text-navy/80 font-body">
-            <XIcon size={12} strokeWidth={2} /> {declinedCount} declinaron
+            <Check size={12} strokeWidth={2.5} /> {asignadosCount} {asignadosCount === 1 ? 'asignado' : 'asignados'}
           </span>
         </div>
 
@@ -190,13 +182,12 @@ export function EventServersTab({
                     <div className="flex-1 min-w-0">
                       <p className="text-sm font-medium text-navy truncate font-body">{b.member_name}</p>
                       <div className="flex items-center gap-1.5 mt-0.5">
-                        <span className={cn(
-                          'rounded-md px-1.5 py-0.5 text-[11px] font-medium',
-                          b.status === 'confirmed' ? 'bg-teal-soft/30 text-teal-ink' :
-                          b.status === 'pending' ? 'bg-amber-100 text-amber-700' :
-                          'bg-navy/10 text-navy/80'
-                        )}>
-                          {b.status === 'confirmed' ? '✓ Confirmado' : b.status === 'pending' ? '⏳ Pendiente' : '✗ Declinó'}
+                        {/* EVE-16 (2026-10-29): «Pendiente» desapareció. Nadie
+                            podía confirmar ni declinar (no había pantalla ni
+                            ruta), así que Raquel Otárola llevaba desde el 10-set
+                            «pendiente» sin que nadie pudiera hacer nada. */}
+                        <span className="rounded-md bg-teal-soft/30 px-1.5 py-0.5 text-[11px] font-medium text-teal-ink">
+                          ✓ Asignado
                         </span>
                         {/* Badge "Serie" eliminado: is_recurring era estado local
                             decorativo, no un dato persistido. */}

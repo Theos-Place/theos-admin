@@ -388,9 +388,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
     return acc
   }, {})
 
-  const confirmedCount = allBookings.filter(b => b.status === 'confirmed').length
-  const pendingCount   = allBookings.filter(b => b.status === 'pending').length
-  const declinedCount  = allBookings.filter(b => b.status === 'declined').length
+  // EVE-16: todo lo anotado cuenta como asignado (ver EventServersTab).
+  const asignadosCount = allBookings.length
 
   const selectedMember = selectedMemberId ? memberResults.find(m => m.id === selectedMemberId) : null
 
@@ -520,7 +519,9 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       const res = await fetch(`/api/events/${id}/volunteers`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ member_id: selectedMember.id, role, status: 'pending' }),
+        // EVE-16: la asignación ES el estado; se guarda 'confirmed' para que la
+        // base no diga «pendiente» de algo que nadie puede confirmar.
+        body: JSON.stringify({ member_id: selectedMember.id, role, status: 'confirmed' }),
       })
       if (!res.ok) {
         const detail = await res.json().catch(() => null) as { error?: string } | null
@@ -761,9 +762,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           presentes={servidoresPresentes}
           allBookings={allBookings}
           groupedBookings={groupedBookings}
-          confirmedCount={confirmedCount}
-          pendingCount={pendingCount}
-          declinedCount={declinedCount}
+          asignadosCount={asignadosCount}
           isRecurring={event.is_recurring}
           onRemoveBooking={removeBooking}
           showAssignModal={showAssignModal}
