@@ -3590,3 +3590,51 @@ Idempotente (el cierre de ventana corre una vez; re-corridas no duplican correos
 deltas). Tests: nota de matrícula abierta en el tiquete, delta correcto (+N), sin
 cambios no genera correo al dirigente, historial del tiquete. tsc/lint/vitest.
 ```
+
+### [x] COM-5 · Boletín mensual: botón "Cambiar imagen" sin tocar código (pedido 2026-10-29)
+
+**Hecho el 2026-10-29** (`lib/communications/ranuras-de-imagen.ts`,
+`components/communications/ImagenesDePlantilla.tsx`): la imagen reemplazable se
+marca con `data-imagen-slot="nombre"`; en «Editar plantilla» aparece la tarjeta
+«Imágenes de esta plantilla» con vista previa, tamaño recomendado (el `width`
+de la imagen) y «Cambiar imagen» (JPG/PNG ≤ 2 MB → bucket público
+`email-images` → reemplaza SOLO el `src` de esa etiqueta; el resto del HTML
+byte-idéntico, nada pasa por TipTap). La vista previa se actualiza sola y el
+guardado es el de siempre. Sin ranuras no aparece. La imagen del «Boletín
+mensual» quedó marcada en prod (script `com5-2026-10-29`, respaldo en
+docs/correcciones). Documentado en la guía «Plantillas de correo y el editor».
+Nota de entorno: en staging no existía el bucket `email-images`; se creó.
+
+Quien arma el boletín cada mes no sabe de código, y abrir la plantilla en el
+editor arriesga el formato (el gotcha conocido de TipTap que aplana el HTML
+avanzado). Se necesita reemplazar la imagen del cuerpo adjuntando una nueva,
+sin editar HTML.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Plantillas de correo: imagen reemplazable sin editar el HTML
+
+PROBLEMA: la plantilla del boletín mensual es HTML avanzado; cambiar la imagen del body
+requiere editar código, y abrirla en TipTap aplana el formato (gotcha conocido,
+isAdvancedHtml). La persona que lo hace cada mes no es técnica.
+
+DISEÑO — "ranuras de imagen" en las plantillas:
+1. En el HTML de la plantilla, la imagen reemplazable se marca con un atributo
+   (ej. data-imagen-slot="principal") — marcar así la imagen del boletín actual.
+2. En la pantalla de la plantilla/comunicación, si el HTML tiene ranuras, mostrar un
+   panel "Imágenes de esta plantilla" con la vista previa de cada ranura y un botón
+   "Cambiar imagen": file picker → sube a Supabase Storage (el bucket/patrón de hosting
+   de imágenes de correo que ya usamos para las miniaturas del campa: público, URL
+   estable) → reemplaza SOLO el src de esa ranura en el HTML, sin pasar por TipTap y sin
+   tocar nada más del markup. Validar tipo (jpg/png) y avisar el tamaño recomendado (el
+   ancho de la imagen actual, ej. 600px).
+3. Vista previa renderizada del correo después del cambio, para confirmar antes de
+   guardar.
+4. Guardado con el guardarraíl de HTML avanzado existente (el HTML no se re-procesa).
+5. Funciona para cualquier plantilla con ranuras (no hardcodear "boletín") — documentar
+   en el centro de ayuda interno cómo marcar una ranura al crear plantillas.
+Permisos: los mismos que editan plantillas (comunicaciones/admin).
+Tests: reemplazo cambia solo el src, el resto del HTML byte-idéntico; plantilla sin
+ranuras no muestra el panel; upload validado. tsc/lint/vitest.
+```

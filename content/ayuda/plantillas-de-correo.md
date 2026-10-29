@@ -69,3 +69,25 @@ después.
 
 > El pie de baja no se escribe en la plantilla: lo agrega el envío cuando el correo sale como
 > marketing. El tipo de correo tampoco se elige — sale de la categoría de la plantilla.
+
+## Cambiar una imagen sin tocar el código
+
+Las plantillas con diseño avanzado (como el boletín mensual) se editan en modo código, y
+cambiar la foto del mes editando HTML es fácil de romper. Para eso existen las **ranuras de
+imagen**: si la plantilla marca una imagen como reemplazable, arriba del editor aparece la
+tarjeta **Imágenes de esta plantilla** con la vista previa y el botón **Cambiar imagen**.
+
+1. Tocá **Cambiar imagen** y elegí el archivo (JPG o PNG, hasta 2 MB; la tarjeta dice el
+   ancho recomendado, por ejemplo 520 px).
+2. La vista previa del correo se actualiza al instante. Revisala.
+3. Tocá **Guardar**. Solo cambia esa imagen; el resto del diseño queda exactamente igual.
+
+**Cómo marcar una ranura al crear una plantilla** (una sola vez, en modo código): a la
+etiqueta de la imagen se le agrega el atributo `data-imagen-slot` con un nombre, por ejemplo:
+
+```html
+<img src="https://…/foto.jpg" alt="Actividades del mes" width="520" data-imagen-slot="principal" />
+```
+
+Cada nombre distinto es una ranura; una plantilla puede tener varias. Sin ese atributo, la
+tarjeta no aparece y la imagen se cambia como siempre, en el código.

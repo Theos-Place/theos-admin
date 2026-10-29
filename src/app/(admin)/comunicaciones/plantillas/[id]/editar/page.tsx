@@ -6,6 +6,7 @@ import Link from 'next/link'
 import { useParams, useRouter } from 'next/navigation'
 import { EmailPreview } from '@/components/communications/EmailPreview'
 import { EmailEditor } from '@/components/communications/EmailEditorLazy'
+import { ImagenesDePlantilla } from '@/components/communications/ImagenesDePlantilla'
 import { editorModeFor, advancedHtmlNotice } from '@/components/communications/email-html'
 import { saveTemplate } from '@/lib/communications/save-template'
 import { useToast } from '@/components/shared/Toast'
@@ -158,6 +159,10 @@ export default function EditarPlantillaPage() {
             <label htmlFor="asunto-del-correo" className={labelCls}>Asunto del correo</label>
             <input id="asunto-del-correo" className={inputCls} placeholder="Asunto con variables: Hola {nombre}..." value={subject} onChange={e => setSubject(e.target.value)} />
           </div>
+
+          {/* COM-5 · Ranuras de imagen: cambiar la foto del boletín sin tocar
+              el HTML. Solo aparece si la plantilla marca alguna imagen. */}
+          <ImagenesDePlantilla html={emailBody} onChange={setEmailBody} />
 
           <div>
             <span className={labelCls}>Cuerpo del correo</span>
