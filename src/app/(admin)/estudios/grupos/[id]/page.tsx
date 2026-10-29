@@ -390,7 +390,10 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
   // SEC-1: 'member'/'none' = vista de solo lectura (miembro inscrito viendo SU
   // grupo): sin añadir/desinscribir, sin links a perfiles ajenos, sin editar
   // el link de WhatsApp. El server ya recorta el roster a su propia inscripción.
-  const readOnly = group?.viewer_scope === 'member' || group?.viewer_scope === 'none'
+  const readOnly = group?.viewer_scope === 'member' || group?.viewer_scope === 'none' || group?.viewer_scope === 'evaluador'
+  // RET-2: el comité de evaluaciones entra en solo lectura PERO ve el compilado,
+  // que es a lo que vino desde su tiquete.
+  const veCompilado = !readOnly || group?.viewer_scope === 'evaluador'
   const [activeTab, setActiveTab] = useState('participantes')
   const [showAddMember, setShowAddMember] = useState(false)
   const [mostrarRetirados, setMostrarRetirados] = useState(false)
@@ -738,7 +741,7 @@ export default function GrupoDetailPage({ params }: { params: Promise<{ id: stri
             ]} />
             {/* Retroalimentación: solo tiene sentido con el grupo cerrado. El
                 panel decide qué mostrar según quién mira. */}
-            {group.status === 'finalizado' && !readOnly && (
+            {group.status === 'finalizado' && veCompilado && (
               <div className="pt-1"><LeaderFeedbackPanel groupId={group.id} /></div>
             )}
             {/* GRU-2: a quién se le ofrece este grupo. Solo se pinta si hay

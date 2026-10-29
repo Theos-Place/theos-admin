@@ -73,7 +73,7 @@ export type GroupParticipant = {
 export type StudyGroup = {
   /** SEC-1: alcance del que consulta, calculado server-side por el GET del
    *  grupo — 'member'/'none' ⇒ vista de solo lectura sin roster ajeno. */
-  viewer_scope?: 'admin' | 'leader' | 'member' | 'none'
+  viewer_scope?: 'admin' | 'leader' | 'evaluador' | 'member' | 'none'
   id: string
   name?: string
   /** EST-14 · 'legacy' cobra y entrega folletos por nivel; 'bloques' por par. */

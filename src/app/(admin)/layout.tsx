@@ -8,7 +8,7 @@ import { AppShell } from '@/components/layout/AppShell'
 import { usePermissions } from '@/hooks/usePermissions'
 import { canSeeSummaryRoute } from '@/lib/auth/module-summary'
 import { isStudyGroupsOnly, isDirigentesOnly, EVALUATION_ROLES } from '@/lib/auth/roles'
-import { studyGroupsOnlyAllows, dirigentesOnlyAllows } from '@/lib/auth/studies-scope'
+import { studyGroupsOnlyAllows, dirigentesOnlyAllows, evaluadorAllows } from '@/lib/auth/studies-scope'
 import { SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-rules'
 
 const pageTitles: Record<string, string> = {
@@ -212,6 +212,14 @@ function ModuleGuard({ pathname, children }: { pathname: string; children: React
   // Y los reportes de FINANZAS (solo lectura; los endpoints usan
   // requireVistaFinanciera): el índice con sus pestañas y el de donantes.
   if (user.direccion_por_puesto && ['/finanzas/reportes', '/finanzas/donaciones/reporte'].includes(pathname)) {
+    return <>{children}</>
+  }
+  // RET-2 (2026-10-29): el comité de evaluaciones también abre el DETALLE de un
+  // grupo —es donde está el compilado que le enlaza cada tiquete—. Solo esa
+  // ruta; el API devuelve el grupo con alcance 'evaluador' (sin contacto ni
+  // datos personales). Lo encontró Eimy en el navegador: «Ver el compilado»
+  // la mandaba a «Acceso restringido».
+  if (evaluadorAllows(pathname) && (user.roles ?? []).some(r => (EVALUATION_ROLES as string[]).includes(r))) {
     return <>{children}</>
   }
   if (!can(MODULE_BY_PREFIX[prefix], 'view')) return <AccessDenied />

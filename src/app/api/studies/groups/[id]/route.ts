@@ -80,10 +80,12 @@ export async function GET(
     // borran del payload para quien no gestiona el grupo — un estudiante ve el
     // nombre de su dirigente, no su celular.
     const sinContacto = stripLeaderContact(group)
-    if (scope === 'member') {
+    // RET-2: el comité de evaluaciones ve lo mismo que un estudiante, más el
+    // compilado (que trae la ruta de leader-feedback con su propio gate).
+    if (scope === 'member' || scope === 'evaluador') {
       // Ve a sus compañeros, solo con nombre. Antes recibía únicamente su
       // propia inscripción y abría el grupo sin saber con quién lo lleva.
-      return NextResponse.json({ ...sinContacto, enrollments: recortarRoster(roster, 'member'), viewer_scope: 'member' })
+      return NextResponse.json({ ...sinContacto, enrollments: recortarRoster(roster, 'member'), viewer_scope: scope })
     }
     // Inalcanzable: arriba se corta 'none'. Queda por exhaustividad del tipo.
     return NextResponse.json({ error: 'No autorizado' }, { status: 403 })

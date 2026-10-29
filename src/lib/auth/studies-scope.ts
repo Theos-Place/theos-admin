@@ -7,7 +7,7 @@
 //  · 'leader' → dirigente: SOLO sus grupos (leader_id o co_leader_id).
 //  · 'member' → cualquier otra sesión: solo el grupo donde está inscrito
 //               (vista de solo lectura), nada de gestión.
-import { hasModulePermission } from './roles'
+import { hasModulePermission, EVALUATION_ROLES } from './roles'
 import type { RoleId } from '@/types/auth'
 
 export type StudiesScope = 'all' | 'leader' | 'member'
@@ -48,7 +48,7 @@ export function dirigentesOnlyAllows(pathname: string): boolean {
  *  (leader/co-leader del grupo, inscripción del miembro) y esta función decide.
  *  'none' = sesión sin relación con el grupo: recibe el grupo SIN roster
  *  (comportamiento histórico para p. ej. la confirmación de matrícula). */
-export type GroupViewerScope = 'admin' | 'leader' | 'member' | 'none'
+export type GroupViewerScope = 'admin' | 'leader' | 'evaluador' | 'member' | 'none'
 
 export function groupViewerScope(input: {
   roles: RoleId[]
@@ -59,6 +59,21 @@ export function groupViewerScope(input: {
   if (studiesViewScope(input.roles) === 'all') return 'admin'
   const m = input.memberId
   if (m && (input.group.leader_id === m || input.group.co_leader_id === m)) return 'leader'
+  // RET-2 (2026-10-29): el comité de evaluaciones abre el grupo que le enlaza
+  // su tiquete («Ver el compilado»). Sin esto, Eimy —rol `evaluaciones` y nada
+  // más— llegaba a «Acceso restringido» desde su propia cola. Ve el grupo como
+  // un estudiante (sin contacto del dirigente, roster solo con nombres) y
+  // además el compilado; la API de leader-feedback ya la dejaba pasar.
+  if (input.roles.some(r => (EVALUATION_ROLES as readonly string[]).includes(r))) return 'evaluador'
   if (input.isEnrolled) return 'member'
   return 'none'
+}
+
+/**
+ * RET-2 · Rutas de /estudios que abre el rol acotado `evaluaciones` además de su
+ * cola: SOLO el detalle de un grupo (es donde vive el compilado que le enlaza
+ * cada tiquete). Ni el listado de grupos, ni asistencia, ni cierre, ni edición.
+ */
+export function evaluadorAllows(pathname: string): boolean {
+  return /^\/estudios\/grupos\/[0-9a-f-]{36}$/i.test(pathname)
 }

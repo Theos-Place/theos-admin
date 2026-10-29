@@ -22,7 +22,7 @@
  * enlace, que invitaba a un 403.
  */
 
-export type AlcanceDeVista = 'admin' | 'leader' | 'member' | 'none'
+export type AlcanceDeVista = 'admin' | 'leader' | 'evaluador' | 'member' | 'none'
 
 export type PermisosDelRoster = {
   /** ¿Ve la lista de compañeros, o solo lo suyo? */
@@ -68,8 +68,10 @@ export function permisosDelRoster(scope: AlcanceDeVista): PermisosDelRoster {
       // muestra para felicitar y ahí el año sobra; la edad se muestra porque la
       // regla del grupo depende de ella.
       return { verLista: true, verTelefono: true, verCumple: true, verEdad: true, verDatosDeGestion: true, verPerfil: false, verAsistencia: true, verOfrecimientoDeCasa: false }
+    case 'evaluador':
     case 'member':
       // El estudiante ve la lista y nada personal de sus compañeros.
+      // (RET-2: el comité de evaluaciones, lo mismo.)
       return { verLista: true, verTelefono: false, verCumple: false, verEdad: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false, verOfrecimientoDeCasa: false }
     default:
       return { verLista: false, verTelefono: false, verCumple: false, verEdad: false, verDatosDeGestion: false, verPerfil: false, verAsistencia: false, verOfrecimientoDeCasa: false }
