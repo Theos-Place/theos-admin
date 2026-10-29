@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireRoles } from '@/lib/auth/guard'
 import { SOPORTE_ROLES, puedeLevantarTiquete, motivoQueImpideCrear } from '@/lib/support/tiquete'
-import { listSupportTickets, createSupportTicket } from '@/lib/supabase/queries/support-tickets'
+import { listSupportTickets, createSupportTicket, notificarNuevoTiquete } from '@/lib/supabase/queries/support-tickets'
 import { logAudit } from '@/lib/audit'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -59,6 +59,9 @@ export async function POST(req: NextRequest) {
       actorUserId: auth.ctx.userId, action: 'INSERT', entityType: 'support_ticket', entityId: ticket.id,
       newData: { member_id: ticket.subject_member_id, event_id: ticket.event_id },
     })
+    // SOP-3: la campana de admin y soporte técnico. Best-effort, después de
+    // que el tiquete y su auditoría ya existen.
+    try { await notificarNuevoTiquete(ticket) } catch (e) { reportarError('notificarNuevoTiquete:', e) }
     return NextResponse.json(ticket, { status: 201 })
   } catch (error) {
     reportarError('POST /api/support-tickets:', error)

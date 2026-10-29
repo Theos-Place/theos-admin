@@ -26,6 +26,8 @@ export type InternalNotificationType =
   // Pagos:
   | 'payment_rejected'
   | 'payment_pending'
+  // SOP-3: nació un tiquete de soporte (a admin y soporte técnico).
+  | 'support_ticket_new'
 
 export type InternalNotification = {
   id: string

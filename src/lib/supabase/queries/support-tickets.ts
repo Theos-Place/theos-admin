@@ -197,3 +197,37 @@ export async function updateSupportTicketStatus(
   if (!result) throw new Error('El tiquete desapareció al actualizarlo')
   return result
 }
+
+// ── SOP-3 · Aviso interno al nacer un tiquete ───────────────────────────────
+
+/**
+ * Una notificación interna (campana) por cada admin y soporte técnico activo,
+ * salvo quien lo levantó. Best-effort: si falla, el tiquete ya existe y la
+ * cola lo muestra igual; perder el tiquete por el aviso sería peor.
+ */
+export async function notificarNuevoTiquete(ticket: SupportTicket): Promise<void> {
+  const { destinatariosDeTiquete, notificacionDeTiquete } = await import('@/lib/support/notificacion-de-tiquete')
+  const { SOPORTE_ROLES } = await import('@/lib/support/tiquete')
+  const sb = createAdminClient()
+  const { data, error } = await sb
+    .from('member_roles')
+    .select('member_id, role, is_active, member:members!member_roles_member_id_fkey(is_active)')
+    .in('role', SOPORTE_ROLES as unknown as string[])
+    .eq('is_active', true)
+  if (error) { console.warn('notificarNuevoTiquete:', error.message); return }
+  const filas = ((data ?? []) as Array<{
+    member_id: string; role: string; is_active: boolean; member: { is_active: boolean } | { is_active: boolean }[] | null
+  }>).map(r => ({
+    member_id: r.member_id,
+    role: r.role,
+    role_active: r.is_active !== false,
+    member_active: one(r.member)?.is_active === true,
+  }))
+  const ids = destinatariosDeTiquete(filas, { excludeMemberId: ticket.member_id })
+  if (ids.length === 0) return
+  // El texto del tiquete vive en `details` (`reason` es el campo genérico del tablero y va vacío).
+  const aviso = notificacionDeTiquete({ member_name: ticket.member_name, reason: ticket.details, event_title: ticket.event_name })
+  const { error: eIns } = await sb.from('internal_notifications')
+    .insert(ids.map(recipient_member_id => ({ recipient_member_id, ...aviso })))
+  if (eIns) console.warn('notificarNuevoTiquete:', eIns.message)
+}
