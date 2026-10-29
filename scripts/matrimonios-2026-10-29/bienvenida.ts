@@ -3,7 +3,7 @@
  * cuatro personas que harán el check-in del evento de parejas (2026-10-31),
  * SIN tocar los puestos que ya tienen (Colaborador / Encargado Comité).
  *
- * El título no es decorativo: la regla EVE-15 de POSITION_ROLE_RULES otorga
+ * El título no es decorativo: la regla MAT-1 de POSITION_ROLE_RULES otorga
  * `encargado_eventos` a «Colaborador Bienvenida» del Comité Matrimonios, y por
  * EVE-12 ese rol automático alcanza solo los eventos del comité.
  *

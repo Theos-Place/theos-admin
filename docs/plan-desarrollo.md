@@ -3431,3 +3431,95 @@ arrastrado. tsc/lint/vitest.
   el flujo: empleado solicita → jefe aprueba → finanzas rebaja los días; hoy
   se lleva en Excel y "ya no podemos seguir así" (Meli). La reunión de alcance
   con dirección/Lucy sigue pendiente, pero estos dos van fijos.
+
+### [ ] EVE-14 · Inscripciones sin ficha: vincular a miembros existentes + totales reales — URGENTE (evento de matrimonios este sábado)
+
+Caso en prod: 13 inscripciones con ficha y 39 "sin ficha" (gente que se
+inscribió sin loguearse), varias de personas que SÍ existen en el padrón. Y el
+evento es por PAREJA: el total real de asistentes es ×2.
+
+Prompt para Claude Code:
+
+```
+FIX + FEATURE · Inscripciones de eventos sin login: vinculación y conteos — ANTES DEL
+SÁBADO (evento de matrimonios)
+
+PARTE 1 — VINCULACIÓN ASISTIDA (la urgente):
+1. MATCH AUTOMÁTICO PROPUESTO: para cada inscripción sin ficha, buscar miembro existente
+   por CÉDULA (exacta), EMAIL (exacto, normalizado) o TELÉFONO (normalizado) — en ese
+   orden de confianza. El patrón de DON-1: match evidente se propone, nunca se aplica
+   solo si hay ambigüedad.
+2. UI en la lista de inscripciones del evento: las "sin ficha" muestran el candidato
+   detectado ("¿Es María Rojas, cédula 1-xxx?") con botón "Vincular" (y selector manual
+   con el buscador de miembros para las no evidentes — MemberCombobox). Al vincular, la
+   inscripción queda asociada al member_id (y el pago/check-in posterior le queda en su
+   historial). Rol: quienes gestionan el evento + admin.
+3. Si NO existe en el padrón: botón "Crear ficha desde la inscripción" (reutilizar el
+   flujo de crear miembro desde check-in) — así el sábado el check-in los encuentra.
+4. Todo al audit_log; sin correos.
+
+PARTE 2 — CONTEOS REALES:
+1. El resumen del evento muestra el TOTAL unificado (con ficha + sin ficha) además del
+   desglose, y por TIPO de inscripción.
+2. INSCRIPCIÓN POR PAREJA: si el tipo de inscripción cubre a N personas (pareja = 2), el
+   resumen muestra "X inscripciones · ~2X asistentes" — el multiplicador sale del tipo
+   de inscripción del evento (configurable, no hardcodear "pareja"). Revisar que
+   check-in/capacidad usen el número correcto (una inscripción de pareja = 2 campos).
+
+PARTE 3 — PREVENIR: en el formulario público de inscripción, si el email/cédula tecleado
+coincide con un miembro existente, asociar la inscripción a esa ficha desde el origen
+(sin revelar datos: la asociación es interna). Así "sin ficha" queda solo para gente
+realmente nueva.
+Tests: match por cédula/email/teléfono, ambiguo no se auto-vincula, conteo por pareja,
+asociación en origen. tsc/lint/vitest. PARTE 1 Y 2 ANTES DEL SÁBADO; la 3 puede ir
+después.
+```
+
+### [x] EVE-15 · Check-in de eventos con inscripción: alertar no-inscritos y check-in de invitados sin ficha (pedido 2026-10-29, ideal antes del sábado)
+
+Complementa EVE-14, para la puerta del evento.
+
+**Hecho el 2026-10-29** (migración `20261029150000`, `lib/events/puerta-con-inscripcion.ts`):
+alerta fuerte de «NO está inscrito/a» con «Dejar pasar sin inscripción» (flag
+`event_checkins.sin_inscripcion`, lo calcula el servidor; en evento pago siguen
+los dos caminos del cobro en sitio), el buscador de la puerta encuentra a los
+inscritos por el link sin ficha y los marca contra su respuesta
+(`form_checkins.form_response_id`), sugerencia de vínculo con UNA ficha del
+mismo nombre (PATCH `guest-responses`: liga la respuesta, crea la inscripción
+`pending` sin correo y el disparador pasa el check-in a la persona), conteos
+en vivo «X de Y inscritos presentes · Z sin inscripción», tarjeta «Llegaron
+sin inscripción» en el tab Check-in del evento y columna «Inscripción» en el
+CSV. Queda para EVE-14: el match asistido por cédula/correo/teléfono y los
+totales por tipo de inscripción (pareja).
+
+Prompt para Claude Code:
+
+```
+FEATURE · Check-in en eventos que requieren inscripción: estado de inscripción visible
+
+En eventos con "requiere inscripción", la puerta debe saber al instante quién viene
+inscrito y quién no:
+
+1. ALERTA DE NO INSCRITO: al hacer check-in de alguien que NO tiene inscripción al
+   evento, el panel lo dice fuerte y claro ("⚠️ [Nombre] NO está inscrita a este evento")
+   — el check-in NO se bloquea (la puerta decide dejarla pasar), pero queda la marca
+   visible y el registro lleva un flag "sin inscripción" para que el equipo del evento
+   maneje aparte el pago. Estos salen en una lista/tab del evento ("llegaron sin
+   inscripción") con conteo.
+2. INSCRITO CON FICHA: lo normal — al seleccionarlo, confirmación de que está inscrito
+   (y su tipo de inscripción: pareja, etc.).
+3. INSCRITO SIN FICHA (el caso EVE-14): la BÚSQUEDA del check-in debe encontrar también
+   a los inscritos sin ficha (buscar sobre las inscripciones del evento por nombre), y
+   permitir hacerles CHECK-IN COMO INVITADOS contra la inscripción misma — sin exigir
+   crear/asociar ficha en la fila. El check-in queda vinculado a esa inscripción (la
+   misma persona que se inscribió es la que llegó); si después se vincula la ficha
+   (EVE-14), el check-in viaja con ella.
+   - Si hay un miembro con el mismo nombre+apellido, mostrar la sugerencia de vínculo
+     (un toque, patrón EVE-14) pero NO obligar — la fila no se detiene.
+4. CONTEOS de la puerta: inscritos presentes / inscritos ausentes / llegaron sin
+   inscripción — en vivo, para el equipo del evento.
+Server-side como siempre (requireEventAccess de la puerta); los invitados sin ficha no
+crean members fantasma. Tests: alerta de no inscrito (check-in procede con flag),
+check-in de invitado contra inscripción, vínculo posterior arrastra el check-in, conteos.
+tsc/lint/vitest.
+```

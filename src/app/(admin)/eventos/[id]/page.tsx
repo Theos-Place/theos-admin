@@ -40,6 +40,7 @@ import { ChevronLeft } from 'lucide-react'
 import { getInitials, formatMoney, todayCR, formatDate } from '@/lib/format'
 import { contarPorCalidad } from '@/lib/events/calidad-checkin'
 import { asistenciaPorSubEvento } from '@/lib/events/asistencia-por-sub-evento'
+import { origenDeCheckin, TEXTO_DE_ORIGEN } from '@/lib/events/puerta-con-inscripcion'
 import { mostrarInscripciones, esInscripcionHistorica, tasaDeAsistencia, textoDeAsistencia, AVISO_INSCRIPCION_HISTORICA } from '@/lib/events/inscripcion-visible'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
 import { hayQuePreguntarElAlcance, esLaPrimeraOcurrencia } from '@/lib/events/alcance-de-edicion'
@@ -589,6 +590,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   const nuevos = contarPersonasNuevas(event.checkins, event.start_at)
   // EVE-10 · Solo si el evento tiene sub-eventos (Youth, Kids…): el reporte
   // sumaba todo y el dato del Youth no aparecía por ningún lado.
+  const idsInscritosCsv = new Set(event.registrations.map(r => r.member_id))
   const porSubEvento = event.sub_events.length > 0
     ? asistenciaPorSubEvento(event.checkins, event.sub_events, event.start_at)
     : []
@@ -969,11 +971,13 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           <div className="flex gap-2 flex-wrap">
             <button
               onClick={() => generateCSV(
-                ['Nombre', 'Tipo de asistencia', 'Sub-evento', 'Fecha de check-in', '¿Primera vez?'],
+                ['Nombre', 'Tipo de asistencia', 'Sub-evento', 'Inscripción', 'Fecha de check-in', '¿Primera vez?'],
                 event.checkins.map(c => [
                   c.member_name,
                   c.attendance_type === 'server' ? 'Servidor' : 'Participante',
                   event.sub_events.find(se => se.id === c.sub_event_id)?.name ?? '',
+                  // EVE-15: solo dice algo en eventos con inscripción.
+                  event.requires_registration ? TEXTO_DE_ORIGEN[origenDeCheckin(c, idsInscritosCsv)] : '',
                   c.checked_at ? new Date(c.checked_at).toLocaleString('es-CR') : '',
                   !c.member_created_at ? ''
                     : contarPersonasNuevas([c], event.start_at).nuevas === 1 ? 'Sí' : 'No',

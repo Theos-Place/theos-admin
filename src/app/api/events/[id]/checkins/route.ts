@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireEventAccess } from '@/lib/auth/event-guard'
 import {
-  createCheckin, deleteCheckin, getEventAttendeeIds, getCheckinExistente,
-  checkinEnOtraSedeHoy, NotRegisteredError,
+  createCheckin, deleteCheckin, getEventAttendeeIds, getCheckinExistente, getCheckinExistenteDeInvitado,
+  checkinEnOtraSedeHoy, NotRegisteredError, RespuestaAjenaError, RespuestaConFichaError,
 } from '@/lib/supabase/queries/events'
+import { isUuid } from '@/lib/validate'
 import { YA_REGISTRADO, EN_OTRA_SEDE } from '@/lib/events/checkin-duplicado'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -42,6 +43,8 @@ export async function POST(
   if (auth.res) return auth.res
   const body = await req.json().catch(() => null)
   const memberId = body?.member_id ?? null
+  // EVE-15: fuera del try por lo mismo que memberId (el catch lo usa).
+  const formResponseId = typeof body?.form_response_id === 'string' && isUuid(body.form_response_id) ? body.form_response_id : null
   try {
     // La pantalla habla de 'participant'/'server'; la base de
     // 'asistente'/'servidor'. La traducción vive en un solo lugar, y
@@ -49,7 +52,7 @@ export async function POST(
     const { calidadDesdeTipo } = await import('@/lib/events/calidad-checkin')
     const calidad = calidadDesdeTipo(body?.attendance_type)
     const guestName = typeof body?.guest_name === 'string' ? body.guest_name.trim() : ''
-    if (!memberId && !guestName) {
+    if (!memberId && !guestName && !formResponseId) {
       return NextResponse.json(
         { error: 'Se requiere un miembro o un nombre de invitado para el check-in' },
         { status: 400 },
@@ -86,7 +89,9 @@ export async function POST(
 
     const res = await createCheckin(id, {
       ...body,
-      guest_name: memberId ? body.guest_name ?? null : guestName,
+      guest_name: memberId ? body.guest_name ?? null : (guestName || null),
+      form_response_id: memberId ? null : formResponseId,
+      sin_inscripcion: body?.sin_inscripcion === true,
       checked_in_as: calidad,
       // Quién lo registró. Hasta hoy no se guardaba y por eso no se podía
       // contestar "¿quién la marcó?" en ningún reclamo.
@@ -104,7 +109,8 @@ export async function POST(
      * el servidor es el que sabe.
      */
     if ((error as { code?: string })?.code === '23505') {
-      const existente = memberId ? await getCheckinExistente(id, memberId) : null
+      const existente = memberId ? await getCheckinExistente(id, memberId)
+        : formResponseId ? await getCheckinExistenteDeInvitado(id, formResponseId) : null
       return NextResponse.json(
         { error: 'Esta persona ya tiene check-in en este evento.', code: YA_REGISTRADO, checkin: existente },
         { status: 409 },
@@ -113,6 +119,12 @@ export async function POST(
     // Evento pago sin inscripción previa: mismo caso para los 3 métodos.
     if (error instanceof NotRegisteredError) {
       return NextResponse.json({ error: error.message, code: 'not_registered' }, { status: 409 })
+    }
+    if (error instanceof RespuestaAjenaError) {
+      return NextResponse.json({ error: error.message, code: 'respuesta_ajena' }, { status: 404 })
+    }
+    if (error instanceof RespuestaConFichaError) {
+      return NextResponse.json({ error: error.message, code: 'respuesta_con_ficha', member_id: error.memberId }, { status: 409 })
     }
     reportarError('POST /api/events/[id]/checkins:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

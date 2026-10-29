@@ -91,7 +91,10 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
     checkins: (db.checkins ?? []).map((c) => ({
       id: c.id,
       member_id: c.member_id ?? '',
-      member_name: fullName(c.member),
+      // EVE-15: el invitado sin ficha no tiene `member`; su nombre es el del link.
+      member_name: c.member ? fullName(c.member) : (c.guest_name ?? 'Invitado/a'),
+      form_response_id: c.form_response_id ?? null,
+      sin_inscripcion: c.sin_inscripcion === true,
       // Sale de la COLUMNA, que es lo que el operador eligió. Antes se
       // derivaba de event_volunteers —quién estaba anotado de antemano—, que
       // es otra cosa y además está vacía: por eso todo el mundo leía como

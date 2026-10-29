@@ -152,7 +152,7 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
       'Colaborador Bienvenida del Comité Matrimonios: hace el check-in de los eventos '
       + 'que organiza ese comité (el de parejas del 2026-10-31, para empezar).',
     /**
-     * EVE-15 (2026-10-29), decisión de Floriana: el comité organiza eventos
+     * MAT-1 (2026-10-29), decisión de Floriana: el comité organiza eventos
      * propios y quien recibe en la puerta marca la asistencia, mismo criterio
      * que en las sedes y en Youth. Acotada a ESE título: «Colaborador» a secas
      * y «Encargado Comité» del mismo comité no lo traen. El alcance queda en

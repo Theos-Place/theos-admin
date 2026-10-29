@@ -95,6 +95,12 @@ export type DbEventEnriched = {
     /** `created_at` de la ficha: con él se cuenta a quién se le creó el perfil
      *  el mismo día del evento (personas nuevas, en el tab de Reportes). */
     member: { first_name: string; last_name: string; created_at: string | null } | null
+    /** EVE-15 · Invitado sin ficha: el nombre que dio en el link. */
+    guest_name?: string | null
+    /** EVE-15 · La inscripción por el link contra la que se hizo el check-in. */
+    form_response_id?: string | null
+    /** EVE-15 · Llegó sin inscripción a un evento que la pide. */
+    sin_inscripcion?: boolean
     is_volunteer: boolean
     /** Primer check-in de esa persona en todo el sistema. Solo lo llena
      *  getEventById; en la LISTA de eventos viene undefined. */
@@ -140,6 +146,9 @@ const SELECT = `
   checkins:event_checkins(
     id,
     member_id,
+    guest_name,
+    form_response_id,
+    sin_inscripcion,
     sub_event_id,
     checked_in_at,
     checked_in_as,
@@ -162,6 +171,9 @@ function normalize(row: Record<string, unknown>): DbEventEnriched {
   const checkins = ((row.checkins ?? []) as Array<Record<string, unknown>>).map((c) => ({
     id: c.id as string,
     member_id: (c.member_id as string) ?? null,
+    guest_name: (c.guest_name as string) ?? null,
+    form_response_id: (c.form_response_id as string) ?? null,
+    sin_inscripcion: c.sin_inscripcion === true,
     sub_event_id: (c.sub_event_id as string) ?? null,
     checked_in_at: c.checked_in_at as string,
     checked_in_as: (c.checked_in_as as string) ?? 'asistente',
@@ -976,6 +988,11 @@ export async function createCheckin(
   input: {
     member_id?: string | null; guest_name?: string | null; sub_event_id?: string | null
     method?: 'manual' | 'qr' | 'smart_link'
+    /** EVE-15 · Check-in de un invitado contra su inscripción por el link. */
+    form_response_id?: string | null
+    /** EVE-15 · La puerta decidió dejar pasar a alguien sin inscripción. En un
+     *  evento PAGO es lo único que salta el gate de abajo; el flag se guarda. */
+    sin_inscripcion?: boolean
     /** 'asistente' | 'servidor'. Se REVALIDA acá, no se cree lo que llega. */
     checked_in_as?: string | null
     /**
@@ -993,15 +1010,42 @@ export async function createCheckin(
   // persona ya tenga inscripción (cualquier payment_status). Antes esto vivía
   // solo en el cliente y los caminos divergían (QR bloqueaba, familia no) — el
   // servidor no lo validaba. Ahora es la fuente de verdad para los 3 métodos.
+  //
+  // EVE-15: en un evento que PIDE inscripción, llegar sin ella ya no es solo
+  // «cobrar en sitio o nada». Si la puerta dice explícitamente que lo deja
+  // pasar (`sin_inscripcion`), entra con la marca; el equipo del evento lo ve
+  // aparte. El flag lo calcula el SERVIDOR con lo que hay en la base, no se
+  // cree el del cliente: así una fila vieja o un POST a mano no lo falsean.
+  let sinInscripcion = false
+  let guestName = input.guest_name ?? null
   if (input.member_id) {
     const { data: ev } = await supabase
-      .from('events').select('requires_payment').eq('id', eventId).maybeSingle()
-    if ((ev as { requires_payment?: boolean } | null)?.requires_payment) {
+      .from('events').select('requires_payment, requires_registration').eq('id', eventId).maybeSingle()
+    const e = ev as { requires_payment?: boolean; requires_registration?: boolean } | null
+    if (e?.requires_payment || e?.requires_registration) {
       const { data: reg } = await supabase
         .from('event_registrations').select('id')
         .eq('event_id', eventId).eq('member_id', input.member_id).limit(1).maybeSingle()
-      if (!reg) throw new NotRegisteredError()
+      if (!reg) {
+        if (e?.requires_payment && !input.sin_inscripcion) throw new NotRegisteredError()
+        sinInscripcion = true
+      }
     }
+  } else if (input.form_response_id) {
+    // Invitado por el link: la respuesta tiene que ser DEL formulario de este
+    // evento y seguir sin ficha. Si ya tiene ficha, el check-in va por la
+    // persona, no por la respuesta.
+    const { data: ev } = await supabase
+      .from('events').select('registration_form_id').eq('id', eventId).maybeSingle()
+    const formId = (ev as { registration_form_id: string | null } | null)?.registration_form_id
+    const { data: resp } = formId
+      ? await supabase.from('form_responses').select('id, guest_name, member_id')
+          .eq('id', input.form_response_id).eq('form_id', formId).maybeSingle()
+      : { data: null }
+    const r = resp as { id: string; guest_name: string | null; member_id: string | null } | null
+    if (!r) throw new RespuestaAjenaError()
+    if (r.member_id) throw new RespuestaConFichaError(r.member_id)
+    guestName = (r.guest_name ?? '').trim() || guestName
   }
 
   // Calidad del check-in. Marcar 'servidor' se REVALIDA contra los comités
@@ -1020,7 +1064,9 @@ export async function createCheckin(
     .insert({
       event_id: eventId,
       member_id: input.member_id ?? null,
-      guest_name: input.guest_name ?? null,
+      guest_name: guestName,
+      form_response_id: input.member_id ? null : (input.form_response_id ?? null),
+      sin_inscripcion: sinInscripcion,
       sub_event_id: input.sub_event_id ?? null,
       method: input.method ?? 'manual',
       checked_in_as: calidad,
@@ -1029,10 +1075,59 @@ export async function createCheckin(
     // `checked_in_as` vuelve para que la pantalla sepa con qué calidad QUEDÓ:
     // si se pidió 'servidor' y no califica, entra como asistente, y el QR
     // —que no muestra tarjeta— tiene que poder decirlo (2026-10-15).
-    .select('id, checked_in_as')
+    .select('id, checked_in_as, sin_inscripcion')
     .single()
   if (error) throw error
-  return data as { id: string; checked_in_as: 'asistente' | 'servidor' }
+  return data as { id: string; checked_in_as: 'asistente' | 'servidor'; sin_inscripcion: boolean }
+}
+
+/** EVE-15 · La respuesta no es del formulario de este evento (o no existe). */
+export class RespuestaAjenaError extends Error {
+  constructor() { super('Esa inscripción no es de este evento.'); this.name = 'RespuestaAjenaError' }
+}
+/** EVE-15 · La respuesta ya tiene ficha: el check-in va por la persona. */
+export class RespuestaConFichaError extends Error {
+  constructor(public readonly memberId: string) {
+    super('Esa inscripción ya está ligada a una ficha; hacé el check-in por la persona.')
+    this.name = 'RespuestaConFichaError'
+  }
+}
+
+/**
+ * EVE-15 · Vincula una respuesta por el link (sin ficha) a una ficha. El
+ * disparador de la base pasa el check-in del invitado a la persona. Solo
+ * respuestas del formulario de ESTE evento y que sigan sin ficha.
+ */
+export async function vincularRespuestaAFicha(
+  eventId: string, responseId: string, memberId: string, actorUserId: string | null = null,
+): Promise<void> {
+  const supabase = createAdminClient()
+  const { data: ev } = await supabase
+    .from('events').select('registration_form_id').eq('id', eventId).maybeSingle()
+  const formId = (ev as { registration_form_id: string | null } | null)?.registration_form_id
+  if (!formId) throw new RespuestaAjenaError()
+  const { data, error } = await supabase
+    .from('form_responses')
+    .update({ member_id: memberId })
+    .eq('id', responseId).eq('form_id', formId).is('member_id', null)
+    .select('id')
+  if (error) throw error
+  if (!data || data.length === 0) throw new RespuestaAjenaError()
+
+  // La inscripción de la persona, ligada a su respuesta: sin ella seguiría
+  // contando como «sin inscripción» en la puerta y en el detalle. Entra como
+  // 'pending' (lo mismo que una inscripción normal) y SIN correo: el pago, si
+  // el evento lo pide, lo maneja el equipo del evento. Si ya estaba inscrita
+  // por su cuenta, se deja esa.
+  const { error: eReg } = await supabase
+    .from('event_registrations')
+    .insert({ event_id: eventId, member_id: memberId, payment_status: 'pending', form_response_id: responseId, recorded_by: actorUserId })
+  if (eReg && (eReg as { code?: string }).code !== '23505') throw eReg
+
+  await supabase.from('audit_log').insert({
+    action: 'UPDATE', entity_type: 'form_responses', entity_id: responseId,
+    old_data: { member_id: null }, new_data: { member_id: memberId, op: 'vinculo_respuesta_a_ficha', event_id: eventId },
+  })
 }
 
 export type OnsiteChargeMode = 'pending' | 'verified'
@@ -1183,6 +1278,20 @@ export async function onsiteChargeAndCheckin(
  * en un recurrente la persona tiene un check-in por semana y el que importa es
  * el de hoy.
  */
+/** EVE-15 · El check-in que ya tiene un invitado (por su inscripción) en este evento. */
+export async function getCheckinExistenteDeInvitado(
+  eventId: string, formResponseId: string,
+): Promise<{ id: string; checked_at: string; checked_in_as: string | null; operador: string | null } | null> {
+  const supabase = createAdminClient()
+  const { data } = await supabase
+    .from('event_checkins')
+    .select('id, checked_in_at, checked_in_as')
+    .eq('event_id', eventId).eq('form_response_id', formResponseId)
+    .order('checked_in_at', { ascending: false }).limit(1).maybeSingle()
+  const r = data as { id: string; checked_in_at: string; checked_in_as: string | null } | null
+  return r ? { id: r.id, checked_at: r.checked_in_at, checked_in_as: r.checked_in_as, operador: null } : null
+}
+
 export async function getCheckinExistente(
   eventId: string, memberId: string,
 ): Promise<{ id: string; checked_at: string; checked_in_as: string | null; operador: string | null } | null> {

@@ -18,6 +18,7 @@ import { FamilyMemberModal, type FamilyDraft } from '@/components/members/Family
 import { DocumentCapture } from '@/components/members/DocumentCapture'
 import { ContactCapture } from '@/components/members/ContactCapture'
 import { Modal } from '@/components/shared/Modal'
+import { Button } from '@/components/shared/Button'
 import { CrearTiqueteDeSoporte } from '@/components/support/CrearTiqueteDeSoporte'
 import { getInitials, toYmdLocal, formatMoney } from '@/lib/format'
 import { validarAltaDePersona } from '@/lib/members/alta-persona'
@@ -26,6 +27,9 @@ import { PageContainer } from '@/components/layout/PageContainer'
 import { MemberCombobox } from '@/components/shared/MemberCombobox'
 import { motivoQueImpideCrear } from '@/lib/members/menor-protegido'
 import { checkinsDeLaOcurrencia, diaQueSeEstaViendo } from '@/lib/events/checkins-del-dia'
+import {
+  buscarInvitados, conteosDeLaPuerta, estadoDeInscripcion, sugerirVinculo, textoDeConteos, type Invitado,
+} from '@/lib/events/puerta-con-inscripcion'
 import { todayCR } from '@/lib/format'
 import { DatePicker } from '@/components/events/DatePicker'
 import {
@@ -217,6 +221,24 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   const serverInfo = cargandoServerCheck ? null : serverCheck
 
   /**
+   * EVE-15 · Quiénes se inscribieron por el link público SIN ficha. No están
+   * en `members`, así que el buscador de miembros no los encuentra; se cargan
+   * una vez y se buscan por nombre acá. Solo si el evento tiene formulario.
+   */
+  const { datos: invitadosCargados, recargar: recargarInvitados } = useCargaRemota<Invitado[]>(
+    event?.registration_form_id ?? '',
+    () => fetch(`/api/events/${id}/guest-responses`)
+      .then(r => (r.ok ? r.json() : { items: [] }))
+      .then(d => ((d.items ?? []) as Array<{ id: string; nombre: string; email: string | null }>)),
+    { activo: !!event?.registration_form_id },
+  )
+  const invitados: Invitado[] = useMemo(() => invitadosCargados ?? [], [invitadosCargados])
+  // Vínculo sugerido tras marcar a un invitado: UNA ficha con el mismo nombre.
+  // Se ofrece, no se aplica, y la fila no se detiene por esto.
+  const [vinculoSugerido, setVinculoSugerido] = useState<{ invitado: Invitado; miembro: { id: string; name: string } } | null>(null)
+  const [vinculando, setVinculando] = useState(false)
+
+  /**
    * CHK-2 · El día de HOY en hora de Costa Rica, para saber quién cumple años
    * esta semana. Se calcula una vez: en la fila se marcan decenas de personas y
    * no tiene sentido rehacerlo por fila. 'en-CA' da YYYY-MM-DD.
@@ -300,14 +322,29 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       id: c.id, checked_at: c.checked_at, checked_in_as: c.attendance_type === 'server' ? 'servidor' : 'asistente',
     } as CheckinExistente]))
   const searchResults = memberResults
+  // EVE-15: invitados por el link que coinciden con lo escrito (sin ficha).
+  const invitadosEncontrados = buscarInvitados(invitados, query)
+  const conteos = event.requires_registration
+    ? conteosDeLaPuerta({ inscritos: event.registrations, invitados, checkins })
+    : null
+  /** Lo que se lee bajo el nombre en el resultado: en un evento con
+   *  inscripción, si está inscrita o no, ANTES de tocar. */
+  function etiquetaDeInscripcion(memberId: string): { texto: string; clase: string } {
+    const e = estadoDeInscripcion(event!, memberId, event!.registrations)
+    if (e.estado === 'inscrito') return { texto: '✓ Inscrito/a', clase: 'text-teal-deep font-semibold' }
+    if (e.estado === 'no_inscrito') return { texto: 'Sin inscripción', clase: 'text-coral-deep font-semibold' }
+    return { texto: registeredIds.has(memberId) ? 'Inscrito' : 'Miembro', clase: 'text-navy-light/80' }
+  }
 
   // Persiste un check-in (optimista con rollback). CHOKE POINT ÚNICO de los tres
   // métodos (QR, nombre/cédula, familia, persona nueva) — acá vive el gate de
   // "evento pago requiere inscripción" para que TODOS se comporten igual
   // (Fase 1). 'not_registered' = evento pago y la persona no está inscrita.
-  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual', subEvent: string | null = targetSub, confirmarOtraSede = false): Promise<'ok' | 'dup' | 'error' | 'not_registered' | 'otra_sede'> {
+  async function persistCheckin(m: { id: string; name: string }, type: AttendanceType, method: 'manual' | 'qr' = 'manual', subEvent: string | null = targetSub, confirmarOtraSede = false, sinInscripcion = false): Promise<'ok' | 'dup' | 'error' | 'not_registered' | 'otra_sede'> {
     // Gate cliente (feedback inmediato sin round-trip); el server lo re-valida.
-    if (event!.requires_payment && !registeredIds.has(m.id)) return 'not_registered'
+    // EVE-15: también en eventos con inscripción sin costo — antes ahí no se
+    // avisaba nada. `sinInscripcion` es la puerta diciendo «la dejo pasar».
+    if (!sinInscripcion && (event!.requires_payment || event!.requires_registration) && !registeredIds.has(m.id)) return 'not_registered'
     const subEventId = subEvent // null = evento padre; o el subevento elegido para esta persona
     const nowIso = new Date().toISOString()       // fecha real del check-in (válida)
     const tempId = `tmp:${nowIso}:${m.id}`        // id temporal para rollback/replace
@@ -318,6 +355,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
       attendance_type: type,
       sub_event_id: subEventId,
       checked_at: nowIso,
+      sin_inscripcion: sinInscripcion,
       _new: true,
     }
     setCheckins(prev => [newCheckin, ...prev])
@@ -334,6 +372,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         body: JSON.stringify({
           member_id: m.id, sub_event_id: subEventId, method, attendance_type: type,
           ...(confirmarOtraSede ? { confirmar_otra_sede: true } : {}),
+          ...(sinInscripcion ? { sin_inscripcion: true } : {}),
         }),
       })
       if (res.status === 409) {
@@ -478,6 +517,93 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   function requestCobro(m: { id: string; name: string }, method: 'manual' | 'qr' = 'manual') {
     setSelectedMember(null)
     setCobroTarget({ ...m, method })
+  }
+
+  /** EVE-15 · La puerta deja pasar a alguien sin inscripción: queda con marca. */
+  async function dejarPasarSinInscripcion() {
+    if (!cobroTarget || cobroSubmitting) return
+    const t = cobroTarget
+    setCobroTarget(null)
+    setQuery('')
+    const r = await persistCheckin({ id: t.id, name: t.name }, 'participant', t.method, targetSub, false, true)
+    if (r === 'ok') {
+      const msg = `✓ ${t.name}: check-in SIN inscripción`
+      setScanMsg({ kind: 'ok', text: msg })
+      setTimeout(() => setScanMsg(m => (m?.text === msg ? null : m)), 3500)
+    } else if (r === 'error') {
+      setScanMsg({ kind: 'error', text: 'No se pudo registrar el check-in.' })
+    }
+  }
+
+  /** member_id → su check-in de hoy; para invitados, por su inscripción. */
+  const checkinPorInvitado = new Map(
+    checkins.filter(c => c.form_response_id).map(c => [c.form_response_id as string, {
+      id: c.id, checked_at: c.checked_at, checked_in_as: c.attendance_type === 'server' ? 'servidor' : 'asistente',
+    } as CheckinExistente]))
+
+  /**
+   * EVE-15 · Check-in de un invitado por el link, contra su inscripción. No
+   * exige crear ni asociar ficha en la fila: la persona que se inscribió es la
+   * que llegó. Si hay UNA ficha con ese nombre exacto, se sugiere el vínculo
+   * después, sin detener nada.
+   */
+  async function handleSelectInvitado(inv: Invitado) {
+    const ya = checkinPorInvitado.get(inv.id)
+    if (ya) { setYaRegistrado({ nombre: inv.nombre, checkin: ya }); return }
+    const candidato = sugerirVinculo(inv, memberResults)
+    setQuery('')
+    const nowIso = new Date().toISOString()
+    const tempId = `tmp:${nowIso}:${inv.id}`
+    const nuevo: EventCheckin & { _new?: boolean } = {
+      id: tempId, member_id: '', member_name: inv.nombre, attendance_type: 'participant',
+      sub_event_id: targetSub, checked_at: nowIso, form_response_id: inv.id, _new: true,
+    }
+    setCheckins(prev => [nuevo, ...prev])
+    try {
+      const res = await fetch(`/api/events/${id}/checkins`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ form_response_id: inv.id, guest_name: inv.nombre, sub_event_id: targetSub, method: 'manual', attendance_type: 'participant' }),
+      })
+      if (res.status === 409) {
+        setCheckins(prev => prev.filter(c => c.id !== tempId))
+        const data = await res.json().catch(() => null) as { code?: string; checkin?: CheckinExistente | null } | null
+        if (data?.checkin) setYaRegistrado({ nombre: inv.nombre, checkin: data.checkin })
+        return
+      }
+      if (!res.ok) throw new Error(`HTTP ${res.status}`)
+      const data = await res.json().catch(() => null) as { id?: string } | null
+      if (data?.id) setCheckins(prev => prev.map(c => c.id === tempId ? { ...c, id: data.id! } : c))
+      if (candidato) setVinculoSugerido({ invitado: inv, miembro: candidato })
+    } catch (err) {
+      console.error('No se pudo registrar el check-in del invitado:', err)
+      setCheckins(prev => prev.filter(c => c.id !== tempId))
+      setScanMsg({ kind: 'error', text: `No se pudo registrar a ${inv.nombre}.` })
+    }
+  }
+
+  /** Aplica el vínculo sugerido: la respuesta pasa a la ficha y el check-in viaja con ella (disparador). */
+  async function vincularInvitado() {
+    if (!vinculoSugerido || vinculando) return
+    const v = vinculoSugerido
+    setVinculando(true)
+    try {
+      const res = await fetch(`/api/events/${id}/guest-responses`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ response_id: v.invitado.id, member_id: v.miembro.id }),
+      })
+      if (!res.ok) throw new Error()
+      setVinculoSugerido(null)
+      await Promise.all([refetch(), recargarInvitados()])
+      const msg = `✓ ${v.invitado.nombre} quedó ligado/a a su ficha`
+      setScanMsg({ kind: 'ok', text: msg })
+      setTimeout(() => setScanMsg(m => (m?.text === msg ? null : m)), 3500)
+    } catch {
+      setScanMsg({ kind: 'error', text: 'No se pudo vincular la ficha.' })
+    } finally {
+      setVinculando(false)
+    }
   }
 
   // Cobro en sitio + check-in de una persona no inscrita (Fase 2).
@@ -917,7 +1043,7 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 puerta={serverGate}
               />
             </div>
-          ) : searchResults.length > 0 ? (
+          ) : searchResults.length > 0 || invitadosEncontrados.length > 0 ? (
             <div className="space-y-2">
               {searchResults.map(r => (
                 <button
@@ -942,8 +1068,8 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                       )}
                       {r.name}
                     </p>
-                    <p className="text-navy-light/80 text-[13px] font-body">
-                      {registeredIds.has(r.id) ? 'Inscrito' : 'Miembro'}
+                    <p className={cn('text-[13px] font-body', etiquetaDeInscripcion(r.id).clase)}>
+                      {etiquetaDeInscripcion(r.id).texto}
                       {r.pedir_documento === true && (
                         <span className="ml-2 rounded-md bg-navy/5 px-1.5 py-0.5 text-[11px] text-navy-light/80">
                           sin documento
@@ -960,6 +1086,30 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                   </div>
                 </button>
               ))}
+              {/* EVE-15 · Inscritos por el link, sin ficha: se marcan contra su
+                  inscripción, sin crearles ficha en la fila. */}
+              {invitadosEncontrados.map(inv => (
+                <button
+                  key={inv.id}
+                  onClick={() => handleSelectInvitado(inv)}
+                  className="w-full flex items-center gap-4 rounded-2xl bg-surface-card px-4 py-3 text-left hover:bg-surface-low transition-colors shadow-[var(--shadow-sm)] min-h-[60px] border border-dashed border-teal-deep/40"
+                >
+                  <div className={cn('h-10 w-10 rounded-full flex items-center justify-center text-[13px] font-bold text-white shrink-0', avatarColor(inv.nombre))}>
+                    {getInitials(inv.nombre)}
+                  </div>
+                  <div className="min-w-0">
+                    <p className="text-navy font-medium font-body truncate">{inv.nombre}</p>
+                    <p className="text-teal-deep text-[13px] font-semibold font-body">
+                      ✓ Inscrito/a por el link · sin ficha
+                    </p>
+                    {marcaEnLaBusqueda(checkinPorInvitado.get(inv.id)) && (
+                      <p className="text-teal-deep text-[13px] font-semibold font-body">
+                        {marcaEnLaBusqueda(checkinPorInvitado.get(inv.id))}
+                      </p>
+                    )}
+                  </div>
+                </button>
+              ))}
             </div>
           ) : query.trim().length >= 2 && searching ? (
             <div className="rounded-2xl bg-surface-card p-6 text-center shadow-[var(--shadow-sm)]">
@@ -970,6 +1120,31 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               <p className="text-navy-light/80 text-sm font-body">No se encontró nadie con ese nombre.</p>
             </div>
           ) : null}
+
+          {/* EVE-15 · Vínculo sugerido tras marcar a un invitado: se ofrece, no se obliga. */}
+          {vinculoSugerido && (
+            <div className="rounded-2xl bg-teal-soft/20 p-4 space-y-3">
+              <div className="flex items-start gap-3">
+                <UserCheck size={18} className="text-teal-deep shrink-0 mt-0.5" aria-hidden />
+                <p className="text-[13px] text-navy font-body">
+                  {vinculoSugerido.invitado.nombre} quedó registrado/a. Hay una ficha con ese mismo nombre:
+                  ¿es la misma persona? Si la vinculás, el check-in queda en su historial.
+                </p>
+              </div>
+              <div className="flex gap-2">
+                <Button variante="navy" ancho="flex" onClick={vincularInvitado} disabled={vinculando} className="min-h-[44px]">
+                  {vinculando ? 'Vinculando…' : `Sí, es ${vinculoSugerido.miembro.name}`}
+                </Button>
+                <button
+                  onClick={() => setVinculoSugerido(null)}
+                  disabled={vinculando}
+                  className="rounded-xl border border-navy/20 px-4 py-2.5 text-sm text-navy hover:bg-navy/5 transition-colors font-body min-h-[44px]"
+                >
+                  No
+                </button>
+              </div>
+            </div>
+          )}
 
           {/* Ya está en OTRA SEDE hoy: se pregunta, no se bloquea.
               Va antes que «ya registrado» porque es la respuesta a lo que el
@@ -1093,6 +1268,12 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
               </p>
               <span className="text-[13px] text-navy-light/80 font-body tabular-nums shrink-0">{visibleCheckins.length}</span>
             </div>
+            {/* EVE-15 · En vivo, para el equipo del evento. */}
+            {conteos && (
+              <p className="px-4 py-2 border-b border-[var(--outline-variant)] text-[13px] text-navy-light font-body tabular-nums">
+                {textoDeConteos(conteos)}
+              </p>
+            )}
             {visibleCheckins.length === 0 ? (
               <p className="px-4 py-10 text-center text-sm text-navy-light/80 font-body">Aún nadie registrado. Escaneá un QR o buscá por nombre.</p>
             ) : visibleCheckins.map(ci => (
@@ -1107,6 +1288,19 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                     {subName(ci.sub_event_id) ? ` · ${subName(ci.sub_event_id)}` : ''}
                   </p>
                 </div>
+                {/* El flag lo pone el servidor desde hoy; las filas anteriores
+                    se leen contra la lista de inscritos para que el conteo y
+                    la marca digan lo mismo. */}
+                {(ci.sin_inscripcion || (event.requires_registration && !!ci.member_id && !ci.form_response_id && !registeredIds.has(ci.member_id))) && (
+                  <span className="rounded-md bg-coral/10 px-2 py-0.5 text-[11px] font-medium text-coral-deep shrink-0">
+                    Sin inscripción
+                  </span>
+                )}
+                {ci.form_response_id && (
+                  <span className="rounded-md bg-navy/5 px-2 py-0.5 text-[11px] font-medium text-navy-light shrink-0">
+                    Por el link
+                  </span>
+                )}
                 <span className={cn('rounded-md px-2 py-0.5 text-[11px] font-medium shrink-0',
                   ci.attendance_type === 'server' ? 'bg-coral/10 text-coral-deep' : 'bg-teal-soft/30 text-teal-ink')}>
                   {ci.attendance_type === 'server' ? 'Servidor' : 'Participante'}
@@ -1153,24 +1347,30 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
         />
       )}
 
-      {/* Cobro en sitio de un no inscrito en evento pago (Fase 2, 2 caminos). */}
+      {/* No inscrito/a en un evento que pide inscripción (EVE-15). En uno PAGO
+          siguen los dos caminos del cobro en sitio (Fase 2) y, además, la
+          puerta puede dejar pasar con marca; en uno sin costo, solo eso. */}
       {cobroTarget && (
         <Modal onClose={() => !cobroSubmitting && setCobroTarget(null)} titleId="cobro-title" width={460}>
           <div className="p-6 space-y-5">
-            <div className="space-y-1.5">
-              <h3 id="cobro-title" className="text-base font-bold text-navy font-display">
-                Cobro en sitio — {cobroTarget.name}
+            <div className="flex items-start gap-3 rounded-xl bg-amber-50 p-3">
+              <AlertTriangle size={20} className="text-amber-700 shrink-0 mt-0.5" aria-hidden />
+              <h3 id="cobro-title" className="text-base font-bold text-amber-900 font-display">
+                {cobroTarget.name} NO está inscrito/a en este evento
               </h3>
+            </div>
+            {event.requires_payment && (
               <p className="text-sm text-navy-light/80 font-body">
-                No tiene inscripción en este evento pago. Registrá el cobro y le hacés
-                check-in de una vez.
+                Es un evento pago. Podés registrar el cobro y hacerle check-in de una vez,
+                o dejarlo/a pasar y que el equipo del evento maneje el pago aparte.
                 {event.payment_amount != null && event.payment_amount > 0 && (
                   <> Monto del evento: <strong className="text-navy">{formatMoney(event.payment_amount, event.currency)}</strong>.</>
                 )}
               </p>
-            </div>
+            )}
 
             <div className="space-y-3">
+              {event.requires_payment && (<>
               {/* Camino 1 — enviar cobro a la persona */}
               <button
                 onClick={() => submitOnsiteCharge('pending')}
@@ -1198,6 +1398,22 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
                 <p className="text-[13px] text-navy-light/80 font-body mt-1">
                   Ya viste el comprobante en su teléfono. Registra el pago como aprobado
                   (con tu nombre y la hora) y hace check-in.
+                </p>
+              </button>
+              </>)}
+
+              {/* Camino 3 — dejar pasar con marca */}
+              <button
+                onClick={dejarPasarSinInscripcion}
+                disabled={!!cobroSubmitting}
+                className="w-full text-left rounded-xl border border-amber-300 bg-amber-50/60 p-4 hover:bg-amber-50 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
+              >
+                <p className="text-sm font-semibold text-amber-900 font-body">
+                  Dejar pasar sin inscripción
+                </p>
+                <p className="text-[13px] text-navy-light/80 font-body mt-1">
+                  Hace el check-in ya y queda marcado «sin inscripción» en la lista
+                  {event.requires_payment ? ', para que el equipo resuelva el pago después.' : '.'}
                 </p>
               </button>
             </div>

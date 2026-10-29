@@ -12,6 +12,7 @@ import { TOAST_MS } from '@/lib/constants'
 import { cn } from '@/lib/utils'
 import type { AdminEvent, EventCheckin } from '@/data/event-config'
 import { getInitials } from '@/lib/format'
+import { llegaronSinInscripcion, origenDeCheckin, TEXTO_DE_ORIGEN } from '@/lib/events/puerta-con-inscripcion'
 
 type Event = AdminEvent
 
@@ -41,6 +42,10 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
   const [toUndo, setToUndo] = useState<EventCheckin | null>(null)
   const [busy, setBusy] = useState(false)
   const [toast, setToast] = useState<string | null>(null)
+  // EVE-15 · En un evento con inscripción, quiénes llegaron sin ella (el
+  // equipo maneja aparte el pago o la inscripción) y de dónde viene cada fila.
+  const idsInscritos = new Set(event.registrations.map(r => r.member_id))
+  const sinInscripcion = event.requires_registration ? llegaronSinInscripcion(event.checkins, event.registrations) : []
 
   async function confirmUndo() {
     if (!toUndo || busy) return
@@ -83,6 +88,25 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
         </p>
       </div>
 
+      {/* EVE-15 · Llegaron sin inscripción */}
+      {sinInscripcion.length > 0 && (
+        <div className="rounded-2xl border border-coral/30 bg-surface-card p-5 shadow-[var(--shadow-md)] space-y-2">
+          <p className="text-[11px] tracking-widest uppercase text-coral-deep font-display">
+            Llegaron sin inscripción · {sinInscripcion.length}
+          </p>
+          <p className="text-[13px] text-navy-light/80 font-body">
+            La puerta los dejó pasar. {event.requires_payment ? 'El pago se resuelve aparte con el equipo del evento.' : 'Quedan marcados para que el equipo del evento los revise.'}
+          </p>
+          <div className="flex flex-wrap gap-1.5">
+            {sinInscripcion.map(c => (
+              <span key={c.id} className="rounded-full bg-surface-low px-2.5 py-1 text-[13px] text-navy-light font-body">
+                {c.member_name}
+              </span>
+            ))}
+          </div>
+        </div>
+      )}
+
       <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">
         <div className="px-4 py-3 border-b border-b-[var(--outline-variant)]">
           <p className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">Check-ins registrados</p>
@@ -104,6 +128,12 @@ export function EventCheckinTab({ event, eventId, checkinCount, onChanged }: Pro
                   <p className="text-[13px] text-navy-light/80 font-body">
                     {new Date(ci.checked_at).toLocaleTimeString('es-CR', { hour: '2-digit', minute: '2-digit' })}
                     {ci.sub_event_id && ` · ${ci.sub_event_id}`}
+                    {event.requires_registration && origenDeCheckin(ci, idsInscritos) !== 'inscrito' && (
+                      <span className={cn('ml-2 rounded-md px-1.5 py-0.5 text-[11px] font-medium',
+                        origenDeCheckin(ci, idsInscritos) === 'sin_inscripcion' ? 'bg-coral/10 text-coral-deep' : 'bg-navy/5 text-navy-light')}>
+                        {TEXTO_DE_ORIGEN[origenDeCheckin(ci, idsInscritos)]}
+                      </span>
+                    )}
                   </p>
                 </div>
                 <span className={cn(

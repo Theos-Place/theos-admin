@@ -16,7 +16,7 @@ describe('QR · escanear como servidor', () => {
     expect(pantalla).toMatch(/\['server', 'Servidor'\]/)
   })
   it('el servidor devuelve con qué calidad QUEDÓ, y la pantalla lo usa', () => {
-    expect(queries).toMatch(/\.select\('id, checked_in_as'\)/)
+    expect(queries).toMatch(/\.select\('id, checked_in_as, sin_inscripcion'\)/)
     expect(pantalla).toMatch(/ultimaCalidad\.current = data\?\.checked_in_as/)
     expect(pantalla).toMatch(/no es servidor del comité organizador/)
   })

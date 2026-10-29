@@ -46,6 +46,11 @@ export type EventCheckin = {
   /** Estaba anotado en event_volunteers ANTES del evento. Distinto de haber
    *  hecho el check-in como servidor: son dos cosas y las dos informan. */
   registrado_como_servidor?: boolean
+  /** EVE-15 · Invitado por el link, sin ficha: la inscripción contra la que
+   *  se hizo el check-in. member_id va vacío. */
+  form_response_id?: string | null
+  /** EVE-15 · Llegó sin inscripción a un evento que la pide. */
+  sin_inscripcion?: boolean
   sub_event_id: string | null
   checked_at: string
   /** Cuándo se creó la ficha de la persona. Sirve para contar a quien vino por

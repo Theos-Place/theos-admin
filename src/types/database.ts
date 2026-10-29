@@ -800,7 +800,9 @@ export type Database = {
           checked_in_as: string
           checked_in_by: string | null
           event_id: string
+          form_response_id: string | null
           guest_name: string | null
+          sin_inscripcion: boolean
           id: string
           member_id: string | null
           method: string | null
@@ -812,7 +814,9 @@ export type Database = {
           checked_in_as?: string
           checked_in_by?: string | null
           event_id: string
+          form_response_id?: string | null
           guest_name?: string | null
+          sin_inscripcion?: boolean
           id?: string
           member_id?: string | null
           method?: string | null
@@ -824,7 +828,9 @@ export type Database = {
           checked_in_as?: string
           checked_in_by?: string | null
           event_id?: string
+          form_response_id?: string | null
           guest_name?: string | null
+          sin_inscripcion?: boolean
           id?: string
           member_id?: string | null
           method?: string | null
