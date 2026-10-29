@@ -81,6 +81,12 @@ function esComiteYouth(areaName: string): boolean {
   return palabras.has('comite') && palabras.has('youth')
 }
 
+/** El comité de Matrimonios, por sus palabras y no por el nombre exacto. */
+function esComiteMatrimonios(areaName: string): boolean {
+  const palabras = new Set(norm(areaName).split(/[^a-z0-9]+/).filter(Boolean))
+  return palabras.has('comite') && palabras.has('matrimonios')
+}
+
 export function esComiteDeSede(ctx: PositionContext): boolean {
   if (ctx.areaType !== 'committee') return false
   return norm(ctx.parentAreaName ?? '') === 'sedes' || norm(ctx.areaName).startsWith('sede ')
@@ -139,6 +145,23 @@ export const POSITION_ROLE_RULES: PositionRoleRule[] = [
       ctx.areaType === 'committee'
       && esComiteYouth(ctx.areaName)
       && ['colaborador', 'colaborador youth', 'bienvenida'].includes(normSinArticulos(ctx.title)),
+  },
+  {
+    role: 'encargado_eventos',
+    description:
+      'Colaborador Bienvenida del Comité Matrimonios: hace el check-in de los eventos '
+      + 'que organiza ese comité (el de parejas del 2026-10-31, para empezar).',
+    /**
+     * EVE-15 (2026-10-29), decisión de Floriana: el comité organiza eventos
+     * propios y quien recibe en la puerta marca la asistencia, mismo criterio
+     * que en las sedes y en Youth. Acotada a ESE título: «Colaborador» a secas
+     * y «Encargado Comité» del mismo comité no lo traen. El alcance queda en
+     * los eventos del comité por EVE-12.
+     */
+    matches: (ctx) =>
+      ctx.areaType === 'committee'
+      && esComiteMatrimonios(ctx.areaName)
+      && normSinArticulos(ctx.title) === 'colaborador bienvenida',
   },
   /**
    * ACÁ ESTABA LA REGLA `reportes` DEL ANFITRIÓN, Y SE QUITÓ (REP-11,

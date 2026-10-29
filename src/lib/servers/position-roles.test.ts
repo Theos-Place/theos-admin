@@ -148,6 +148,29 @@ describe('solicitudes_estudio por puesto del comité', () => {
 // charlas, así que su puesto trae el acceso a eventos. La regla se quitó el
 // 2026-09-11 y volvió el 12 por decisión del usuario, ahora apuntando también
 // al nombre oficial «Colaborador Youth» que dejó el Excel Madre.
+// EVE-15 · El comité de Matrimonios organiza eventos propios; quien recibe en
+// la puerta marca la asistencia (Floriana, 2026-10-29).
+describe('Comité Matrimonios', () => {
+  const enMatrimonios = (title: string, areaName = 'Comité Matrimonios') =>
+    rolesGrantedByPosition({ title, areaName, areaType: 'committee', parentAreaName: 'Area de Enseñanza' })
+
+  it('el Colaborador Bienvenida trae encargado_eventos, con y sin «de»', () => {
+    expect(enMatrimonios('Colaborador Bienvenida')).toContain('encargado_eventos')
+    expect(enMatrimonios('Colaborador de Bienvenida')).toContain('encargado_eventos')
+    expect(enMatrimonios('Colaborador Bienvenida', 'Comite de Matrimonios')).toContain('encargado_eventos')
+  })
+
+  it('los otros puestos del comité NO lo traen', () => {
+    for (const t of ['Colaborador', 'Encargado Comité', 'Coordinador Bienvenida']) {
+      expect(enMatrimonios(t), t).not.toContain('encargado_eventos')
+    }
+  })
+
+  it('un «Colaborador Bienvenida» de otro comité que no es sede tampoco', () => {
+    expect(enMatrimonios('Colaborador Bienvenida', 'Comité Mujeres')).not.toContain('encargado_eventos')
+  })
+})
+
 describe('Comité Youth', () => {
   const enYouth = (title: string, areaName = 'Comité Youth') =>
     rolesGrantedByPosition({ title, areaName, areaType: 'committee', parentAreaName: 'Area de Enseñanza' })
