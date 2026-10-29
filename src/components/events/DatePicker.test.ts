@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
+import { readFileSync } from 'node:fs'
 import { posicionDelPopover, rangoDeMeses } from './DatePicker'
 
 const vp = { width: 1280, height: 800 }
@@ -44,5 +45,16 @@ describe('los menús de mes y año (Meridiano, 2026-10-27)', () => {
     const src = readFileSync('src/components/events/DatePicker.tsx', 'utf8')
     expect(src).toContain('captionLayout="dropdown"')
     expect(src).toContain('startMonth={startMonth}')
+  })
+})
+
+describe('el calendario se ve dentro de un modal (2026-10-29)', () => {
+  it('va por encima del Modal compartido (z-[1000], o z-[1100] encima de otro modal)', () => {
+    const picker = readFileSync('src/components/events/DatePicker.tsx', 'utf8')
+    const modal = readFileSync('src/components/shared/Modal.tsx', 'utf8')
+    expect(modal).toContain('z-[1000]')
+    expect(modal).toContain('z-[1100]')
+    expect(picker).toContain('theos-daypicker fixed z-[1200]')
+    expect(picker).not.toContain('theos-daypicker fixed z-[100] ')
   })
 })

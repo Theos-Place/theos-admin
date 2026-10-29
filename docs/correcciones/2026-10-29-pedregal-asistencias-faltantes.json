@@ -1,0 +1,24 @@
+{
+  "fecha": "2026-10-29T16:52:29.717Z",
+  "evento": "d40fad32-5fec-4fb8-91e1-f58e644c711e",
+  "insertados": [
+    {
+      "member_id": "42312027-2834-4936-a1d9-461113c30123",
+      "nombre": "Valeria Charpentier Mora",
+      "checkin_id": "e44111cd-a39e-4c68-95a7-16b0bb8da1d1",
+      "checked_in_at": "2026-10-29T01:42:23.366Z"
+    },
+    {
+      "member_id": "13d37ddb-3180-4cc8-8400-40b92046bed4",
+      "nombre": "Sharon Fonseca de la O",
+      "checkin_id": "92297ba5-c447-4c0d-a45a-a52731458dd6",
+      "checked_in_at": "2026-10-29T01:48:17.002Z"
+    },
+    {
+      "member_id": "82913323-4c38-4844-a491-815d46d1861e",
+      "nombre": "Dayana Hidalgo Anchía",
+      "checkin_id": "e813826f-0d3f-49c0-9b1f-d3b42b097cef",
+      "checked_in_at": "2026-10-29T03:01:30.093Z"
+    }
+  ]
+}

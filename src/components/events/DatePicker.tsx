@@ -166,7 +166,14 @@ export function DatePicker({ value, onChange, min, max, error, placeholder = 'dd
       {open && rect && createPortal(
         <div
           ref={popRef}
-          className="theos-daypicker fixed z-[100] rounded-2xl bg-surface-card p-3 shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
+          // z-[1200] y no z-[100]: el Modal compartido va en z-[1000] (z-[1100] si
+          // está encima de otro modal), así que
+          // dentro de un modal —«Persona nueva» del check-in, por ejemplo— el
+          // calendario se abría DETRÁS del modal y no se veía. Fue lo que pasó en
+          // Meridiano (27-oct) y en Pedregal (28-oct): 27 fichas nuevas sin fecha
+          // de nacimiento porque «el sistema no dejaba ponerla». Los menús de mes
+          // y año del 28-oct no lo arreglaban: el problema era que no se veía.
+          className="theos-daypicker fixed z-[1200] rounded-2xl bg-surface-card p-3 shadow-[var(--shadow-lg)] border border-[var(--outline-variant)]"
           style={{ top: rect.top, left: rect.left }}
         >
           <DayPicker

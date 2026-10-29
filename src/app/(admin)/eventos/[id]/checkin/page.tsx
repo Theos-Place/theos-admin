@@ -648,9 +648,23 @@ export default function CheckinLivePage({ params }: { params: Promise<{ id: stri
   }
 
   // Crea un miembro nuevo (primera visita) y lo deja seleccionado para el check-in.
+  /**
+   * CHK-9 (2026-10-29) · La persona recién creada queda REGISTRADA de una vez,
+   * como asistente. Antes solo quedaba seleccionada y el operador tenía que
+   * tocar «Participante» en un segundo paso; en la fila ese paso se saltaba y
+   * la ficha quedaba creada SIN check-in. Pasó con Cesar Amador y Nicolás
+   * Ramírez el 21-oct y con Valeria Charpentier, Sharon Fonseca y Dayana
+   * Hidalgo el 28-oct: cinco personas nuevas que el reporte no contó.
+   *
+   * Si el evento es pago y no está inscrita, o si el registro falla, se cae al
+   * comportamiento anterior (queda seleccionada) para que el operador resuelva.
+   */
   async function handlePersonCreated(member: { id: string; name: string }) {
     setShowNewPerson(false)
     setMemberResults(() => [])
+    const r = await persistCheckin(member, 'participant')
+    if (r === 'ok' || r === 'dup') { setQuery(''); return }
+    if (r === 'not_registered') { setQuery(''); requestCobro(member); return }
     setSelectedMember(member)
     setQuery(member.name)
   }
