@@ -188,7 +188,8 @@ export async function POST(req: NextRequest) {
     const { esZonaVirtual, MIN_RAZON_VIRTUAL } = await import('@/lib/studies/demanda-declarada')
     const esVirtual = body.request_type === 'study_interest' && esZonaVirtual(body.proposed_location)
     if (esVirtual && reason.length < MIN_RAZON_VIRTUAL) {
-      return NextResponse.json({ error: 'Contanos por qué te sirve que sea virtual.' }, { status: 400 })
+      const { ERROR_RAZON_VIRTUAL } = await import('@/lib/studies/demanda-declarada')
+      return NextResponse.json({ error: ERROR_RAZON_VIRTUAL }, { status: 400 })
     }
 
     const request = await createStudyRequest({

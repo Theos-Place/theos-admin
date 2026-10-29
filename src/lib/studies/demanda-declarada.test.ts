@@ -3,6 +3,7 @@ import { readFileSync } from 'node:fs'
 import {
   zonasDeSolicitud, agruparDemanda, dirigentesParaCluster, puedeDarPlan, tendenciaSemanal, lunesDe,
   etiquetaDeZona, etapaDelCluster, SIN_ZONA, CUALQUIER_ZONA, UMBRAL_ACCIONABLE, type Solicitud, type DirigenteParaDemanda,
+  AVISO_VIRTUAL, ETIQUETA_RAZON_VIRTUAL,
 } from './demanda-declarada'
 import { prellenadoDesdeDemanda, urlDeNuevoGrupo, diaComoLetra } from './grupo-desde-demanda'
 
@@ -207,9 +208,28 @@ describe('zona virtual en el interés de estudio (2026-10-20)', () => {
   it('el formulario pide el porqué solo con virtual, y el servidor lo exige', () => {
     const f = readFileSync('src/components/studies/StudyRequestActions.tsx', 'utf8')
     expect(f).toContain("{zoneSel === 'virtual' && (")
-    expect(f).toContain('¿Por qué te sirve virtual?')
+    // 2026-10-29: virtual es por excepción — aviso arriba, etiqueta nueva y
+    // campo obligatorio (en el cliente y, abajo, en el servidor).
+    expect(f).toContain('{AVISO_VIRTUAL}')
+    expect(f).toContain('{ETIQUETA_RAZON_VIRTUAL}')
+    expect(f).toContain('required aria-required="true"')
+    expect(f).toContain('setError(ERROR_RAZON_VIRTUAL)')
+    expect(ETIQUETA_RAZON_VIRTUAL).toBe('¿Por qué necesitás la modalidad virtual?')
+    expect(AVISO_VIRTUAL).toContain('exclusivos para personas que no pueden asistir presencialmente')
     const api = readFileSync('src/app/api/studies/requests/route.ts', 'utf8')
     expect(api).toContain('esVirtual && reason.length < MIN_RAZON_VIRTUAL')
     expect(api).toContain("reason: body.request_type === 'relocation' || esVirtual ? reason : null")
+  })
+})
+
+describe('virtual es por excepción (2026-10-29)', () => {
+  it('la reubicación no ofrece virtual como zona: solo las sedes', () => {
+    const f = readFileSync('src/components/studies/StudyRequestActions.tsx', 'utf8')
+    // Un solo <option value="virtual">: el del interés de estudio.
+    expect(f.match(/value="virtual"/g)?.length).toBe(1)
+  })
+  it('sin virtual, el campo del porqué ni se muestra ni se exige (el guard es solo con virtual)', () => {
+    const api = readFileSync('src/app/api/studies/requests/route.ts', 'utf8')
+    expect(api).toContain('esVirtual && reason.length < MIN_RAZON_VIRTUAL')
   })
 })

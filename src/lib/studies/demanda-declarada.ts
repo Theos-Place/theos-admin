@@ -60,6 +60,15 @@ export const ZONA_VIRTUAL = '__virtual__'
 export const ETIQUETA_VIRTUAL = 'Virtual'
 /** Lo que se le pide a quien elige virtual: por qué. */
 export const MIN_RAZON_VIRTUAL = 10
+/**
+ * Virtual es por EXCEPCIÓN, no una opción abierta (Floriana, 2026-10-29): el
+ * aviso va arriba del campo y el campo es obligatorio. Las constantes viven
+ * acá para que el modal y el servidor digan lo mismo.
+ */
+export const AVISO_VIRTUAL =
+  'Los estudios virtuales son exclusivos para personas que no pueden asistir presencialmente por distancia o salud. Contanos tu caso y lo evaluaremos.'
+export const ETIQUETA_RAZON_VIRTUAL = '¿Por qué necesitás la modalidad virtual?'
+export const ERROR_RAZON_VIRTUAL = 'Contanos por qué necesitás la modalidad virtual: sin eso no podemos evaluar tu caso.'
 
 /** ¿El texto de zona es «Virtual»? Sin importar mayúsculas ni tildes. */
 export function esZonaVirtual(texto: string | null | undefined): boolean {

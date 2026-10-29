@@ -10,7 +10,7 @@ import { Combobox, type ComboValue } from '@/components/shared/Combobox'
 import { useSedes } from '@/lib/sedes'
 import { ANY_ZONE, DIAS_DE_ESTUDIO } from '@/lib/studies/request-prefs'
 import { cn } from '@/lib/utils'
-import { ETIQUETA_VIRTUAL, MIN_RAZON_VIRTUAL } from '@/lib/studies/demanda-declarada'
+import { ETIQUETA_VIRTUAL, MIN_RAZON_VIRTUAL, AVISO_VIRTUAL, ETIQUETA_RAZON_VIRTUAL, ERROR_RAZON_VIRTUAL } from '@/lib/studies/demanda-declarada'
 import type { StudyRequestType } from '@/types/study'
 import { textoFalta } from '@/lib/studies/relocation'
 
@@ -137,7 +137,7 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
     if (openModal === 'study_interest') {
       if (!planId) { setError('Seleccioná el estudio de interés.'); return }
       if (zoneSel === 'virtual' && reason.trim().length < MIN_RAZON_VIRTUAL) {
-        setError('Contanos por qué te sirve que sea virtual.'); return
+        setError(ERROR_RAZON_VIRTUAL); return
       }
     }
     if (openModal === 'relocation') {
@@ -395,15 +395,25 @@ export function StudyRequestActions({ memberId, only, variant = 'buttons' }: {
                       {zoneSel === 'otra' && (
                         <input value={zoneOther} onChange={e => setZoneOther(e.target.value)} placeholder="Escribí la zona" className={cn(SELECT_CLS, 'mt-2 placeholder:text-navy-light/80')} />
                       )}
-                      {/* Solo si eligen virtual (2026-10-20): por qué. Ayuda a
-                          decidir si se abre un grupo virtual o se le busca uno
-                          presencial cerca. */}
+                      {/* Solo si eligen virtual (2026-10-20): por qué. Virtual es
+                          por EXCEPCIÓN (2026-10-29): el aviso lo dice antes del
+                          campo y el campo es obligatorio (lo exige también el
+                          servidor). */}
                       {zoneSel === 'virtual' && (
-                        <div className="mt-2">
-                          <label htmlFor="interest-virtual-reason" className={LABEL_CLS}>¿Por qué te sirve virtual?</label>
-                          <textarea id="interest-virtual-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3}
-                            placeholder="Por ejemplo: vivo fuera del país, trabajo de noche, no tengo cómo trasladarme…"
-                            className={cn(SELECT_CLS, 'placeholder:text-navy-light/80')} />
+                        <div className="mt-2 space-y-2">
+                          <div className="flex items-start gap-2 rounded-xl bg-teal/8 border border-teal/20 px-4 py-3">
+                            <Info size={15} className="mt-0.5 shrink-0 text-teal-deep" aria-hidden />
+                            <p className="text-[13px] text-navy font-body">{AVISO_VIRTUAL}</p>
+                          </div>
+                          <div>
+                            <label htmlFor="interest-virtual-reason" className={LABEL_CLS}>
+                              {ETIQUETA_RAZON_VIRTUAL} <span className="text-coral-deep" aria-hidden>*</span>
+                            </label>
+                            <textarea id="interest-virtual-reason" value={reason} onChange={e => setReason(e.target.value)} rows={3}
+                              required aria-required="true"
+                              placeholder="Por ejemplo: vivo fuera del país, tengo una condición de salud que me impide trasladarme…"
+                              className={cn(SELECT_CLS, 'placeholder:text-navy-light/80')} />
+                          </div>
                         </div>
                       )}
                     </div>
