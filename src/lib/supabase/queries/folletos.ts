@@ -10,6 +10,10 @@ import { reportarError } from '@/lib/observabilidad'
 import { folletosQuePide } from '@/lib/studies/corte-de-bloque'
 import type { ResultadoPorTiquete } from '@/lib/studies/cambio-de-estado-folleto'
 import { modalidadDe } from '@/lib/studies/modalidad-de-bloques'
+import {
+  tieneMatriculaAbierta, notaDeMatriculaAbierta, tocaCerrarMatricula, yaSeCerroLaMatricula,
+  notaDeCierreDeMatricula, deltaDeFolletos, nuevosDesde, textoParaElDirigente,
+} from '@/lib/studies/continuacion-n3'
 
 export type DbFolletoRequest = {
   id: string
@@ -147,7 +151,7 @@ export async function createAutoFolletoIfNeeded(
   const supabase = createAdminClient()
   const [{ data: g }, { count }, { count: conPar }] = await Promise.all([
     supabase.from('study_groups')
-      .select('id, max_students, folletos_sede, leader_id, co_leader_id, modalidad, plan:study_plans(code)')
+      .select('id, max_students, folletos_sede, leader_id, co_leader_id, modalidad, status, enrollment_end_date, plan:study_plans(code)')
       .eq('id', groupId).maybeSingle(),
     // 'pendiente_de_pago' cuenta: los que avanzan por cierre entran así (la
     // matrícula es efectiva de inmediato y el cobro va aparte), y si no se
@@ -165,7 +169,7 @@ export async function createAutoFolletoIfNeeded(
       .eq('group_id', groupId).eq('cubre_bloque', true)
       .in('status', ['enrolled', 'pendiente_de_pago']),
   ])
-  const row = g as { id: string; max_students: number | null; folletos_sede: string | null; leader_id: string | null; co_leader_id: string | null; modalidad: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
+  const row = g as { id: string; max_students: number | null; folletos_sede: string | null; leader_id: string | null; co_leader_id: string | null; modalidad: string | null; status: string | null; enrollment_end_date: string | null; plan: { code: string | null } | { code: string | null }[] | null } | null
   if (!row) return { created: false, reason: 'grupo_no_encontrado' }
   const plan = Array.isArray(row.plan) ? row.plan[0] : row.plan
   const code = plan?.code ?? null
@@ -227,7 +231,11 @@ export async function createAutoFolletoIfNeeded(
     sede,
     close_date: todayIso,
     available_at: estimatedAvailableDate(todayIso),
-    note: extras?.note ?? null,
+    // EST-31: el tiquete de cierre de un sucesor EN MATRÍCULA nace diciendo
+    // hasta cuándo puede entrar más gente y que habrá actualización.
+    note: extras?.note ?? (tipo === 'cierre' && tieneMatriculaAbierta(row)
+      ? notaDeMatriculaAbierta({ finDeMatricula: row.enrollment_end_date!, aprobados: aImprimir, nivelOrigen: originGroupId ? 'nivel anterior' : null })
+      : null),
   }).select('id').single()
   if (error) {
     if ((error as { code?: string }).code !== '23505') throw error
@@ -994,4 +1002,138 @@ export async function getFolletoDetalle(id: string): Promise<FolletoDetalle | nu
     target_leader_name: t.target_leader_name,
     reubicacion,
   }
+}
+
+// ── EST-31 · Cierre de matrícula del sucesor (continuación N2→N3) ───────────
+
+export type ResumenCierreDeMatricula = {
+  group_id: string
+  folleto_id: string
+  inicial: number
+  final: number
+  adicionales: number
+  nuevos: number
+  correosAlDirigente: number
+}
+
+/**
+ * EST-31 · Cuando CIERRA LA MATRÍCULA del sucesor (un día después del fin de
+ * la ventana, aunque no haya arrancado), el MISMO tiquete de cierre se
+ * actualiza con el total final y el delta —lo ya impreso no se repite—, se
+ * avisa a folletos y, SOLO si entró alguien después del tiquete, al dirigente
+ * con los nombres para que los sume al chat. Idempotente por la marca en la
+ * nota. Devuelve null si no había nada que hacer.
+ */
+export async function cerrarMatriculaDeContinuacion(groupId: string, hoy: string): Promise<ResumenCierreDeMatricula | null> {
+  const { contarMatricula, totalMatriculados, anexarNota, textoConteo } = await import('@/lib/studies/folletos-anticipados-auto')
+  const supabase = createAdminClient()
+  const { data: previo } = await supabase.from('folleto_requests')
+    .select('id, status, quantity, note, sede, target_level_code, source_plan_code, created_at')
+    .eq('source_group_id', groupId).eq('tipo', 'cierre').maybeSingle()
+  const t = previo as { id: string; status: string; quantity: number; note: string | null; sede: string | null; target_level_code: string | null; source_plan_code: string | null; created_at: string | null } | null
+  if (!t || yaSeCerroLaMatricula(t.note)) return null
+
+  const { data: g } = await supabase.from('study_groups')
+    .select('status, name, modalidad, enrollment_end_date, leader_id, co_leader_id')
+    .eq('id', groupId).maybeSingle()
+  const grupo = g as { status: string; name: string | null; modalidad: string | null; enrollment_end_date: string | null; leader_id: string | null; co_leader_id: string | null } | null
+  if (!grupo || !tocaCerrarMatricula(grupo, hoy)) return null
+
+  const filas = await matriculaConPagos(groupId)
+  const conteo = contarMatricula(filas)
+  const final = totalMatriculados(conteo)
+  const delta = deltaDeFolletos(t.quantity, final)
+  const note = anexarNota(t.note, notaDeCierreDeMatricula({ hoy, inicial: t.quantity, final, conteo }))
+  // La cantidad del tiquete pasa a ser el TOTAL final; el delta queda en la
+  // nota y en el correo, que es donde quien imprime lo lee.
+  const { error } = await supabase.from('folleto_requests').update({ quantity: final, note }).eq('id', t.id)
+  if (error) throw error
+
+  const par = folletosQuePide(t.source_plan_code, modalidadDe(grupo.modalidad)).map(levelLabel).join(' + ')
+    || levelLabel(t.target_level_code)
+  const sede = t.sede ?? 'sede sin definir'
+  try {
+    const { renderEmail } = await import('@/lib/email/baseLayout')
+    await notifyFolletoRecipients({
+      title: delta.cambio ? `Folletos: +${delta.adicionales} adicionales` : 'Folletos: cantidad final confirmada',
+      body: `${grupo.name ?? 'Grupo'} cerró matrícula · ${par}: ${delta.texto}`,
+      subject: delta.cambio
+        ? `Folletos de ${par} — CONTINUACIÓN: +${delta.adicionales} adicionales para ${sede}`
+        : `Folletos de ${par} — cantidad final confirmada: ${final} para ${sede}`,
+      link: `/estudios/folletos/${t.id}`,
+      html: renderEmail(`<p class="greeting">Cerró la matrícula del grupo de continuación</p>
+<p>El grupo <strong>${grupo.name ?? ''}</strong> cerró su matrícula. El tiquete de folletos que se pidió al
+cerrar el nivel anterior queda con los números finales:</p>
+<div class="info-box">
+  <p class="info-title">${delta.cambio ? 'Hay que imprimir más' : 'Sin cambios'}</p>
+  <p style="font-size:14px; color:#161440; line-height:1.8; margin:0;">
+    <strong>${delta.texto}</strong><br/>
+    ${textoConteo(conteo)}<br/>
+    Folletos: ${par} · enviar a ${sede}
+  </p>
+</div>
+<p style="text-align:center; margin:28px 0;">
+  <a class="btn" href="https://admin.theosplace.org/estudios/folletos/${t.id}">Ver el tiquete</a>
+</p>`),
+    })
+  } catch (e) {
+    reportarError('folletos: cierre de matrícula registrado pero NADIE fue avisado:', e)
+  }
+
+  // Al dirigente, solo si entró alguien después del tiquete.
+  let correosAlDirigente = 0
+  const { data: mats } = await supabase.from('study_enrollments')
+    .select('member_id, status, created_at, member:members!study_enrollments_member_id_fkey(first_name, last_name)')
+    .eq('group_id', groupId)
+  const nuevos = nuevosDesde(((mats ?? []) as Array<{ member_id: string; status: string | null; created_at: string | null; member: { first_name: string | null; last_name: string | null } | { first_name: string | null; last_name: string | null }[] | null }>)
+    .map(m => { const p = Array.isArray(m.member) ? m.member[0] : m.member; return { member_id: m.member_id, status: m.status, created_at: m.created_at, nombre: `${p?.first_name ?? ''} ${p?.last_name ?? ''}`.trim() } }),
+    t.created_at ?? hoy)
+  const texto = textoParaElDirigente(nuevos.map(n => n.nombre))
+  if (texto) {
+    try {
+      const ids = [grupo.leader_id, grupo.co_leader_id].filter((x): x is string => !!x)
+      const { data: lideres } = ids.length
+        ? await supabase.from('members').select('id, first_name, last_name, email, email_bounced').in('id', ids)
+        : { data: [] }
+      const { renderEmail } = await import('@/lib/email/baseLayout')
+      const { sendEmail } = await import('@/lib/email/provider')
+      for (const m of (lideres ?? []) as Array<{ id: string; first_name: string; last_name: string; email: string | null; email_bounced: boolean | null }>) {
+        if (!m.email || m.email_bounced) continue
+        await sendEmail({
+          to: { email: m.email, name: `${m.first_name} ${m.last_name}`.trim() },
+          subject: `${grupo.name ?? 'Tu grupo'}: cerró la matrícula, ${nuevos.length === 1 ? 'entró una persona más' : `entraron ${nuevos.length} personas más`}`,
+          html: renderEmail(`<p class="greeting">Hola, ${m.first_name}</p>
+<p>Cerró la matrícula de <strong>${grupo.name ?? 'tu grupo'}</strong>.</p>
+<div class="info-box">
+  <p class="info-title">Personas nuevas</p>
+  <p style="font-size:14px; color:#161440; line-height:1.8; margin:0;">${texto}</p>
+</div>
+<p style="font-size:13px; color:#777; line-height:1.7;">Sus folletos ya se pidieron junto con los del grupo; no tenés que hacer nada más por ese lado.</p>`),
+          kind: 'transactional',
+        })
+        correosAlDirigente++
+      }
+    } catch (e) {
+      reportarError('EST-31: cierre de matrícula registrado pero el dirigente no fue avisado:', e)
+    }
+  }
+  return { group_id: groupId, folleto_id: t.id, inicial: t.quantity, final, adicionales: delta.adicionales, nuevos: nuevos.length, correosAlDirigente }
+}
+
+/** EST-31 · El barrido diario: todo sucesor en matrícula cuya ventana venció. */
+export async function barrerCierresDeMatriculaDeContinuacion(hoy: string): Promise<ResumenCierreDeMatricula[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('study_groups')
+    .select('id').eq('status', 'en_matricula').not('enrollment_end_date', 'is', null).lt('enrollment_end_date', hoy)
+  if (error) throw error
+  const out: ResumenCierreDeMatricula[] = []
+  for (const g of (data ?? []) as Array<{ id: string }>) {
+    try {
+      const r = await cerrarMatriculaDeContinuacion(g.id, hoy)
+      if (r) out.push(r)
+    } catch (e) {
+      reportarError(`EST-31: cierre de matrícula de continuación ${g.id}:`, e)
+    }
+  }
+  return out
 }

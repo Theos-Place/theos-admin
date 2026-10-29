@@ -3540,3 +3540,53 @@ crean members fantasma. Tests: alerta de no inscrito (check-in procede con flag)
 check-in de invitado contra inscripción, vínculo posterior arrastra el check-in, conteos.
 tsc/lint/vitest.
 ```
+
+### [x] EST-31 · Continuación N2→N3: avisos al dirigente y tiquete de folletos con continuación (pedido 2026-10-29)
+
+**Hecho el 2026-10-29** (`lib/studies/continuacion-n3.ts`, cableado en
+`queries/folletos.ts`, el cron `group-enrollment-windows` y `email/close-summary.ts`):
+(1) el resumen del cierre al dirigente dice que los folletos ya se mandaron a
+imprimir y hasta cuándo queda el grupo en matrícula; (2) el tiquete de cierre
+del sucesor en matrícula nace con la nota «⚠️ EN MATRÍCULA hasta el … habrá una
+actualización al cierre. Cantidad inicial = N aprobados», visible en el tiquete
+y en el correo a folletos (la nota ya se renderiza); (3) y (4) un día después
+del fin de la ventana el cron actualiza el MISMO tiquete con el total final y
+la nota «Cierre de matrícula (fecha): … CONTINUACIÓN: +N folletos adicionales»
+o «Sin cambios, cantidad final confirmada», y manda el correo a folletos;
+(5) correo al dirigente SOLO si entró alguien después del tiquete, con los
+nombres y el pedido de sumarlos al chat. Idempotente por la marca en la nota.
+
+Lo que ya existe (verificado): el check obligatorio de "¿continúa a N3?" en el
+cierre de N2, el grupo sucesor con los aprobados y la matrícula abierta. Lo
+nuevo: el circuito de avisos y la actualización/continuación del tiquete.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Continuación N2→N3 (esquema de bloques): avisos y tiquete de folletos en dos
+tiempos
+
+AL CREARSE EL GRUPO N3 POR CONTINUACIÓN (dirigente dijo sí en el cierre):
+1. CORREO AL DIRIGENTE confirmando: "Tu grupo de Nivel 3-4 quedó creado con N estudiantes
+   (los que aprobaron Nivel 2). Ya mandamos a imprimir sus folletos. El grupo queda en
+   matrícula ~2 semanas y pueden sumarse más personas."
+2. TIQUETE DE FOLLETOS a Denise (ya se genera — verificar) CON NOTA VISIBLE en el tiquete
+   y en su correo: "⚠️ Este grupo queda EN MATRÍCULA hasta el [fecha]: potencialmente se
+   matricularán más personas — habrá una actualización al cierre." Cantidad inicial =
+   los aprobados de N2.
+
+AL CERRARSE LA MATRÍCULA DEL N3 (pasa a por-iniciar, EST-21):
+3. ACTUALIZAR EL MISMO TIQUETE con el total final (patrón EST-30: historial inicial →
+   final visible) y correo de actualización a Denise.
+4. SI ENTRARON MÁS personas después del tiquete inicial: la actualización dice explícito
+   "CONTINUACIÓN: este grupo necesita +N folletos adicionales" (los ya mandados a
+   imprimir no se repiten — el delta claro para que Denise imprima solo lo que falta).
+   Si no entró nadie: "sin cambios, cantidad final confirmada".
+5. CORREO AL DIRIGENTE con el resultado de la matrícula: "Se matricularon N personas más:
+   [nombres]. Por favor asegurate de AGREGARLAS AL CHAT DE WHATSAPP del grupo." (Si no
+   entró nadie, no se le manda nada — cero ruido.)
+Correos internos/operativos con baseLayout y criterio EMAIL_SILENT_MODE de siempre.
+Idempotente (el cierre de ventana corre una vez; re-corridas no duplican correos ni
+deltas). Tests: nota de matrícula abierta en el tiquete, delta correcto (+N), sin
+cambios no genera correo al dirigente, historial del tiquete. tsc/lint/vitest.
+```

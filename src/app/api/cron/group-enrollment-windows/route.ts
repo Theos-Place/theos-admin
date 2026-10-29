@@ -3,7 +3,7 @@ import { requireRoles, secretsMatch } from '@/lib/auth/guard'
 import { pingHealthcheck } from '@/lib/health'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { shouldCloseEnrollment } from '@/lib/studies/enrollment-window'
-import { pedirFolletosAnticipadosAutomaticos, actualizarFolletoAlAbrir } from '@/lib/supabase/queries/folletos'
+import { pedirFolletosAnticipadosAutomaticos, actualizarFolletoAlAbrir, barrerCierresDeMatriculaDeContinuacion } from '@/lib/supabase/queries/folletos'
 import { ymdCR } from '@/lib/format'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -41,6 +41,20 @@ export async function POST(req: NextRequest) {
       anticipados = await pedirFolletosAnticipadosAutomaticos(today)
     } catch (e) {
       reportarError('group-enrollment-windows: folletos anticipados automáticos:', e)
+    }
+
+    /**
+     * EST-31 · También antes de cerrar ventanas: el sucesor de un corte N2→N3
+     * cuya matrícula venció ayer actualiza su tiquete de folletos con el
+     * total final y el delta, avisa a folletos y al dirigente si entró
+     * alguien. Va aparte del cierre de ventana porque ese espera al
+     * arranque, y quien imprime necesita el número ANTES.
+     */
+    let continuaciones: Awaited<ReturnType<typeof barrerCierresDeMatriculaDeContinuacion>> = []
+    try {
+      continuaciones = await barrerCierresDeMatriculaDeContinuacion(today)
+    } catch (e) {
+      reportarError('group-enrollment-windows: cierres de matrícula de continuación:', e)
     }
 
     const { data, error } = await supabase
@@ -82,7 +96,7 @@ export async function POST(req: NextRequest) {
     }
 
     await pingHealthcheck('HEALTHCHECK_URL_GROUP_WINDOWS')
-    return NextResponse.json({ closed, anticipados, folletosActualizados })
+    return NextResponse.json({ closed, anticipados, folletosActualizados, continuaciones })
   } catch (error) {
     reportarError('POST /api/cron/group-enrollment-windows:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

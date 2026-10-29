@@ -34,6 +34,8 @@ export type ResumenCierre = {
   sucesor: { nombre: string; nivel: string | null; matriculados: number } | null
   /** Cuándo arranca el grupo siguiente (YYYY-MM-DD). */
   sucesorArranca: string | null
+  /** EST-31 · Hasta cuándo el sucesor queda en matrícula (solo en el corte 2→3). */
+  sucesorMatriculaHasta: string | null
 }
 
 export function asuntoCierre(r: ResumenCierre): string {
@@ -78,7 +80,9 @@ export function cuerpoCierre(r: ResumenCierre): string {
     <strong>${r.sucesor.nombre}</strong>${r.sucesorArranca ? `, que arranca el ${formatDateLong(r.sucesorArranca)}` : ''}.
   </p>
   <p style="font-size:13px; color:#777; line-height:1.7; margin:0;">
-    Los folletos del grupo nuevo ya se pidieron: no tenés que hacer nada.
+    Ya mandamos a imprimir sus folletos: no tenés que hacer nada.${r.sucesorMatriculaHasta
+      ? ` El grupo queda <strong>en matrícula hasta el ${formatDateLong(r.sucesorMatriculaHasta)}</strong> y pueden sumarse más personas; si entra alguien, te avisamos al cierre para que lo sumés al chat.`
+      : ''}
   </p>
 </div>`
     : `<p style="font-size:13px; color:#777; line-height:1.7;">
@@ -142,11 +146,12 @@ export async function sendCloseSummary(input: {
 
   let sucesor: ResumenCierre['sucesor'] = null
   let sucesorArranca: string | null = null
+  let sucesorMatriculaHasta: string | null = null
   if (input.successorGroupId) {
     const { data } = await sb.from('study_groups')
-      .select('name, starts_at, plan:study_plans!study_groups_plan_id_fkey(name)')
+      .select('name, starts_at, status, enrollment_end_date, plan:study_plans!study_groups_plan_id_fkey(name)')
       .eq('id', input.successorGroupId).maybeSingle()
-    const g = data as { name: string | null; starts_at: string | null; plan: { name: string | null } | { name: string | null }[] | null } | null
+    const g = data as { name: string | null; starts_at: string | null; status: string | null; enrollment_end_date: string | null; plan: { name: string | null } | { name: string | null }[] | null } | null
     if (g) {
       const { count } = await sb.from('study_enrollments')
         .select('id', { count: 'exact', head: true })
@@ -155,6 +160,7 @@ export async function sendCloseSummary(input: {
       const plan = Array.isArray(g.plan) ? g.plan[0] : g.plan
       sucesor = { nombre: g.name ?? 'el grupo siguiente', nivel: plan?.name ?? null, matriculados: count ?? 0 }
       sucesorArranca = g.starts_at
+      sucesorMatriculaHasta = g.status === 'en_matricula' && g.enrollment_end_date ? g.enrollment_end_date : null
     }
   }
 
@@ -191,6 +197,7 @@ export async function sendCloseSummary(input: {
       retirados: porResultado('retirado'),
       sucesor,
       sucesorArranca,
+      sucesorMatriculaHasta,
     }
     try {
       await sendEmail({

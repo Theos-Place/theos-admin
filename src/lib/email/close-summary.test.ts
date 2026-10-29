@@ -15,6 +15,7 @@ const base: ResumenCierre = {
   retirados: [],
   sucesor: { nombre: 'N4 · Nivel 3. Jhonny Leandro. Junio 2026', nivel: 'Nivel 4', matriculados: 7 },
   sucesorArranca: '2026-09-01',
+  sucesorMatriculaHasta: null,
 }
 
 describe('asunto', () => {
@@ -49,7 +50,7 @@ describe('cuerpo', () => {
   it('dice qué pasó con ellos y cuándo arranca el grupo nuevo', () => {
     expect(html).toContain('N4 · Nivel 3. Jhonny Leandro. Junio 2026')
     expect(html).toContain('1 de septiembre de 2026')
-    expect(html).toContain('Los folletos del grupo nuevo ya se pidieron')
+    expect(html).toContain('Ya mandamos a imprimir sus folletos')
   })
 
   it('avisa que el cierre no se deshace solo', () => {
@@ -124,7 +125,7 @@ describe('estudios que no encadenan', () => {
   it('sin sucesor lo dice, en vez de callarlo', () => {
     const html = cuerpoCierre({ ...base, sucesor: null, sucesorArranca: null })
     expect(html).toContain('no encadena con un nivel siguiente')
-    expect(html).not.toContain('Los folletos del grupo nuevo')
+    expect(html).not.toContain('Ya mandamos a imprimir')
   })
 
   it('con sucesor pero sin fecha de arranque no inventa la fecha', () => {
@@ -184,5 +185,16 @@ describe('los nombres van en el correo, no detrás de un enlace', () => {
     })
     expect(html).toContain('Sin Motivo Registrado')
     expect(html).not.toContain('Sin Motivo Registrado</span> —')
+  })
+})
+
+describe('EST-31 · el resumen dice hasta cuándo queda en matrícula el sucesor', () => {
+  it('con ventana: fecha y aviso de que se le escribe si entra alguien', () => {
+    const html = cuerpoCierre({ ...base, sucesorMatriculaHasta: '2026-11-12' })
+    expect(html).toContain('en matrícula hasta el')
+    expect(html).toContain('te avisamos al cierre')
+  })
+  it('sin ventana (1→2, 3→4): no se menciona', () => {
+    expect(cuerpoCierre(base)).not.toContain('en matrícula hasta el')
   })
 })
