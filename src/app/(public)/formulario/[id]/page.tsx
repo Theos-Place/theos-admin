@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react'
 import { useParams } from 'next/navigation'
 import Link from 'next/link'
 import { PublicFormFiller } from '@/components/forms/PublicFormFiller'
+import { Button } from '@/components/shared/Button'
 import { rutaConCuenta } from '@/lib/forms/reanswer'
 
 /**
@@ -51,12 +52,9 @@ export default function FormularioPublicoPage() {
           Para llenarlo hay que ingresar a la plataforma de Theos Place con tu correo y
           contraseña. Al entrar volvés directo a este formulario.
         </p>
-        <Link
-          href={entrar}
-          className="inline-flex items-center justify-center rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-6 py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body min-h-[44px]"
-        >
+        <Button href={entrar} tamano="lg" resplandor className="min-h-[44px]">
           Ingresar a Theos Place
-        </Link>
+        </Button>
         <p className="pt-2 text-[13px] text-navy-light/80 font-body">
           ¿Todavía no tenés cuenta?{' '}
           <Link href="/registro" className="text-teal-deep underline">Registrate acá</Link>
