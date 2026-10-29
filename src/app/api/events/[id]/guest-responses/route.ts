@@ -4,6 +4,7 @@ import { createAdminClient } from '@/lib/supabase/admin'
 import { reportarError } from '@/lib/observabilidad'
 import { isUuid } from '@/lib/validate'
 import { vincularRespuestaAFicha, RespuestaAjenaError } from '@/lib/supabase/queries/events'
+import { respuestasSinFicha } from '@/lib/supabase/queries/forms'
 
 /**
  * Quiénes llenaron el formulario de inscripción del evento por el LINK PÚBLICO,
@@ -24,16 +25,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (eEv) throw eEv
     const formId = (ev as { registration_form_id: string | null } | null)?.registration_form_id
     if (!formId) return NextResponse.json({ formId: null, items: [] })
-    const { data, error } = await supabase.from('form_responses')
-      .select('id, guest_name, guest_email, submitted_at')
-      .eq('form_id', formId).is('member_id', null)
-      .order('submitted_at', { ascending: true }).limit(500)
-    if (error) throw error
-    return NextResponse.json({
-      formId,
-      items: ((data ?? []) as Array<{ id: string; guest_name: string | null; guest_email: string | null; submitted_at: string }>)
-        .map(r => ({ id: r.id, nombre: r.guest_name ?? 'Sin nombre', email: r.guest_email, fecha: r.submitted_at })),
-    })
+    return NextResponse.json({ formId, items: await respuestasSinFicha(formId) })
   } catch (error) {
     reportarError('GET /api/events/[id]/guest-responses:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })

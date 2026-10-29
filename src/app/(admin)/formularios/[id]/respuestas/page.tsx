@@ -18,6 +18,7 @@ import { isSelectionForm, SELECTION_REVIEW_ROLES } from '@/lib/forms/selection-r
 import { useAuth } from '@/hooks/useAuth'
 
 import { usePermissions } from '@/hooks/usePermissions'
+import { RespuestasSinFicha } from '@/components/forms/RespuestasSinFicha'
 import { formatDateLong } from '@/lib/format'
 import { formatDateTime } from '@/lib/format'
 
@@ -55,6 +56,9 @@ export default function RespuestasPage() {
   const { can } = usePermissions()
   const canEditForm = can('formularios', 'edit')
 
+  // FRM-9: `version` sube al vincular una respuesta a una ficha, para que la
+  // tabla la muestre ya con nombre de miembro.
+  const [version, setVersion] = useState(0)
   useEffect(() => {
     let alive = true
     Promise.all([
@@ -68,7 +72,7 @@ export default function RespuestasPage() {
       setLoading(false)
     }).catch(() => { if (alive) setLoading(false) })
     return () => { alive = false }
-  }, [id])
+  }, [id, version])
 
   const dataFields = (form?.fields ?? []).filter(f => isDataField(f.type))
 
@@ -266,6 +270,9 @@ export default function RespuestasPage() {
               ))}
             </div>
           )}
+
+          {/* FRM-9 · Respuestas sin ficha, con su candidato del padrón. */}
+          <RespuestasSinFicha formId={id} onVinculado={() => setVersion(v => v + 1)} />
 
           {/* Individual responses table */}
           <div className="rounded-2xl overflow-hidden bg-surface-card shadow-[var(--shadow-md)]">

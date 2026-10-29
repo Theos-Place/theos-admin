@@ -74,7 +74,13 @@ describe('los CUATRO caminos a las respuestas quedaron censados', () => {
   })
 
   it('la tabla de respuestas del módulo de formularios comprueba la reserva', () => {
-    expect(lee('src/app/api/forms/[id]/responses/route.ts')).toContain('bloqueoPorReserva')
+    // FRM-9: la regla se movió al guard compartido; la ruta tiene que usarlo y
+    // el guard tiene que seguir comprobando la reserva.
+    expect(lee('src/app/api/forms/[id]/responses/route.ts')).toContain('requireRespuestasDelFormulario(id)')
+    expect(lee('src/lib/auth/respuestas-guard.ts')).toContain('bloqueoPorReserva')
+    // Las dos rutas nuevas de FRM-9 pasan por el mismo guard.
+    expect(lee('src/app/api/forms/[id]/responses/sin-ficha/route.ts')).toContain('requireRespuestasDelFormulario(id)')
+    expect(lee('src/app/api/forms/[id]/responses/[responseId]/route.ts')).toContain('requireRespuestasDelFormulario(id)')
   })
 
   it('y el EXPORT también', () => {

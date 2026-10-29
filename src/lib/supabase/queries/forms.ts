@@ -1108,3 +1108,131 @@ export async function getFichasPersonalesParaExport(
   }
   return out
 }
+
+// ── FRM-9 · Respuestas sin ficha: candidatos y vínculo ─────────────────────
+
+import { candidatoParaRespuesta, normalizarCorreo, type Candidato, type FichaCandidata } from '@/lib/forms/vinculo-de-respuesta'
+import { normalizarNombre } from '@/lib/events/puerta-con-inscripcion'
+
+export type RespuestaSinFicha = {
+  id: string
+  nombre: string
+  email: string | null
+  fecha: string
+  /** UNA ficha que coincide por correo o por nombre; null = búsqueda manual. */
+  candidato: { id: string; name: string; cedula: string | null; motivo: Candidato['motivo'] } | null
+}
+
+/**
+ * Las respuestas de un formulario que llegaron sin ficha (link público), cada
+ * una con su candidato del padrón si lo hay. Las fichas se buscan en DOS
+ * tandas (por correo y por nombre) con filtros `in`, no una consulta por
+ * respuesta; el match lo decide la función pura.
+ */
+export async function respuestasSinFicha(formId: string): Promise<RespuestaSinFicha[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('form_responses')
+    .select('id, guest_name, guest_email, submitted_at')
+    .eq('form_id', formId).is('member_id', null)
+    .order('submitted_at', { ascending: true }).limit(500)
+  if (error) throw error
+  const filas = (data ?? []) as Array<{ id: string; guest_name: string | null; guest_email: string | null; submitted_at: string }>
+  if (filas.length === 0) return []
+
+  const correos = [...new Set(filas.map(r => normalizarCorreo(r.guest_email)).filter(Boolean))]
+  const nombres = [...new Set(filas.map(r => normalizarNombre(r.guest_name)).filter(Boolean))]
+  const fichas = new Map<string, FichaCandidata>()
+  const guardar = (rows: unknown[] | null) => {
+    for (const r of (rows ?? []) as FichaCandidata[]) fichas.set(r.id, r)
+  }
+  if (correos.length) {
+    // ilike con `in` no existe: se piden en minúsculas Y como vienen, y la
+    // comparación real (normalizada) la hace la función pura.
+    const { data: porCorreo } = await supabase.from('members')
+      .select('id, first_name, last_name, email, cedula')
+      .eq('is_active', true).in('email', [...correos, ...filas.map(r => (r.guest_email ?? '').trim()).filter(Boolean)])
+    guardar(porCorreo)
+  }
+  if (nombres.length) {
+    // Por nombre: se traen las fichas activas cuyo primer nombre coincide y se
+    // compara el nombre completo normalizado en memoria (sin tildes).
+    const primeros = [...new Set(nombres.map(n => n.split(' ')[0]))]
+    const { data: porNombre } = await supabase.from('members')
+      .select('id, first_name, last_name, email, cedula')
+      .eq('is_active', true).or(primeros.map(p => `first_name.ilike.${p.replace(/[,().]/g, '')}%`).join(','))
+      .limit(2000)
+    guardar(porNombre)
+  }
+  const lista = [...fichas.values()]
+  return filas.map(r => {
+    const c = candidatoParaRespuesta(r, lista)
+    return {
+      id: r.id,
+      nombre: r.guest_name ?? 'Sin nombre',
+      email: r.guest_email,
+      fecha: r.submitted_at,
+      candidato: c ? { id: c.miembro.id, name: `${c.miembro.first_name} ${c.miembro.last_name}`.trim(), cedula: c.miembro.cedula, motivo: c.motivo } : null,
+    }
+  })
+}
+
+/** FRM-9 · La respuesta no es de este formulario, no existe o ya tiene ficha. */
+export class RespuestaNoVinculableError extends Error {
+  constructor() { super('Esa respuesta no es de este formulario o ya tiene ficha.'); this.name = 'RespuestaNoVinculableError' }
+}
+
+/**
+ * FRM-9 · Liga una respuesta sin ficha a una persona del padrón.
+ *
+ * Después del vínculo pasa por EL MISMO camino que una respuesta con ficha
+ * (`linkResponseToRegistration`): si el formulario inscribe a un evento, se
+ * crea la inscripción con el estado de pago que dicta `pago-al-inscribirse`
+ * —`paid` si el formulario exige comprobante y la persona lo adjuntó, con su
+ * fila de pago; si no, `pending`— y fechada el día de la respuesta. Sin
+ * correo. El disparador de la base (EVE-15) pasa el check-in del invitado a
+ * la persona. Queda en audit_log.
+ */
+export async function vincularRespuestaSinFicha(
+  formId: string, responseId: string, memberId: string, actorUserId: string | null,
+): Promise<{ inscribeAEventos: boolean }> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('form_responses')
+    .update({ member_id: memberId })
+    .eq('id', responseId).eq('form_id', formId).is('member_id', null)
+    .select('id, submitted_at')
+  if (error) throw error
+  if (!data || data.length === 0) throw new RespuestaNoVinculableError()
+  const submittedAt = (data[0] as { submitted_at: string | null }).submitted_at ?? null
+
+  const [{ data: campos }, { data: valores }, { data: ev }, { data: eventos }] = await Promise.all([
+    supabase.from('form_fields').select('id, field_type, label, is_required').eq('form_id', formId),
+    supabase.from('form_response_values').select('field_id, value_text, value_json').eq('response_id', responseId),
+    supabase.from('events').select('requires_payment, payment_amount, title').eq('registration_form_id', formId).limit(1).maybeSingle(),
+    supabase.from('events').select('id').eq('registration_form_id', formId),
+  ])
+  // Solo se mira SI el formulario inscribe a algún evento; en CUÁL se inscribe
+  // lo decide linkResponseToRegistration (la sesión del día que eligió).
+  const inscribeAEventos = ((eventos ?? []) as Array<{ id: string }>).length > 0
+  if (inscribeAEventos) {
+    const listaCampos = (campos ?? []) as CampoDelFormulario[]
+    const respuestas = (valores ?? []) as Array<{ field_id: string; value_text: string | null; value_json: unknown }>
+    const estado = estadoDePagoAlInscribirse({ campos: listaCampos, respuestas })
+    const evento = (ev ?? {}) as { requires_payment?: boolean; payment_amount?: string; title?: string }
+    const pago = pagoDeInscripcion({ campos: listaCampos, respuestas, evento })
+    const idComprobante = new Set(listaCampos.filter(esCampoDeComprobante).map(c => c.id))
+    const comprobante = respuestas.find(r =>
+      idComprobante.has(r.field_id) && typeof r.value_text === 'string' && r.value_text.trim() !== '')
+      ?.value_text ?? null
+    await linkResponseToRegistration(
+      supabase, formId, memberId, responseId, estado, pago, comprobante,
+      evento.title ?? 'Inscripción', submittedAt, fechaDeActividadDeclarada(listaCampos, respuestas))
+  }
+
+  await supabase.from('audit_log').insert({
+    action: 'UPDATE', entity_type: 'form_responses', entity_id: responseId, actor_id: actorUserId,
+    old_data: { member_id: null },
+    new_data: { member_id: memberId, op: 'vinculo_respuesta_a_ficha', form_id: formId, inscribe_a_eventos: inscribeAEventos },
+  })
+  return { inscribeAEventos }
+}

@@ -1106,28 +1106,14 @@ export async function vincularRespuestaAFicha(
     .from('events').select('registration_form_id').eq('id', eventId).maybeSingle()
   const formId = (ev as { registration_form_id: string | null } | null)?.registration_form_id
   if (!formId) throw new RespuestaAjenaError()
-  const { data, error } = await supabase
-    .from('form_responses')
-    .update({ member_id: memberId })
-    .eq('id', responseId).eq('form_id', formId).is('member_id', null)
-    .select('id')
-  if (error) throw error
-  if (!data || data.length === 0) throw new RespuestaAjenaError()
-
-  // La inscripción de la persona, ligada a su respuesta: sin ella seguiría
-  // contando como «sin inscripción» en la puerta y en el detalle. Entra como
-  // 'pending' (lo mismo que una inscripción normal) y SIN correo: el pago, si
-  // el evento lo pide, lo maneja el equipo del evento. Si ya estaba inscrita
-  // por su cuenta, se deja esa.
-  const { error: eReg } = await supabase
-    .from('event_registrations')
-    .insert({ event_id: eventId, member_id: memberId, payment_status: 'pending', form_response_id: responseId, recorded_by: actorUserId })
-  if (eReg && (eReg as { code?: string }).code !== '23505') throw eReg
-
-  await supabase.from('audit_log').insert({
-    action: 'UPDATE', entity_type: 'form_responses', entity_id: responseId,
-    old_data: { member_id: null }, new_data: { member_id: memberId, op: 'vinculo_respuesta_a_ficha', event_id: eventId },
-  })
+  // FRM-9: la lógica (vínculo + inscripción + auditoría) es del formulario.
+  const { vincularRespuestaSinFicha, RespuestaNoVinculableError } = await import('./forms')
+  try {
+    await vincularRespuestaSinFicha(formId, responseId, memberId, actorUserId)
+  } catch (e) {
+    if (e instanceof RespuestaNoVinculableError) throw new RespuestaAjenaError()
+    throw e
+  }
 }
 
 export type OnsiteChargeMode = 'pending' | 'verified'

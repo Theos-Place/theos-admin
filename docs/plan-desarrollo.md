@@ -3492,6 +3492,23 @@ sin inscripción» en el tab Check-in del evento y columna «Inscripción» en e
 CSV. Queda para EVE-14: el match asistido por cédula/correo/teléfono y los
 totales por tipo de inscripción (pareja).
 
+### [x] FRM-9 · Respuestas sin ficha: vincular a una persona del padrón (pedido 2026-10-29)
+
+**Hecho el 2026-10-29.** En la pantalla de respuestas de cualquier formulario
+y en la pestaña Inscripciones del evento, la tarjeta «Por el link público, sin
+ficha» propone UNA ficha por correo exacto (o, si no, por nombre exacto) con
+«Sí, vincular», y ofrece el buscador de miembros para el resto («Buscar su
+ficha…» / «Es otra persona…»). Rutas: `GET /api/forms/[id]/responses/sin-ficha`
+y `PATCH /api/forms/[id]/responses/[responseId]`, con el mismo permiso que
+leer las respuestas (`lib/auth/respuestas-guard.ts`). Al vincular: la
+respuesta pasa a la ficha, se crea la inscripción por el MISMO camino que una
+respuesta con ficha (`linkResponseToRegistration`: pagada si adjuntó comprobante,
+si no pendiente; sin correo) en el evento cuyo formulario de inscripción es ese, el disparador EVE-15 pasa
+el check-in del invitado a la persona, y queda en audit_log. Medido en prod:
+25 de las 29 respuestas de Matrimonios tienen UNA ficha con el mismo correo.
+Cubre la parte 1 de EVE-14 salvo el match por teléfono y «crear ficha desde la
+inscripción».
+
 Prompt para Claude Code:
 
 ```

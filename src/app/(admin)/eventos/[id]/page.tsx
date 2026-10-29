@@ -744,7 +744,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       )}
       {/* 2026-10-19 · Lo que llegó por el link público sin ficha: no son
           inscripciones, pero alguien tiene que verlas (Matrimonios). */}
-      {tabEfectivo === 'inscripciones' && event.registration_form_id && <InscritosSinFicha eventId={id} />}
+      {tabEfectivo === 'inscripciones' && event.registration_form_id && <InscritosSinFicha eventId={id} onVinculado={refetch} />}
 
       {/* Tab: Check-in */}
       {tabEfectivo === 'checkin' && (

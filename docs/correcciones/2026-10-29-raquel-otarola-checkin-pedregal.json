@@ -1,0 +1,18 @@
+{
+  "fecha": "2026-10-29T20:33:48.972Z",
+  "motivo": "Raquel Otárola sirvió el 28-oct en Pedregal Miércoles y no tenía check-in",
+  "insertado": {
+    "id": "c8261f09-53c1-47d6-be5b-bf5f5d2336d7",
+    "event_id": "d40fad32-5fec-4fb8-91e1-f58e644c711e",
+    "member_id": "e902a9ef-9c69-4f7a-925c-55c8fcb5825a",
+    "guest_name": null,
+    "checked_in_at": "2026-10-29T01:30:00.000Z",
+    "checked_in_by": null,
+    "method": "manual",
+    "notes": "Repuesto el 2026-10-29: sirvió en Bienvenida y no se le marcó (Floriana)",
+    "sub_event_id": null,
+    "checked_in_as": "servidor",
+    "form_response_id": null,
+    "sin_inscripcion": false
+  }
+}
