@@ -4,6 +4,7 @@ import {
   esAvance, esRetroceso, notaObligatoria, motivoQueImpide, textoDeConfirmacion,
   disparaEfecto, resumenDelLote, MINIMO_DE_LA_NOTA, type ResultadoPorTiquete,
 } from './cambio-de-estado-folleto'
+import { FOLLETO_STATES, FOLLETO_STATE_LABEL, nextFolletoState } from './folletos'
 
 const sinComentarios = (ruta: string): string =>
   readFileSync(ruta, 'utf8')
@@ -14,7 +15,7 @@ const sinComentarios = (ruta: string): string =>
 describe('FOL-2 · adelante y atrás', () => {
   it('sabe en qué dirección va', () => {
     expect(esAvance('creada', 'en_impresion')).toBe(true)
-    expect(esAvance('creada', 'cerrada')).toBe(true)      // saltos también
+    expect(esAvance('creada', 'enviado_entregado')).toBe(true)      // saltos también
     expect(esRetroceso('enviado_entregado', 'creada')).toBe(true)
     expect(esAvance('creada', 'creada')).toBe(false)
     expect(esRetroceso('creada', 'creada')).toBe(false)
@@ -37,7 +38,7 @@ describe('FOL-2 · adelante y atrás', () => {
   })
 
   it('avanzar no pide nada', () => {
-    expect(motivoQueImpide({ desde: 'creada', hasta: 'cerrada' })).toBeNull()
+    expect(motivoQueImpide({ desde: 'creada', hasta: 'enviado_entregado' })).toBeNull()
   })
 
   it('al mismo estado, no', () => {
@@ -46,9 +47,9 @@ describe('FOL-2 · adelante y atrás', () => {
 
   it('la confirmación nombra el SALTO, no pregunta «¿seguro?»', () => {
     expect(textoDeConfirmacion('creada', 'en_impresion'))
-      .toBe('¿Cambiar de Creada a En impresión?')
+      .toBe('¿Cambiar de Creado a En impresión?')
     expect(textoDeConfirmacion('enviado_entregado', 'creada'))
-      .toBe('¿Devolver de Enviado / Entregado a Creada?')
+      .toBe('¿Devolver de Enviado / Entregado a Creado?')
   })
 })
 
@@ -56,7 +57,7 @@ describe('FOL-2 · los efectos no se repiten', () => {
   it('solo «enviado / entregado» dispara algo', () => {
     // Se censó la cadena: el único efecto es el aviso al dirigente.
     expect(disparaEfecto('enviado_entregado')).toBe(true)
-    for (const e of ['creada', 'en_impresion', 'cerrada']) {
+    for (const e of ['creada', 'en_impresion', 'empacado']) {
       expect(disparaEfecto(e), e).toBe(false)
     }
   })
@@ -72,7 +73,7 @@ describe('FOL-2 · los efectos no se repiten', () => {
 describe('FOL-2 · el lote dice qué pasó con CADA UNO', () => {
   const ok = (id: string): ResultadoPorTiquete => ({ id, movido: true, desde: 'creada' })
   const no = (id: string, motivo: string): ResultadoPorTiquete =>
-    ({ id, movido: false, desde: 'cerrada', motivo })
+    ({ id, movido: false, desde: 'enviado_entregado', motivo })
 
   it('todos movidos: el mensaje de siempre', () => {
     expect(resumenDelLote([ok('a'), ok('b')], 'En impresión'))
@@ -91,8 +92,8 @@ describe('FOL-2 · el lote dice qué pasó con CADA UNO', () => {
   })
 
   it('parcial: dice cuántos de cuántos', () => {
-    expect(resumenDelLote([ok('a'), ok('b'), no('c', 'x')], 'Cerrada'))
-      .toBe('2 de 3 pasaron a Cerrada; 1 no.')
+    expect(resumenDelLote([ok('a'), ok('b'), no('c', 'x')], 'Empacado'))
+      .toBe('2 de 3 pasaron a Empacado; 1 no.')
   })
 
   it('la consulta LEE el estado de cada uno antes de tocar nada', () => {
@@ -128,5 +129,24 @@ describe('FOL-2 · el cambio libre está cableado', () => {
     const permiso = "requireModuleView('folletos', { action: 'edit' })"
     expect(r).toContain(permiso)
     expect(b).toContain(permiso)
+  })
+})
+
+describe('FOL-3 · la cadena es exactamente esa y en ese orden (2026-10-29)', () => {
+  it('creado → en impresión → empacado → enviado/entregado, sin «cerrada»', () => {
+    expect([...FOLLETO_STATES]).toEqual(['creada', 'en_impresion', 'empacado', 'enviado_entregado'])
+    expect(FOLLETO_STATE_LABEL.creada).toBe('Creado')
+    expect(FOLLETO_STATE_LABEL.empacado).toBe('Empacado')
+    expect(nextFolletoState('en_impresion')).toBe('empacado')
+    expect(nextFolletoState('empacado')).toBe('enviado_entregado')
+    expect(nextFolletoState('enviado_entregado')).toBeNull()
+  })
+
+  it('el CHECK de la BD y el código se mueven juntos', () => {
+    const m = readFileSync('supabase/migrations/20261029120000_fol3_estado_empacado.sql', 'utf8')
+    expect(m).toContain("'empacado'")
+    expect(m).toContain("'cerrada'")
+    // La consulta de apertura ya no pregunta por un estado que no existe.
+    expect(sinComentarios('src/lib/supabase/queries/folletos.ts')).not.toContain("'cerrada'")
   })
 })

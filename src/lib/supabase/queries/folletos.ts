@@ -405,7 +405,8 @@ export async function actualizarFolletoAlAbrir(groupId: string, hoy: string): Pr
     .select('id, status, quantity, note, sede, target_level_code, source_plan_code')
     .eq('source_group_id', groupId).in('tipo', ['anticipado', 'anticipado_auto']).maybeSingle()
   const t = previo as { id: string; status: string; quantity: number; note: string | null; sede: string | null; target_level_code: string | null; source_plan_code: string | null } | null
-  if (!t || t.status === 'cerrada' || yaSeActualizoAlAbrir(t.note)) return false
+  // FOL-3: «cerrada» ya no existe; el final de la cadena es enviado/entregado.
+  if (!t || t.status === 'enviado_entregado' || yaSeActualizoAlAbrir(t.note)) return false
 
   const { data: g } = await supabase.from('study_groups').select('status, name, modalidad').eq('id', groupId).maybeSingle()
   const grupo = g as { status: string; name: string | null; modalidad: string | null } | null
@@ -592,7 +593,7 @@ export async function getFolletoRequests(filters: { sede?: string; status?: Foll
 }
 
 /** Cambio de estado (individual o en lote). QA 2026-07-17: el flujo es LINEAL
- *  (creada → en_impresion → enviado_entregado → cerrada) y la UI solo ofrece
+ *  (creada → en_impresion → empacado → enviado_entregado) y la UI solo ofrece
  *  "avanzar al siguiente" — el update se condiciona al estado PREDECESOR, así
  *  un request repetido/adulterado no salta pasos ni retrocede. Las filas que
  *  no estaban en el estado esperado se omiten (se refleja en `updated`). */

@@ -162,7 +162,7 @@ Cola de tiquetes de impresión/entrega por sede. **Las reglas de generación cam
 | APIs | `/api/studies/folletos` (+bulk, manual), cron `/api/cron/folleto-blocks` |
 | Tablas | `folleto_requests` — tipos vigentes: **`cupo_lleno`**, **`fin_matricula`**, **`manual`**, `reubicacion`; (`cierre` y `preapertura_*` solo quedan como datos históricos) |
 | Permisos | Permiso `folletos` (rol acotado `folletos` — **coordinador_estudios NO trae el módulo**, lo delega) |
-| Estado | Funcional. Automáticos: `cupo_lleno` al confirmarse la matrícula que llena el grupo, `fin_matricula` al vencer la ventana con ≥5 matriculados (idempotente por índice único por grupo); solo planes con folleto propio (N1-N4, DIS1-DIS3, PREMAT). `manual` desde el botón de la cola (nivel, cantidad, sede, dirigente, nota). El cron `folleto-blocks` **ya no crea tiquetes**: solo avisa los hitos del bloque (campana + correo con conteo por sede y desglose) a quienes tienen permiso folletos. Estados lineales: `creada → en_impresion → enviado_entregado → cerrada`. Sede del tiquete: `folletos_sede` del grupo → sede del dirigente → zona del grupo |
+| Estado | Funcional. Automáticos: `cupo_lleno` al confirmarse la matrícula que llena el grupo, `fin_matricula` al vencer la ventana con ≥5 matriculados (idempotente por índice único por grupo); solo planes con folleto propio (N1-N4, DIS1-DIS3, PREMAT). `manual` desde el botón de la cola (nivel, cantidad, sede, dirigente, nota). El cron `folleto-blocks` **ya no crea tiquetes**: solo avisa los hitos del bloque (campana + correo con conteo por sede y desglose) a quienes tienen permiso folletos. Estados lineales: `creada → en_impresion → empacado → enviado_entregado` (FOL-3, 2026-10-29; se ven como Creado / En impresión / Empacado / Enviado · Entregado). Sede del tiquete: `folletos_sede` del grupo → sede del dirigente → zona del grupo |
 | Depende de | Estudios (bloques, matrícula), email + notificaciones |
 
 ### Pagos (unificado) y Mis pagos
@@ -286,7 +286,7 @@ Bandeja interna (`/notificaciones`, `internal_notifications`) + alertas calculad
 | Grupo de estudio | `en_matricula → en_curso → finalizado` | Cierre por ventana vía cron; el sucesor hereda dirigente/horario/zona |
 | Bloque (`capacitacion_bloques`) | `en_apertura → activo → archivado` | Derivado por fecha, nunca manual; cierre = matrícula + 3 meses |
 | Tiquete de evento (`event_registrations`) | `pending/paid/exempted/expired` | Servidor del comité organizador exento o con precio propio |
-| Folleto (`folleto_requests`) | `creada → en_impresion → enviado_entregado → cerrada` | Lineal, sin retroceso |
+| Folleto (`folleto_requests`) | `creada → en_impresion → empacado → enviado_entregado` | Lineal; retroceso solo con nota desde «Cambiar estado» del detalle (FOL-2) |
 | Vacante (`vacancies`) | `creado → enviado_lider → aprobado/denegado`; `aprobado → cerrada` | Ventana de solicitud abre el día 25 |
 | Beca (`scholarships`) | `active → used/revoked` | Un solo uso, guard atómico |
 | Solicitudes (estudio/finanzas/prematrimonial) | `open → in_review → resolved/rejected` (premat: `pago_en_revision/pendiente/grupo_creado/cancelada`) | Reubicación resuelta = matrícula real; una solicitud de estudio abierta a la vez |

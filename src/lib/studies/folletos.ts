@@ -64,21 +64,29 @@ export function estimatedAvailableDate(closeDateIso: string): string {
 }
 
 // ── Estados ──────────────────────────────────────────────────────────────────
-export const FOLLETO_STATES = ['creada', 'en_impresion', 'enviado_entregado', 'cerrada'] as const
+/**
+ * FOL-3 (2026-10-29, pedido de Floriana): la cadena es creado → en impresión →
+ * empacado → enviado/entregado, exactamente esos cuatro y en ese orden.
+ * «Cerrada» se elimina: no había ningún tiquete en ese estado en producción
+ * (6 creadas, 2 en impresión, 35 enviadas) y nadie sabía qué significaba
+ * distinto de «enviado». El valor interno `creada` se conserva —renombrarlo
+ * en BD no aporta nada y deja literales sueltos—; lo que se ve es «Creado».
+ */
+export const FOLLETO_STATES = ['creada', 'en_impresion', 'empacado', 'enviado_entregado'] as const
 export type FolletoState = (typeof FOLLETO_STATES)[number]
 
 export const FOLLETO_STATE_LABEL: Record<FolletoState, string> = {
-  creada: 'Creada',
+  creada: 'Creado',
   en_impresion: 'En impresión',
+  empacado: 'Empacado',
   enviado_entregado: 'Enviado / Entregado',
-  cerrada: 'Cerrada',
 }
 
 export const FOLLETO_STATE_BADGE: Record<FolletoState, string> = {
   creada: 'bg-navy-light/10 text-navy-light/80',
   en_impresion: 'bg-amber-50 text-amber-700',
+  empacado: 'bg-teal-soft/30 text-teal-ink',
   enviado_entregado: 'bg-teal-deep/10 text-teal-ink',
-  cerrada: 'bg-teal-soft/30 text-teal-ink',
 }
 
 export function isFolletoState(v: string): v is FolletoState {

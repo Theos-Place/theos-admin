@@ -5,7 +5,7 @@
 // se ve cómo va el cobro de su gente.
 //
 // El pago NO frena la impresión. Los estados del folleto (creada → en_impresion
-// → enviado_entregado → cerrada) corren por su lado; esto es la otra pista.
+// → empacado → enviado_entregado) corren por su lado; esto es la otra pista.
 
 export type ConteoPagos = { total: number; pagados: number }
 

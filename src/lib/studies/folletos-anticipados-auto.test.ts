@@ -123,7 +123,8 @@ describe('convivencia con un tiquete que ya existía (EST-18/EST-21/EST-25)', ()
 
   it('ya en impresión o más: no se toca', () => {
     expect(cantidadAlConvivir({ status: 'en_impresion', quantity: 4, cupo: 15 })).toBeNull()
-    expect(cantidadAlConvivir({ status: 'cerrada', quantity: 4, cupo: 15 })).toBeNull()
+    expect(cantidadAlConvivir({ status: 'empacado', quantity: 4, cupo: 15 })).toBeNull()
+    expect(cantidadAlConvivir({ status: 'enviado_entregado', quantity: 4, cupo: 15 })).toBeNull()
   })
 
   it('si ya pide el cupo o más: nada que hacer', () => {
