@@ -1,0 +1,15 @@
+{
+  "fecha": "2026-10-29T04:09:23.386Z",
+  "motivo": "Floriana, 28/10/2026",
+  "grupo_antes": {
+    "id": "a9180796-4c23-4d43-96cf-857471cba22a",
+    "name": "Nivel 4. Marco Acuña y Tatiana Arauz. Octubre 2026",
+    "leader_id": "f069b781-5b0f-4cf9-bd19-f2cd8662d729"
+  },
+  "member_antes": {
+    "id": "3d226ece-06fa-41f5-8d7e-4dfcb9abf96f",
+    "nombre": "Santiago Conejo Rodri­guez",
+    "email": "santiagoconejor@hotmail.com",
+    "auth_user_id": "919ed96a-9d58-4120-afce-5d2986f1cf55"
+  }
+}
