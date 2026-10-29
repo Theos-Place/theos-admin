@@ -1,6 +1,5 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
-import { readFileSync } from 'node:fs'
 import { posicionDelPopover, rangoDeMeses } from './DatePicker'
 
 const vp = { width: 1280, height: 800 }

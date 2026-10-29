@@ -19,19 +19,22 @@ async function loadFamily(supabase: AdminSupabase, memberId: string): Promise<Db
   // 1. family_unit_id donde el miembro tiene vínculos
   const { data: ownLinks, error: e1 } = await supabase
     .from('family_members')
-    .select('family_unit_id')
+    .select('family_unit_id, relation')
     .eq('member_id', memberId)
   if (e1) throw e1
 
   const unitIds = (ownLinks ?? []).map(r => r.family_unit_id).filter(Boolean) as string[]
   if (unitIds.length === 0) return []
+  // El rol del propio miembro en la unidad: hace falta para que, desde el
+  // perfil de un hijo, la Titular se lea «Madre» y no «Titular» (FAM-3).
+  const miRol = (ownLinks?.[0]?.relation as string | null) ?? null
 
   // 2. Otros miembros en esos family units
   const { data: links, error: e2 } = await supabase
     .from('family_members')
     .select(`
       relation,
-      member:members!family_members_member_id_fkey(id, first_name, last_name, is_active)
+      member:members!family_members_member_id_fkey(id, first_name, last_name, is_active, gender)
     `)
     .in('family_unit_id', unitIds)
     .neq('member_id', memberId)
@@ -39,12 +42,14 @@ async function loadFamily(supabase: AdminSupabase, memberId: string): Promise<Db
 
   return (links ?? []).map((r) => {
     const row = r as Record<string, unknown>
-    const m = row.member as { id: string; first_name: string; last_name: string; is_active: boolean } | null
+    const m = row.member as { id: string; first_name: string; last_name: string; is_active: boolean; gender: string | null } | null
     return {
       id: m?.id ?? '',
       name: m ? `${m.first_name} ${m.last_name}` : '',
       relation: (row.relation as string) ?? '',
       is_active: m?.is_active ?? false,
+      gender: (m?.gender as DbFamilyMember['gender']) ?? null,
+      viewer_relation: miRol,
     }
   }).filter(f => f.id)
 }
@@ -89,8 +94,12 @@ export type DbFormResponse = {
 export type DbFamilyMember = {
   id: string
   name: string
+  /** Rol en la unidad (lo guardado). */
   relation: string
   is_active: boolean
+  gender: 'M' | 'F' | 'otro' | null
+  /** Rol en la unidad del miembro cuyo perfil se está viendo. */
+  viewer_relation: string | null
 }
 
 export type DbMemberFull = DbMemberEnriched & {

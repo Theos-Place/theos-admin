@@ -117,7 +117,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
       })
       const data = await res.json().catch(() => null)
       if (!res.ok) throw new Error(data?.error ?? 'No se pudo cambiar la relación.')
-      toast(`${fm.name} ahora figura como ${relation}.`, 'success')
+      toast(`${fm.name} ahora figura como ${relation} en la familia.`, 'success')
       onChanged?.()
     } catch (e) {
       toast(e instanceof Error ? e.message : 'No se pudo cambiar la relación.', 'error')
@@ -193,9 +193,14 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
             // El nombre va dentro del enlace; la relación NO. Es un control y
             // anidarlo en un <a> lo deja inoperable con teclado y hace que un
             // clic para cambiarla navegue al perfil.
+            // Lo que se LEE es el parentesco visto desde este perfil («Madre»,
+            // «Hermana»); lo que se EDITA es el rol en la unidad (Titular,
+            // Hijo/a…), que es lo que está guardado. Antes el badge mostraba el
+            // rol y en el perfil del hijo la mamá salía «Titular» (FAM-3).
             const info = (
               <div className="flex-1 min-w-0">
                 <p className="text-sm text-navy font-body">{fm.name}</p>
+                <p className="text-[13px] text-teal-ink font-body">{fm.parentesco}</p>
               </div>
             )
             const relacion = canEdit ? (
@@ -203,7 +208,8 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                 value={fm.relation ?? 'Otro'}
                 disabled={busy}
                 onChange={e => cambiarRelacion(fm, e.target.value)}
-                aria-label={`Relación de ${fm.name}`}
+                aria-label={`Rol de ${fm.name} en la familia`}
+                title="Rol en la familia"
                 className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-1 text-[11px] text-teal-ink outline-none transition-colors hover:bg-teal-soft/50 focus:ring-2 focus:ring-teal-deep/30 disabled:opacity-50 font-body"
               >
                 {RELACIONES_FAMILIARES.map(r => <option key={r} value={r}>{r}</option>)}
@@ -213,11 +219,7 @@ export function MemberFamilyTab({ member, onChanged }: Props) {
                   <option value={fm.relation}>{fm.relation}</option>
                 )}
               </select>
-            ) : (
-              <span className="shrink-0 rounded-full bg-teal-soft/30 px-2 py-0.5 text-[11px] text-teal-ink font-body">
-                {fm.relation}
-              </span>
-            )
+            ) : null
             return (
               <div key={fm.id} className="flex items-center gap-3 rounded-xl bg-surface-low px-4 py-3">
                 {hasProfile ? (

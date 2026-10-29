@@ -155,7 +155,11 @@ export type ServiceRecord = {
 export type FamilyEntry = {
   id: string
   name: string
+  /** Rol en la unidad familiar (Titular, Cónyuge, Hijo/a…): es lo que se edita. */
   relation: string
+  /** Cómo se llama el vínculo VISTO desde este perfil («Madre», «Hermana»);
+   *  sale de `parentescoVistoDesde`, no se guarda (FAM-3). */
+  parentesco: string
   status: 'active' | 'inactive'
 }
 

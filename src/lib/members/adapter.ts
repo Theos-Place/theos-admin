@@ -8,6 +8,7 @@ import type { Member, ServiceRecord } from '@/types/member'
 import { calcAge } from '@/lib/format'
 import { esComiteDirigentes } from '@/lib/dirigentes'
 import { accountState } from '@/lib/members/account-state'
+import { parentescoVistoDesde } from '@/lib/members/relaciones'
 
 /** Convierte un `DbMemberEnriched` a `Member`. Acepta también un `DbMember` plano
  *  (usa defaults para los campos derivados que faltan). */
@@ -137,6 +138,7 @@ export function toDomainMemberFull(db: DbMemberFull): Member {
     id: f.id,
     name: f.name,
     relation: f.relation,
+    parentesco: parentescoVistoDesde(f.viewer_relation, f.relation, f.gender),
     status: (f.is_active ? 'active' : 'inactive') as 'active' | 'inactive',
   }))
 
