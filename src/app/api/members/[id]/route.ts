@@ -147,7 +147,7 @@ async function handleUpdate(
       documentType = (cur as { document_type?: string } | null)?.document_type ?? 'cedula'
     }
     if (typeof updates.cedula === 'string' && updates.cedula && isDocumentType(documentType) && !isValidDocument(documentType, updates.cedula)) {
-      return NextResponse.json({ error: documentFormatMessage(documentType), code: 'cedula_invalida' }, { status: 400 })
+      return NextResponse.json({ error: documentFormatMessage(documentType, updates.cedula), code: 'cedula_invalida' }, { status: 400 })
     }
 
     const cedula = typeof updates.cedula === 'string' ? updates.cedula : ''

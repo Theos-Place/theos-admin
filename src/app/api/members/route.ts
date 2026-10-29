@@ -93,6 +93,12 @@ export async function POST(req: NextRequest) {
     // INT-1: el número se guarda en MAYÚSCULAS (dedup consistente para DNI/
     // pasaporte con letras; las cédulas CR son dígitos y no cambian).
     if ('cedula' in payload && typeof payload.cedula === 'string') payload.cedula = payload.cedula.trim().toUpperCase() || null
+    // 2026-10-29: la cédula CR se guarda canónica (9 dígitos: sin puntos ni
+    // cero adelante) para que el dedup por cedula_normalized la encuentre.
+    if (typeof payload.cedula === 'string' && payload.cedula && (payload.document_type ?? 'cedula') === 'cedula') {
+      const { canonicalCedulaCR, isValidCedula } = await import('@/lib/cedula')
+      if (isValidCedula(payload.cedula)) payload.cedula = canonicalCedulaCR(payload.cedula)
+    }
     if ('birth_date' in payload) {
       const { motivoDeFechaInvalida } = await import('@/lib/members/alta-persona')
       const motivo = motivoDeFechaInvalida(payload.birth_date as string | null)
@@ -104,7 +110,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Tipo de documento inválido.', code: 'documento_invalido' }, { status: 400 })
     }
     if (typeof payload.cedula === 'string' && payload.cedula && !isValidDocument(documentType, payload.cedula)) {
-      return NextResponse.json({ error: documentFormatMessage(documentType), code: 'documento_invalido' }, { status: 400 })
+      return NextResponse.json({ error: documentFormatMessage(documentType, payload.cedula), code: 'documento_invalido' }, { status: 400 })
     }
 
     // Verificación de duplicados a nivel de app (documento / correo), porque la

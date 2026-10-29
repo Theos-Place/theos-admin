@@ -160,7 +160,7 @@ export function validarAltaDePersona(p: AltaDePersona, hoy: string = hoyCR()): R
   const exigeCedula = false
   const cedula = normalizeCedula(p.cedula ?? '')
   if (cedula && !isValidDocument(tipo, cedula)) {
-    errores.cedula = documentFormatMessage(tipo)
+    errores.cedula = documentFormatMessage(tipo, p.cedula)
   }
 
   const malaFecha = motivoDeFechaInvalida(p.birth_date, hoy)

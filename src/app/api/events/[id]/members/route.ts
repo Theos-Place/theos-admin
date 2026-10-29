@@ -102,7 +102,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     // pasaportes con letras.
     const cedula = (d.cedula ?? '').trim().toUpperCase() || null
     if (cedula && !isValidDocument(documentType, cedula)) {
-      return NextResponse.json({ error: documentFormatMessage(documentType), code: 'documento_invalido' }, { status: 400 })
+      return NextResponse.json({ error: documentFormatMessage(documentType, cedula), code: 'documento_invalido' }, { status: 400 })
     }
     const email = d.email ? normalizeEmail(d.email) : null
 

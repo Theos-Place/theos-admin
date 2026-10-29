@@ -1,5 +1,5 @@
 import { describe, it, expect } from 'vitest'
-import { normalizeCedula, isValidCedula } from './cedula'
+import { normalizeCedula, isValidCedula, canonicalCedulaCR, mensajeDeCedulaInvalida, documentFormatMessage, CEDULA_FORMAT_MESSAGE } from './cedula'
 
 describe('normalizeCedula', () => {
   it('quita guiones y espacios', () => {
@@ -52,5 +52,23 @@ describe('isValidDocument (INT-1)', () => {
     // el número se captura sin puntos.
     expect(isValidDocument('otro', 'CC-1.098.765.432')).toBe(false)
     expect(isValidDocument('otro', null)).toBe(false)
+  })
+})
+
+describe('cédula con puntos o cero adelante (Estudios, 2026-10-29)', () => {
+  it('con puntos tiene sus 9 dígitos y vale', () => {
+    expect(isValidCedula('1.1234.5678')).toBe(true)
+    expect(canonicalCedulaCR('1.1234.5678')).toBe('112345678')
+  })
+  it('con cero adelante (10 dígitos) vale y se guarda sin el cero', () => {
+    expect(isValidCedula('0-1234-5678')).toBe(true)
+    expect(canonicalCedulaCR('01-1234-5678')).toBe('112345678')
+    expect(canonicalCedulaCR('1-1234-5678')).toBe('112345678')
+    expect(canonicalCedulaCR('155812345678')).toBe('155812345678') // DIMEX no se toca
+  })
+  it('el mensaje dice qué se recibió', () => {
+    expect(mensajeDeCedulaInvalida('1-1234-567')).toContain('Recibimos «11234567»: 8 dígitos.')
+    expect(mensajeDeCedulaInvalida('1-1234-5678a')).toContain('y además «a», que no es un número')
+    expect(documentFormatMessage('cedula', '')).toBe(CEDULA_FORMAT_MESSAGE)
   })
 })
