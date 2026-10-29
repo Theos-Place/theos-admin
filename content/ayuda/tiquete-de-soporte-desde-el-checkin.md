@@ -1,7 +1,7 @@
 ---
 titulo: Levantar un tiquete de soporte desde el check-in
 seccion: Eventos
-tipo: tutorial
+tipo: infografia
 visibilidad: roles
 roles: [encargado_eventos, direccion, soporte_tecnico]
 orden: 3
@@ -10,7 +10,7 @@ resumen: Qué hacer cuando en la fila algo no cuadra — una persona que no apar
 
 # Levantar un tiquete de soporte desde el check-in
 
-![El flujo completo: abrir el tiquete desde el check-in, contar qué pasó y levantarlo](/ayuda/tutoriales/tiquete/tiquete.mp4)
+![Los tres pasos del tiquete, cuándo levantarlo y qué pasa después](/ayuda/infografias/tiquete-de-soporte.svg)
 
 En la fila no hay tiempo de arreglar datos. Para eso existe el **tiquete de soporte**: lo
 levantás en treinta segundos desde la misma pantalla de check-in, la persona sigue su
@@ -61,3 +61,5 @@ busca con el nombre que quedó en el tiquete.
 
 > El botón solo aparece a quien opera el check-in. Si necesitás el acceso, escribí a
 > soporte@theosplace.org.
+
+![El flujo completo: abrir el tiquete desde el check-in, contar qué pasó y levantarlo](/ayuda/tutoriales/tiquete/tiquete.mp4)

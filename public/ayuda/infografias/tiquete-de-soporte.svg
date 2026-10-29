@@ -1,0 +1,76 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 720 1330" role="img" aria-labelledby="t-ts d-ts" font-family="Arial, Helvetica, sans-serif">
+  <title id="t-ts">Levantar un tiquete de soporte desde el check-in</title>
+  <desc id="d-ts">Los tres pasos para levantar un tiquete desde la pantalla de check-in: tocar Tiquete de soporte arriba a la derecha, contar qué pasó, y Levantar tiquete. Cuándo levantarlo: otra familia, dato equivocado, ficha que no aparece o duplicada, no puede entrar, algo no funciona. Qué pasa después: entra a la cola de Soporte, lo resuelve soporte técnico, y no hay que darle seguimiento.</desc>
+
+  <rect width="720" height="1330" fill="#F6F5F2"/>
+
+  <text x="48" y="66" font-size="30" font-weight="bold" fill="#161440">Tiquete de soporte desde el check-in</text>
+  <rect x="48" y="80" width="60" height="4" rx="2" fill="#D63E3D"/>
+  <text x="48" y="114" font-size="15" fill="#5B5975">En la fila no se arreglan datos: se levanta el tiquete y la persona sigue.</text>
+
+  <g font-size="16">
+    <rect x="48" y="148" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="181" r="18" fill="#161440"/>
+    <text x="88" y="188" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">1</text>
+    <text x="122" y="188" fill="#161440">Tocá <tspan font-weight="bold">Tiquete de soporte</tspan>, arriba a la derecha del check-in</text>
+    <rect x="48" y="226" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="259" r="18" fill="#161440"/>
+    <text x="88" y="266" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">2</text>
+    <text x="122" y="266" fill="#161440">Contá qué pasó: <tspan font-weight="bold">a quién</tspan>, <tspan font-weight="bold">qué dato</tspan> o <tspan font-weight="bold">qué</tspan> no funciona</text>
+    <rect x="48" y="304" width="624" height="66" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="88" cy="337" r="18" fill="#161440"/>
+    <text x="88" y="344" font-size="14" font-weight="bold" fill="#FFFFFF" text-anchor="middle">3</text>
+    <text x="122" y="344" fill="#161440">Tocá <tspan font-weight="bold">Levantar tiquete</tspan> — sale «Listo» y seguís registrando</text>
+  </g>
+
+  <text x="48" y="406" font-size="13" fill="#5B5975">En el celular el botón es el ícono del salvavidas, junto al reloj. Sin categorías ni adjuntos.</text>
+
+  <text x="48" y="456" font-size="20" font-weight="bold" fill="#161440">Cuándo levantar uno</text>
+  <rect x="48" y="468" width="44" height="4" rx="2" fill="#D63E3D"/>
+
+  <g font-size="14.5">
+    <rect x="48" y="484" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="518" r="10" fill="#D63E3D"/>
+    <text x="106" y="514" font-weight="bold" fill="#161440">Le sale otra familia</text>
+    <text x="106" y="536" fill="#5B5975">O le falta un familiar al hacer check-in en familia.</text>
+
+    <rect x="48" y="584" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="618" r="10" fill="#D63E3D"/>
+    <text x="106" y="614" font-weight="bold" fill="#161440">Un dato equivocado en la ficha</text>
+    <text x="106" y="636" fill="#5B5975">Nombre, cédula, fecha de nacimiento, correo o teléfono. Escribí el dato correcto.</text>
+
+    <rect x="48" y="684" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="718" r="10" fill="#D63E3D"/>
+    <text x="106" y="714" font-weight="bold" fill="#161440">Dice que tiene ficha y no aparece — o aparece dos veces</text>
+    <text x="106" y="736" fill="#5B5975">Soporte la busca o une las dos fichas.</text>
+
+    <rect x="48" y="784" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="818" r="10" fill="#D63E3D"/>
+    <text x="106" y="814" font-weight="bold" fill="#161440">No puede entrar al sistema</text>
+    <text x="106" y="836" fill="#5B5975">No le llega el correo o no recuerda la clave.</text>
+
+    <rect x="48" y="884" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="918" r="10" fill="#D63E3D"/>
+    <text x="106" y="914" font-weight="bold" fill="#161440">Algo no funciona en la pantalla</text>
+    <text x="106" y="936" fill="#5B5975">Un botón que no responde, un error al registrar. Decí qué estabas haciendo.</text>
+  </g>
+
+  <text x="48" y="1012" font-size="13" fill="#5B5975">Persona nueva, check-in equivocado o dejar pasar sin inscripción se resuelven en la puerta, sin tiquete.</text>
+
+  <text x="48" y="1062" font-size="20" font-weight="bold" fill="#161440">Qué pasa después</text>
+  <rect x="48" y="1074" width="44" height="4" rx="2" fill="#D63E3D"/>
+
+  <g font-size="14.5">
+    <rect x="48" y="1090" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="1124" r="10" fill="#D63E3D"/>
+    <text x="106" y="1120" font-weight="bold" fill="#161440">Entra a la cola de Soporte</text>
+    <text x="106" y="1142" fill="#5B5975">Con tu nombre, la hora y el evento. Vos solo ponés el qué.</text>
+
+    <rect x="48" y="1190" width="624" height="88" rx="14" fill="#FFFFFF" stroke="#E2E1DA"/>
+    <circle cx="82" cy="1224" r="10" fill="#D63E3D"/>
+    <text x="106" y="1220" font-weight="bold" fill="#161440">Lo resuelve soporte técnico</text>
+    <text x="106" y="1242" fill="#5B5975">No tenés que darle seguimiento: si falta detalle, te buscan.</text>
+  </g>
+
+  <text x="48" y="1310" font-size="13" fill="#5B5975">El botón solo aparece a quien opera el check-in.</text>
+</svg>
