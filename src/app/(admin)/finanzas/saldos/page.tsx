@@ -194,12 +194,15 @@ export default function SaldosAFavorPage() {
   }, [puede])
 
   const filas = useMemo(() => unificarSaldos(sobrantes, creditos, hoy), [sobrantes, creditos, hoy])
-  const totales = useMemo(() => totalVigentePorMoneda(filas), [filas])
-  const personas = useMemo(() => personasConSaldo(filas), [filas])
   const filtrados = useMemo(
     () => filas.filter(f => enRango(f.generado_en, desde, hasta) && coincide(f, busqueda)),
     [filas, busqueda, desde, hasta],
   )
+  // PAG-7 · «Total a favor» y «Personas con saldo» cuentan lo que se está
+  // viendo (Floriana, 2026-10-28): con el rango de fecha puesto, el total es
+  // el de los saldos generados en ese rango, no el de todos.
+  const totales = useMemo(() => totalVigentePorMoneda(filtrados), [filtrados])
+  const personas = useMemo(() => personasConSaldo(filtrados), [filtrados])
 
   if (!loaded) return null
   if (!puede) return <AccessDenied />

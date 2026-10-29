@@ -143,22 +143,36 @@ function PagosContent() {
   }
 
 
-  // Totales globales (los montos del header) — SQL, no sobre lo cargado.
+  // Totales de los montos del header — SQL, no sobre la página cargada.
+  // PAG-7 · Siguen a los filtros (Floriana, 2026-10-28): con el rango de un
+  // mes puesto, «Total cobrado» es lo cobrado ESE mes, no el histórico. Se
+  // mandan los mismos parámetros que la lista, y se vuelven a pedir cuando
+  // cambia cualquiera.
   // INT-3: los totales llegan POR MONEDA ({"CRC": 25000}); ver TotalsDisplay.
   const [stats, setStats] = useState<{ total_paid: MoneyTotals; total_pending: MoneyTotals }>(
     { total_paid: {}, total_pending: {} })
+  const claveDeFiltros = filtrosActuales().toString()
   const loadStats = useCallback(() => {
-    fetch('/api/finance/payments?stats=1')
+    const u = new URLSearchParams(claveDeFiltros)
+    u.set('stats', '1')
+    fetch(`/api/finance/payments?${u.toString()}`)
       .then(r => (r.ok ? r.json() : null))
       .then(d => { if (d) setStats({ total_paid: d.total_paid ?? {}, total_pending: d.total_pending ?? {} }) })
       .catch(() => {})
-  }, [])
+  }, [claveDeFiltros])
   useEffect(() => { loadStats() }, [loadStats])
   const totalPaid = stats.total_paid
   const totalPending = stats.total_pending
-  // Las monedas que REALMENTE hay (de los totales globales, no de la página).
-  const monedasPresentes = CURRENCIES.filter(c =>
-    stats.total_paid[c] !== undefined || stats.total_pending[c] !== undefined)
+  // Las monedas que REALMENTE hay, de los totales GLOBALES (no de la página
+  // ni de los totales filtrados: con el filtro de moneda puesto quedaría una
+  // sola y el chip para quitarlo desaparecería).
+  const [monedasPresentes, setMonedasPresentes] = useState<Currency[]>([])
+  useEffect(() => {
+    fetch('/api/finance/payments?stats=1')
+      .then(r => (r.ok ? r.json() : null))
+      .then(d => { if (d) setMonedasPresentes(CURRENCIES.filter(c => d.total_paid?.[c] !== undefined || d.total_pending?.[c] !== undefined)) })
+      .catch(() => {})
+  }, [])
 
   // Contador de la pestaña "En revisión": tiquetes accionables
   // (pendiente + en_revision, el default del endpoint sin filtros).

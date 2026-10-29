@@ -5616,6 +5616,19 @@ export type Database = {
         Returns: undefined
       }
       payment_stats: { Args: never; Returns: Json }
+      payment_stats_filtrados: {
+        Args: {
+          p_search_tokens?: string[] | null
+          p_entity_type?: string | null
+          p_method?: string | null
+          p_status?: string | null
+          p_currency?: string | null
+          p_in_plan?: boolean
+          p_paid_from?: string | null
+          p_paid_to?: string | null
+        }
+        Returns: Json
+      }
       process_refund: {
         Args: {
           p_note?: string

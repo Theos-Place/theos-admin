@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { requireRoles, requireVistaFinanciera } from '@/lib/auth/guard'
 import {
   getPayments, getPaymentsPage, getPaymentStats, createPayment, getEnrollmentForPayment,
+  type PaymentFilters,
 } from '@/lib/supabase/queries/finance'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -52,6 +53,23 @@ async function conCreditoDeOrigen<T extends { id: string }>(pagos: T[]): Promise
   return pagos.map(p => ({ ...p, credito_origen: creditos.get(p.id) ?? null }))
 }
 
+/** Los filtros de la lista, tal como los manda la pantalla (`filtrosActuales`). */
+function filtrosDeLaConsulta(searchParams: URLSearchParams): PaymentFilters {
+  const entity = searchParams.get('entity_type')
+  const currency = searchParams.get('currency')
+  return {
+    search: searchParams.get('search') ?? undefined,
+    entity_type: entity === 'event' || entity === 'study_group' ? entity : undefined,
+    method: searchParams.get('method') ?? undefined,
+    status: searchParams.get('status') ?? undefined,
+    currency: currency === 'CRC' || currency === 'USD' || currency === 'EUR' ? currency : undefined,
+    // FIN-4: ?in_plan=1 → solo tractos de arreglos de pago.
+    inPaymentPlan: searchParams.get('in_plan') === '1' || undefined,
+    paidFrom: searchParams.get('paid_from') ?? undefined,
+    paidTo: searchParams.get('paid_to') ?? undefined,
+  }
+}
+
 export async function GET(req: NextRequest) {
   try {
     // REV-3: el listado de pagos es la página unificada — lo ven tanto el
@@ -63,21 +81,20 @@ export async function GET(req: NextRequest) {
     if (auth.res) return auth.res
     const { searchParams } = req.nextUrl
 
-    // ?stats=1 → totales globales (los 4 montos del header).
+    // PAG-7 · Lista y totales leen los MISMOS filtros, de una sola función:
+    // así un filtro nuevo no puede quedar en uno y no en el otro. Y el rango
+    // de fecha (PAG-6) entra acá también: la pantalla lo mandaba y la lista no
+    // lo leía —solo el export—, así que el rango no filtraba la lista.
+    const filtros = filtrosDeLaConsulta(searchParams)
+    const hasFilter = Object.values(filtros).some(v => v !== undefined)
+
+    // ?stats=1 → «Total cobrado» y «Pendientes» de lo filtrado (o global sin filtros).
     if (searchParams.get('stats') === '1') {
-      return NextResponse.json(await getPaymentStats())
+      return NextResponse.json(hasFilter ? await getPaymentStats(filtros) : await getPaymentStats())
     }
 
     const rawPage = searchParams.get('page')
     const rawPageSize = searchParams.get('pageSize')
-    const search = searchParams.get('search') ?? undefined
-    const entity = searchParams.get('entity_type')
-    const method = searchParams.get('method')
-    const status = searchParams.get('status')
-    const currency = searchParams.get('currency')
-    // FIN-4: ?in_plan=1 → solo tractos de arreglos de pago.
-    const inPlan = searchParams.get('in_plan') === '1'
-    const hasFilter = !!(search || entity || method || status || currency || inPlan)
 
     // Sin paginación ni filtros: array completo (back-compat: dashboard, etc.).
     if (rawPage === null && rawPageSize === null && !hasFilter) {
@@ -85,12 +102,7 @@ export async function GET(req: NextRequest) {
     }
 
     const { rows, total } = await getPaymentsPage({
-      search,
-      entity_type: entity === 'event' || entity === 'study_group' ? entity : undefined,
-      method: method ?? undefined,
-      status: status ?? undefined,
-      currency: currency === 'CRC' || currency === 'USD' || currency === 'EUR' ? currency : undefined,
-      inPaymentPlan: inPlan || undefined,
+      ...filtros,
       page: Math.max(1, Math.trunc(Number(rawPage ?? 1) || 1)),
       pageSize: Math.min(200, Math.max(1, Math.trunc(Number(rawPageSize ?? 50) || 50))),
     })

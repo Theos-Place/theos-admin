@@ -3,6 +3,7 @@ import { totalsFromJson, sumByCurrency, addTotals, toCurrency, type MoneyTotals 
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
 import { rangoDePago } from '@/lib/finance/rango-de-pagos'
+import { argumentosDeTotales } from '@/lib/finance/totales-filtrados'
 import type { CobroHuerfano } from '@/lib/finance/cobros-huerfanos'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -192,8 +193,22 @@ export type PaymentStats = {
 }
 
 /** Totales globales de pagos (SQL, migración 060). */
-export async function getPaymentStats(): Promise<PaymentStats> {
+export async function getPaymentStats(): Promise<PaymentStats>
+/**
+ * PAG-7 · Con filtros, los totales son los de ESAS filas (migración
+ * 20261028120000): la misma condición que `getPaymentsPage`, sumada por
+ * moneda en SQL. Las tarjetas «Total cobrado» y «Pendientes» de la pantalla
+ * de pagos vienen de acá; por tarjeta y por SINPE siguen siendo globales.
+ */
+export async function getPaymentStats(filters: PaymentFilters): Promise<Pick<PaymentStats, 'total_paid' | 'total_pending'>>
+export async function getPaymentStats(filters?: PaymentFilters): Promise<PaymentStats | Pick<PaymentStats, 'total_paid' | 'total_pending'>> {
   const supabase = createAdminClient()
+  if (filters) {
+    const { data, error } = await supabase.rpc('payment_stats_filtrados', argumentosDeTotales(filters))
+    if (error) throw error
+    const raw = (data ?? {}) as Record<string, unknown>
+    return { total_paid: totalsFromJson(raw.total_paid), total_pending: totalsFromJson(raw.total_pending) }
+  }
   const { data, error } = await supabase.rpc('payment_stats')
   if (error) throw error
   const raw = (data ?? {}) as Record<string, unknown>
