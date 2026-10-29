@@ -1,9 +1,10 @@
 import { applyMemberSearch } from '@/lib/supabase/queries/members'
-import { totalsFromJson, sumByCurrency, addTotals, toCurrency, type MoneyTotals } from '@/lib/money'
+import { totalsFromJson, toCurrency, type MoneyTotals } from '@/lib/money'
 import { createAdminClient } from '@/lib/supabase/admin'
 import type { PaymentMethod, PaymentStatus, RefundStatus } from '@/types/finance'
 import { rangoDePago } from '@/lib/finance/rango-de-pagos'
 import { argumentosDeTotales } from '@/lib/finance/totales-filtrados'
+import { argumentosDeDonantes } from '@/lib/finance/donantes-filtrados'
 import type { CobroHuerfano } from '@/lib/finance/cobros-huerfanos'
 
 // NOTA: createAdminClient (service role) porque la app corre con mock auth.
@@ -288,32 +289,19 @@ export async function getDonations(filters: DonationFilters = {}): Promise<{ row
   return { rows: (data ?? []) as unknown as DbDonation[], total: count ?? 0 }
 }
 
-/** FIN-1: SUMA de montos del filtro COMPLETO (no solo la página visible).
- *  Mismos filtros que getDonations; pagina solo amount+currency (PostgREST corta
- *  en ~1000 filas) y suma acá. Se pide solo cuando hay filtros activos.
- *  INT-3: el resultado es por moneda; nunca un escalar. */
-export async function getDonationsFilteredSum(filters: DonationFilters = {}): Promise<MoneyTotals> {
+/**
+ * DON-5 · Lo que las tarjetas dicen del filtro COMPLETO (no solo la página):
+ * personas distintas identificadas que donaron y la suma por moneda. En SQL
+ * (migración 20261028130000) con los mismos filtros que `getDonations`.
+ * Antes la suma se calculaba paginando de a mil filas en Node (FIN-1).
+ * INT-3: el total es por moneda; nunca un escalar.
+ */
+export async function getDonationsFiltered(filters: DonationFilters = {}): Promise<{ unique_donors: number; total: MoneyTotals }> {
   const supabase = createAdminClient()
-  const search = filters.search?.trim()
-  let total: MoneyTotals = {}
-  for (let from = 0; ; from += 1000) {
-    let q = supabase
-      .from('donations')
-      .select(search ? 'amount, currency, member:members!inner(search_text)' : 'amount, currency')
-      .order('id')
-      .range(from, from + 999)
-    if (filters.status === 'identified') q = q.eq('is_identified', true)
-    else if (filters.status === 'unidentified') q = q.eq('is_identified', false)
-    if (filters.from) q = q.gte('donation_date', filters.from)
-    if (filters.to) q = q.lte('donation_date', filters.to)
-    if (search) q = applyMemberSearch(q, search, 'member.search_text')
-    const { data, error } = await q
-    if (error) throw error
-    const rows = (data ?? []) as unknown as Array<{ amount: number | null; currency: string | null }>
-    total = addTotals(total, sumByCurrency(rows))
-    if (rows.length < 1000) break
-  }
-  return total
+  const { data, error } = await supabase.rpc('donation_stats_filtrados', argumentosDeDonantes(filters))
+  if (error) throw error
+  const raw = (data ?? {}) as Record<string, unknown>
+  return { unique_donors: Number(raw.unique_donors ?? 0), total: totalsFromJson(raw.total) }
 }
 
 /** Totales del módulo de donaciones (calculados en SQL, migración 058). */

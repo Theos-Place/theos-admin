@@ -65,7 +65,7 @@ export function useDonations(params: DonationSearchParams) {
   // Viaja también `amounts_visible`: si quien pregunta puede ver montos. Sin
   // eso la fila con monto null se pintaba como «restringida» (₡ •••,•••) para
   // finanzas, que sí puede verlos; «Sin monto» y «monto oculto» no son lo mismo.
-  const lista = usePaginatedList<DbDonation, Donation, { filteredSum: MoneyTotals | null; amountsVisible: boolean }>(
+  const lista = usePaginatedList<DbDonation, Donation, { filteredSum: MoneyTotals | null; filteredDonors: number | null; amountsVisible: boolean }>(
     page => `/api/finance/donations?${buildQuery(params, page)}`,
     {
       pageSize: PAGE_SIZE,
@@ -73,6 +73,8 @@ export function useDonations(params: DonationSearchParams) {
       mapItem: toDomainDonation,
       leerExtra: d => ({
         filteredSum: (d.filtered_sum as MoneyTotals | null) ?? null,
+        // DON-5: personas identificadas distintas en el filtro completo.
+        filteredDonors: typeof d.filtered_donors === 'number' ? d.filtered_donors : null,
         amountsVisible: d.amounts_visible === true,
       }),
     },
@@ -100,6 +102,7 @@ export function useDonations(params: DonationSearchParams) {
     total: lista.total,
     stats,
     filteredSum: lista.extra?.filteredSum ?? null,
+    filteredDonors: lista.extra?.filteredDonors ?? null,
     amountsVisible: lista.extra?.amountsVisible === true,
     loading: lista.loading,
     error: lista.error,

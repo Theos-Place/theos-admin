@@ -5546,6 +5546,15 @@ export type Database = {
         }[]
       }
       donation_stats: { Args: never; Returns: Json }
+      donation_stats_filtrados: {
+        Args: {
+          p_from?: string | null
+          p_to?: string | null
+          p_status?: string | null
+          p_search_tokens?: string[] | null
+        }
+        Returns: Json
+      }
       find_duplicate_pairs: {
         Args: never
         Returns: {

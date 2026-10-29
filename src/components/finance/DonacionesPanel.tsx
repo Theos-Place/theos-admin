@@ -17,7 +17,8 @@ import { AgregarDonacionModal } from '@/components/finance/AgregarDonacionModal'
 import { FilterChips } from '@/components/shared/FilterChips'
 import { AmountDisplay, TotalsDisplay } from '@/components/finance/AmountDisplay'
 import { toCurrency, type MoneyTotals } from '@/lib/money'
-import { useDonations, urlDeDonaciones } from '@/hooks/useDonations'
+import { useDonations, urlDeDonaciones, hasActiveDonationFilters } from '@/hooks/useDonations'
+import { etiquetaDeTotalDonado, INFO_DONANTES_IDENTIFICADOS } from '@/lib/finance/donantes-filtrados'
 import { usePermissions } from '@/hooks/usePermissions'
 import { toDomainDonation } from '@/lib/finance/adapter'
 import type { Donation } from '@/types/finance'
@@ -62,7 +63,7 @@ export function DonacionesPanel() {
 
   // Lo dice el servidor: null en un monto es «restringido» para quien no
   // tiene finanzas, y «no conocido» para quien sí (2026-10-14).
-  const { donations, total, stats, filteredSum, amountsVisible, loading, error, hasMore, loadMore, refetch } =
+  const { donations, total, stats, filteredSum, filteredDonors, amountsVisible, loading, error, hasMore, loadMore, refetch } =
     useDonations(params)
 
   const [showUnidentifiedModal, setShowUnidentifiedModal] = useState(false)
@@ -93,9 +94,16 @@ export function DonacionesPanel() {
     setTimeout(() => setToast(''), TOAST_MS)
   }
 
-  const uniqueDonors = stats?.unique_donors ?? 0
+  // DON-5 (Floriana, 2026-10-28): con filtros, «Donantes identificados» y el
+  // total son los del filtro completo (los manda la lista); sin filtros, los
+  // del padrón entero (stats). «Donantes activos» no cambia: es la ventana
+  // de FIN-10, no un período elegido.
+  const filtrando = hasActiveDonationFilters(params)
+  const hayRango = dateFrom !== '' || dateTo !== ''
+  const uniqueDonors = filtrando ? (filteredDonors ?? 0) : (stats?.unique_donors ?? 0)
   const activeDonors = stats?.active_donors ?? 0
-  const totalThisMonth = stats?.total_this_month ?? null
+  const totalDonado = filtrando ? filteredSum : (stats?.total_this_month ?? null)
+  const etiquetaDelTotal = etiquetaDeTotalDonado(dateFrom, dateTo, filtrando && !hayRango)
   const unidentifiedCount = stats?.unidentified_count ?? 0
   const unidentifiedTotal = stats?.unidentified_total ?? null
 
@@ -183,9 +191,8 @@ export function DonacionesPanel() {
         <div className={TARJETAS}>
           {[
             // Pedido de Floriana (2026-10-14): que cada número diga a qué se refiere.
-            { label: 'Donantes identificados', value: uniqueDonors, isAmount: false,
-              info: 'Personas distintas que alguna vez donaron y a las que se les pudo identificar (la donación está vinculada a su ficha). Cuenta toda la historia, no un período, y cada persona una sola vez aunque haya donado muchas veces.' },
-            { label: 'Total donado este mes', value: totalThisMonth, isAmount: true, info: null },
+            { label: 'Donantes identificados', value: uniqueDonors, isAmount: false, info: INFO_DONANTES_IDENTIFICADOS },
+            { label: etiquetaDelTotal, value: totalDonado, isAmount: true, info: null },
             // FIN-1/FIN-10: la ventana vive en ventana-de-donante.ts y en
             // refresh_donor_flags(); la explicación sale de ahí, no a mano.
             { label: 'Donantes activos', value: activeDonors, isAmount: false, info: explicacionDeDonantes(new Date()) },

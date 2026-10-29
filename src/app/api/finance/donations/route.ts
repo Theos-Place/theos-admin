@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { veMontosDeDonacion } from '@/lib/finance/quien-ve-montos'
 import { requireRoles, requireVistaFinanciera } from '@/lib/auth/guard'
 import {
-  getDonations, getDonationStats, getDonationsFilteredSum, crearDonacionAMano,
+  getDonations, getDonationStats, getDonationsFiltered, crearDonacionAMano,
   miembroActivoExiste, type DonationFilters,
 } from '@/lib/supabase/queries/finance'
 import { normalizarDonacion, MENSAJES } from '@/lib/finance/donacion-a-mano'
@@ -42,9 +42,10 @@ export async function GET(req: NextRequest) {
     // FIN-1: ?with_sum=1 → suma de montos del filtro COMPLETO (server-side,
     // no solo la página). El cliente lo pide solo con filtros activos.
     const withSum = searchParams.get('with_sum') === '1'
-    const [{ rows, total }, sum] = await Promise.all([
+    // DON-5: con el mismo filtro, también cuántas personas identificadas donaron.
+    const [{ rows, total }, filtrado] = await Promise.all([
       getDonations(filters),
-      withSum ? getDonationsFilteredSum(filters) : Promise.resolve(null),
+      withSum ? getDonationsFiltered(filters) : Promise.resolve(null),
     ])
     return NextResponse.json({
       donations: stripAmounts ? rows.map(d => ({ ...d, amount: null })) : rows,
@@ -53,7 +54,8 @@ export async function GET(req: NextRequest) {
       // si el null es eso o es que a esta persona se le ocultan los montos.
       amounts_visible: !stripAmounts,
       total,
-      filtered_sum: withSum && !stripAmounts ? sum : null,
+      filtered_sum: filtrado && !stripAmounts ? filtrado.total : null,
+      filtered_donors: filtrado ? filtrado.unique_donors : null,
     })
   } catch (error) {
     reportarError('GET /api/finance/donations:', error)
