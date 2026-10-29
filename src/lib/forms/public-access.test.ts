@@ -1,5 +1,6 @@
 import { describe, it, expect } from 'vitest'
-import { esFormularioAbierto, faltaEnEnvioInvitado, claveLimite, ENVIOS_MAX_POR_IP, tieneAudienciaRestringida } from './public-access'
+import { readFileSync } from 'node:fs'
+import { motivoDeCierrePublico, esFormularioAbierto, faltaEnEnvioInvitado, claveLimite, ENVIOS_MAX_POR_IP, tieneAudienciaRestringida } from './public-access'
 
 const f = (o: Partial<Parameters<typeof esFormularioAbierto>[0]>) =>
   ({ is_public: true, requires_auth: false, is_active: true, ...o })
@@ -78,5 +79,28 @@ describe('FRM-5 · una restricción de audiencia cierra el formulario al mundo',
   it('basura en la columna no cierra el formulario por accidente', () => {
     expect(tieneAudienciaRestringida({ ...abierto, audience_restrictions: 'algo' })).toBe(false)
     expect(tieneAudienciaRestringida({ ...abierto, audience_restrictions: {} })).toBe(false)
+  })
+})
+
+describe('FRM-10 · motivoDeCierrePublico: decir claro cuándo falta la cuenta', () => {
+  it('abierto = las dos banderas, sin cuenta ni restricción', () => {
+    expect(motivoDeCierrePublico(f({}))).toBe('abierto')
+  })
+  it('público y activo pero con cuenta obligatoria → requiere_cuenta (es el caso del WhatsApp)', () => {
+    expect(motivoDeCierrePublico(f({ requires_auth: true }))).toBe('requiere_cuenta')
+  })
+  it('con audiencia restringida también pide cuenta: sin ficha no hay a quién evaluar', () => {
+    expect(motivoDeCierrePublico(f({ audience_restrictions: { conditions: [{ x: 1 }] } }))).toBe('requiere_cuenta')
+  })
+  it('inactivo, no público o inexistente siguen siendo «no disponible», sin confirmar nada', () => {
+    expect(motivoDeCierrePublico(f({ is_active: false, requires_auth: true }))).toBe('no_disponible')
+    expect(motivoDeCierrePublico(f({ is_public: false, requires_auth: true }))).toBe('no_disponible')
+    expect(motivoDeCierrePublico(null)).toBe('no_disponible')
+  })
+  it('cableado: la API responde 401 + requiere_cuenta y la página lo pinta aparte', () => {
+    expect(readFileSync('src/app/api/public/forms/[id]/route.ts', 'utf8')).toContain("code: 'requiere_cuenta' }, { status: 401 }")
+    const pagina = readFileSync('src/app/(public)/formulario/[id]/page.tsx', 'utf8')
+    expect(pagina).toContain("d.code === 'requiere_cuenta'")
+    expect(pagina).toContain('Ingresar a Theos Place')
   })
 })

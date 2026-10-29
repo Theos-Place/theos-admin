@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { esFormularioAbierto } from '@/lib/forms/public-access'
+import { motivoDeCierrePublico, TEXTO_REQUIERE_CUENTA } from '@/lib/forms/public-access'
 import { formWindowStatus, FORM_WINDOW_BLOCKED } from '@/lib/forms/active-window'
 import { reportarError } from '@/lib/observabilidad'
 
@@ -10,23 +10,31 @@ import { reportarError } from '@/lib/observabilidad'
 // del formulario: acá no salen created_by, ni la entidad dueña, ni nada de las
 // respuestas de otros. Solo lo que hace falta para dibujarlo y contestarlo.
 //
-// 404 —y no 403— cuando el formulario no es abierto: responder "existe pero no
-// podés" le confirma a cualquiera qué ids son válidos.
+// 404 —y no 403— cuando el formulario no existe, está inactivo o no es
+// público: responder "existe pero no podés" le confirma a cualquiera qué ids
+// son válidos. La EXCEPCIÓN (FRM-10) es el formulario público que pide cuenta:
+// ahí se responde 401 con `requiere_cuenta`, para que la página diga claro que
+// hay que ingresar (ver motivoDeCierrePublico).
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   try {
     const { id } = await params
     const supabase = createAdminClient()
     const { data } = await supabase
       .from('forms')
-      .select('id, title, description, is_public, requires_auth, is_active, starts_at, ends_at, hero_image_url, hero_title, hero_subtitle')
+      .select('id, title, description, is_public, requires_auth, is_active, audience_restrictions, starts_at, ends_at, hero_image_url, hero_title, hero_subtitle')
       .eq('id', id).maybeSingle()
     const f = data as {
       id: string; title: string; description: string | null
       is_public: boolean; requires_auth: boolean; is_active: boolean
+      audience_restrictions: unknown
       starts_at: string | null; ends_at: string | null
       hero_image_url: string | null; hero_title: string | null; hero_subtitle: string | null
     } | null
-    if (!f || !esFormularioAbierto(f)) {
+    const motivo = motivoDeCierrePublico(f)
+    if (motivo === 'requiere_cuenta') {
+      return NextResponse.json({ error: TEXTO_REQUIERE_CUENTA, code: 'requiere_cuenta' }, { status: 401 })
+    }
+    if (!f || motivo !== 'abierto') {
       return NextResponse.json({ error: 'Formulario no encontrado' }, { status: 404 })
     }
 

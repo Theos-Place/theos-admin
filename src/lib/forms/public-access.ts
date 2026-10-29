@@ -34,6 +34,29 @@ export function esFormularioAbierto(f: FormPublicFlags): boolean {
   return f.is_active && f.is_public && !f.requires_auth && !tieneAudienciaRestringida(f)
 }
 
+/**
+ * FRM-10 (2026-10-29) · Por qué NO se abre sin cuenta, para decirlo claro.
+ *
+ * Hasta hoy la página pública no distinguía «pide cuenta» de «no existe»: a
+ * quien llegaba por WhatsApp a un formulario con login obligatorio le salía
+ * «Formulario no encontrado», y nadie entendía que lo que faltaba era entrar.
+ * Floriana pidió un copy claro.
+ *
+ * Lo que se revela con 'requiere_cuenta' es que ese id es un formulario activo
+ * y público que pide sesión —nada de su contenido—, y el id es un UUID que
+ * solo tiene quien recibió el link. Lo inactivo, lo no público y lo que no
+ * existe siguen contestando lo mismo: 'no_disponible'.
+ */
+export type MotivoDeCierrePublico = 'abierto' | 'requiere_cuenta' | 'no_disponible'
+
+export function motivoDeCierrePublico(f: FormPublicFlags | null | undefined): MotivoDeCierrePublico {
+  if (!f || !f.is_active || !f.is_public) return 'no_disponible'
+  if (f.requires_auth || tieneAudienciaRestringida(f)) return 'requiere_cuenta'
+  return 'abierto'
+}
+
+export const TEXTO_REQUIERE_CUENTA = 'Este formulario se contesta con tu cuenta de Theos Place.'
+
 /** Una restricción con condiciones. Se mira el contenido y no solo el `null`:
  *  un `{conditions: []}` guardado por un builder es "sin restricción". */
 export function tieneAudienciaRestringida(f: FormPublicFlags): boolean {

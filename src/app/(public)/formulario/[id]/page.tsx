@@ -20,7 +20,7 @@ import { rutaConCuenta } from '@/lib/forms/reanswer'
  */
 export default function FormularioPublicoPage() {
   const { id } = useParams<{ id: string }>()
-  const [estado, setEstado] = useState<'cargando' | 'ok' | 'no-disponible'>('cargando')
+  const [estado, setEstado] = useState<'cargando' | 'ok' | 'no-disponible' | 'requiere-cuenta'>('cargando')
   const [motivo, setMotivo] = useState<string>('')
   const [data, setData] = useState<{ form: Record<string, unknown>; fields: unknown[] } | null>(null)
 
@@ -30,6 +30,8 @@ export default function FormularioPublicoPage() {
       .then(async r => {
         const d = await r.json().catch(() => ({}))
         if (!vivo) return
+        // FRM-10: el formulario existe y pide cuenta → se dice claro.
+        if (r.status === 401 && d.code === 'requiere_cuenta') { setEstado('requiere-cuenta'); return }
         if (!r.ok) { setMotivo(d.error ?? ''); setEstado('no-disponible'); return }
         setData(d); setEstado('ok')
       })
@@ -39,6 +41,29 @@ export default function FormularioPublicoPage() {
 
   if (estado === 'cargando') {
     return <p className="p-8 text-center text-sm text-navy-light/80 font-body">Cargando…</p>
+  }
+  if (estado === 'requiere-cuenta') {
+    const entrar = `/login?redirect=${encodeURIComponent(rutaConCuenta(id))}`
+    return (
+      <main className="mx-auto max-w-[560px] px-5 py-16 text-center space-y-4">
+        <h1 className="text-xl font-bold text-navy font-display">Este formulario se contesta con tu cuenta</h1>
+        <p className="text-sm text-navy-light/80 font-body">
+          Para llenarlo hay que ingresar a la plataforma de Theos Place con tu correo y
+          contraseña. Al entrar volvés directo a este formulario.
+        </p>
+        <Link
+          href={entrar}
+          className="inline-flex items-center justify-center rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-6 py-3 text-sm font-semibold text-white hover:bg-coral-deep transition-colors font-body min-h-[44px]"
+        >
+          Ingresar a Theos Place
+        </Link>
+        <p className="pt-2 text-[13px] text-navy-light/80 font-body">
+          ¿Todavía no tenés cuenta?{' '}
+          <Link href="/registro" className="text-teal-deep underline">Registrate acá</Link>
+          {' '}y después abrí este mismo link.
+        </p>
+      </main>
+    )
   }
   if (estado === 'no-disponible' || !data) {
     return (
