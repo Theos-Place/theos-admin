@@ -10,6 +10,8 @@ resumen: Qué hacer cuando en la fila algo no cuadra — una persona que no apar
 
 # Levantar un tiquete de soporte desde el check-in
 
+![El flujo completo: abrir el tiquete desde el check-in, contar qué pasó y levantarlo](/ayuda/tutoriales/tiquete/tiquete.mp4)
+
 En la fila no hay tiempo de arreglar datos. Para eso existe el **tiquete de soporte**: lo
 levantás en treinta segundos desde la misma pantalla de check-in, la persona sigue su
 camino, y quien tiene el rol de soporte lo resuelve después con calma.

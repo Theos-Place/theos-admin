@@ -24,6 +24,7 @@
     "tutorial:pago-pendiente": "tsx scripts/tutoriales/run.ts pago-pendiente",
     "tutorial:viaticos": "tsx scripts/tutoriales/run.ts viaticos",
     "tutorial:adelantos": "tsx scripts/tutoriales/run.ts adelantos",
+    "tutorial:tiquete": "tsx scripts/tutoriales/run.ts tiquete",
     "knip": "knip --no-progress --include files,exports,types"
   },
   "dependencies": {
