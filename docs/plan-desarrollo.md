@@ -3654,7 +3654,14 @@ Tests: reemplazo cambia solo el src, el resto del HTML byte-idéntico; plantilla
 ranuras no muestra el panel; upload validado. tsc/lint/vitest.
 ```
 
-### [ ] FRM-8 · Editor de formularios: enlace a las respuestas (pedido 2026-10-30)
+### [x] FRM-8 · Editor de formularios: enlace a las respuestas (pedido 2026-10-30)
+
+**Hecho el 2026-10-30.** En la barra del editor, «Ver respuestas (N)» con el
+conteo, solo si esta persona puede verlas: lo contesta el servidor en
+`GET /api/forms/[id]?export_access=1` (`export_access.respuestas`) con la misma
+regla que las rutas de respuestas (`puedeVerRespuestas`, en el guard). El
+camino inverso ya existía: «Editar formulario» en la pantalla de respuestas,
+con el permiso de edición del módulo.
 
 Prompt para Claude Code:
 

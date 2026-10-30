@@ -13,7 +13,7 @@ import { FormCanvas } from '@/components/forms/FormCanvas'
 import { FieldInspector } from '@/components/forms/FieldInspector'
 import { FieldTypeIcon } from '@/components/forms/FieldTypeIcon'
 import { cn } from '@/lib/utils'
-import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2, ShieldCheck, Archive } from 'lucide-react'
+import { ChevronLeft, Eye, Save, Send, Check, GitBranch, Zap, Loader2, ShieldCheck, Archive, ListChecks } from 'lucide-react'
 import { Modal } from '@/components/shared/Modal'
 import { FormAccessPanel } from './FormAccessPanel'
 import { useToast } from '@/components/shared/Toast'
@@ -160,17 +160,22 @@ export function FormBuilder({ formId }: FormBuilderProps) {
   const [showLogicPanel, setShowLogicPanel] = useState(false)
   const [showAccessPanel, setShowAccessPanel] = useState(false)
   const [saved, setSaved]             = useState(false)
+  // FRM-8 · Enlace a las respuestas del formulario, con el conteo. Solo si puede verlas.
+  const [respuestas, setRespuestas] = useState<{ puede: boolean; count: number } | null>(null)
   const [saving, setSaving]           = useState(false)
   const [nameError, setNameError]     = useState(false)
 
   // Edición: carga el formulario de la BD (async).
   useEffect(() => {
     if (!formId) return
-    fetch(`/api/forms/${formId}`)
+    // ?export_access=1 (FRM-8): el servidor dice si esta persona puede ver las
+    // respuestas, para ofrecerle el enlace solo cuando lo va a poder abrir.
+    fetch(`/api/forms/${formId}?export_access=1`)
       .then(r => (r.ok ? r.json() : null))
       .then(db => {
         if (!db) return
         const f = toDomainFormTemplate(db)
+        setRespuestas({ puede: db.export_access?.respuestas === true, count: f.responses_count })
         setName(f.name)
         setDescription(f.description)
         setCategory(f.category)
@@ -361,6 +366,17 @@ export function FormBuilder({ formId }: FormBuilderProps) {
               <ShieldCheck size={12} />
               Accesos
             </button>
+          )}
+          {/* FRM-8 · Las respuestas a un clic desde el editor (y de vuelta,
+              la pantalla de respuestas ya tiene «Editar formulario»). */}
+          {formId && respuestas?.puede && (
+            <Link
+              href={`/formularios/${formId}/respuestas`}
+              className="flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-[13px] text-navy-light hover:bg-surface-low transition-colors border-[var(--outline-variant)] font-body"
+            >
+              <ListChecks size={12} />
+              Ver respuestas ({respuestas.count})
+            </Link>
           )}
           <Link
             href={formId ? `/formularios/${formId}/preview` : '#'}

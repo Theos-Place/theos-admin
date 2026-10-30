@@ -58,10 +58,14 @@ export async function GET(
         hasGrant: await hasFormAccessGrant(id, auth.ctx.memberId),
         isEventManager: await isManagerOfFormEvent(id, auth.ctx.memberId),
       })
+      // FRM-8 · ¿puede ver las respuestas? Para que el editor ofrezca el
+      // enlace solo a quien lo va a poder abrir. Misma regla que las rutas.
+      const { puedeVerRespuestas } = await import('@/lib/auth/respuestas-guard')
       return NextResponse.json({
         ...resuelto,
         export_access: {
           personales: puedeExportarDatosPersonales({ roles: auth.ctx.roles, scope }),
+          respuestas: (await puedeVerRespuestas(id, auth.ctx)).puede,
         },
       })
     }
