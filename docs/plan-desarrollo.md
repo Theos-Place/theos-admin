@@ -3714,7 +3714,23 @@ Tests: atrás restaura filtros, refresh conserva, limpiar vacía, lista guardada
 tsc/lint/vitest.
 ```
 
-### [ ] PAR-9 · Listas guardadas: editar el filtro con el que se crearon (pedido 2026-10-30)
+### [x] PAR-9 · Listas guardadas: editar el filtro con el que se crearon (pedido 2026-10-30)
+
+**Hecho el 2026-10-30** (`lib/members/editar-lista.ts`). Diagnóstico en
+producción: 17 listas; 13 con filtro completo (`v: 2`) y 4 fijas sin filtro
+(importadas o armadas a mano). Las usan comunicaciones (el cron recalcula la
+lista al enviar un programado, por `recipient_filter.list_id`), el listado y el
+detalle. «Editar filtros» abre /miembros con la búsqueda exacta en la URL
+(patrón PAR-8, más `?lista=`); al guardar se elige «Actualizar» (PATCH al mismo
+id, el servidor recalcula la membresía) o «Guardar como nueva» (POST, la
+original no se toca). Si un comunicado programado usa la lista, se avisa y se
+pide confirmar. Las fijas ofrecen «Agregar o quitar personas» (el PATCH lo
+rechaza en listas con filtro: el recálculo lo borraría). Renombrar y
+descripción desde el listado y el detalle. El detalle muestra quién la creó y
+la última edición (de `audit_log`). Permisos: los roles que gestionan listas o
+quien la creó; `created_by` no se guardaba y ahora sí. Cada cambio va a
+`audit_log`. De paso: «Actualizar snapshot» del listado solo cambiaba una
+fecha y ahora recalcula de verdad.
 
 Hoy una lista guardada no se puede ajustar: si el filtro necesita un cambio,
 hay que crearla de nuevo (y perder su nombre/uso en comunicaciones).

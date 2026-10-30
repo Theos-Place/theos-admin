@@ -10,12 +10,14 @@ import { DeleteConfirmModal } from '@/components/shared/DeleteConfirmModal'
 import { cn } from '@/lib/utils'
 import {
   Bookmark, MessageCircle, MoreHorizontal, Users, Plus, Search, ChevronLeft,
-  Edit2, RefreshCw, Trash2,
+  Edit2, RefreshCw, Trash2, SlidersHorizontal, UserPlus,
 } from 'lucide-react'
 import { EmptyState } from '@/components/shared/EmptyState'
-import { Modal } from '@/components/shared/Modal'
 import { useToast } from '@/components/shared/Toast'
 import { formatDate } from '@/lib/format'
+import { mensajeRecalculo, motivoNoRecalculable } from '@/lib/members/list-refresh'
+import { tieneFiltroEditable } from '@/lib/members/editar-lista'
+import { EditarDatosDeListaModal, useAbrirEdicionDeFiltros } from '@/components/members/EdicionDeLista'
 
 /** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
 const SIN_DATOS: MemberList[] = []
@@ -41,9 +43,8 @@ export default function ListasGuardadasPage() {
   const [activeTag, setActiveTag] = useState<string | null>(null)
   const [openMenu, setOpenMenu]   = useState<string | null>(null)
   useCerrarConEscape(openMenu !== null, useCallback(() => setOpenMenu(null), []))
-  const [editTarget, setEditTarget] = useState<string | null>(null)
-  const [editName, setEditName]   = useState('')
-  const [editTags, setEditTags]   = useState('')
+  const [editTarget, setEditTarget] = useState<MemberList | null>(null)
+  const abrirEdicionDeFiltros = useAbrirEdicionDeFiltros()
   const [deleteTarget, setDeleteTarget] = useState<{ id: string; name: string } | null>(null)
 
   // LINT-1 · «cargando» se deriva (useCargaRemota), no se enciende a mano.
@@ -102,18 +103,20 @@ export default function ListasGuardadasPage() {
     setDeleteTarget(null)
   }
 
+  /**
+   * Recalcula la lista con sus filtros. Antes mandaba un PATCH con
+   * `last_used_at`: cambiaba la fecha y dejaba la lista igual (el detalle ya lo
+   * había corregido; este menú se había quedado con la versión vieja).
+   */
   async function handleRefresh(id: string) {
     setOpenMenu(null)
     try {
-      const res = await fetch(`/api/member-lists/${id}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ last_used_at: new Date().toISOString() }),
-      })
-      if (!res.ok) throw new Error()
+      const res = await fetch(`/api/member-lists/${id}/refresh`, { method: 'POST' })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) { toast(d.error ?? 'No se pudo actualizar la lista.', 'error'); return }
+      toast(mensajeRecalculo(d.antes, d.despues), 'success')
       await loadLists()
-    } catch (err) {
-      console.error('No se pudo actualizar la lista:', err)
+    } catch {
       toast('No se pudo actualizar la lista.', 'error')
     }
   }
@@ -121,28 +124,8 @@ export default function ListasGuardadasPage() {
   function openEdit(id: string) {
     const list = lists.find(l => l.id === id)
     if (!list) return
-    setEditName(list.name)
-    setEditTags(list.tags.join(', '))
-    setEditTarget(id)
+    setEditTarget(list)
     setOpenMenu(null)
-  }
-
-  async function saveEdit() {
-    if (!editTarget || !editName.trim()) return
-    const tags = editTags.split(',').map(t => t.trim()).filter(Boolean)
-    try {
-      const res = await fetch(`/api/member-lists/${editTarget}`, {
-        method: 'PATCH',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ name: editName.trim(), tags }),
-      })
-      if (!res.ok) throw new Error()
-      await loadLists()
-    } catch (err) {
-      console.error('No se pudo guardar la lista:', err)
-      toast('No se pudo guardar la lista. Intentá de nuevo.', 'error')
-    }
-    setEditTarget(null)
   }
 
   return (
@@ -260,15 +243,32 @@ export default function ListasGuardadasPage() {
                   </button>
                   {openMenu === list.id && (
                     <div
-                      className="absolute right-0 top-8 z-20 w-44 rounded-xl overflow-hidden bg-surface-card shadow-[0_8px_32px_rgba(22,20,64,0.16)] border border-[var(--outline-variant)]"
+                      className="absolute right-0 top-8 z-20 w-56 rounded-xl overflow-hidden bg-surface-card shadow-[0_8px_32px_rgba(22,20,64,0.16)] border border-[var(--outline-variant)]"
                     >
                       <button
                         onClick={() => openEdit(list.id)}
                         className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
                       >
-                        <Edit2 size={13} /> Editar nombre/tags
+                        <Edit2 size={13} /> Nombre y descripción
                       </button>
-                      {!list.is_dynamic && (
+                      {/* PAR-9 · Con filtro: se reabre en Miembros. Fija: se le
+                          agregan o quitan personas en su detalle. */}
+                      {tieneFiltroEditable(list.filters) ? (
+                        <button
+                          onClick={() => { setOpenMenu(null); abrirEdicionDeFiltros(list) }}
+                          className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
+                        >
+                          <SlidersHorizontal size={13} /> Editar filtros
+                        </button>
+                      ) : (
+                        <Link
+                          href={`/miembros/listas/${list.id}?personas=1`}
+                          className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
+                        >
+                          <UserPlus size={13} /> Agregar o quitar personas
+                        </Link>
+                      )}
+                      {!list.is_dynamic && !motivoNoRecalculable(list.filters) && (
                         <button
                           onClick={() => handleRefresh(list.id)}
                           className="flex items-center gap-2 w-full px-3 py-2.5 text-[13px] text-navy hover:bg-surface-low transition-colors font-body"
@@ -316,7 +316,8 @@ export default function ListasGuardadasPage() {
 
               {/* Meta */}
               <p className="text-[13px] text-navy-light/80 font-body">
-                Creada por {list.created_by} · {formatDate(list.created_at)}
+                {/* `created_by` es un id: el nombre de quien la creó se ve en el detalle. */}
+                Creada el {formatDate(list.created_at)}
                 {list.last_used_at && ` · Último uso: ${timeAgo(list.last_used_at)}`}
               </p>
 
@@ -344,52 +345,7 @@ export default function ListasGuardadasPage() {
 
       {/* Edit modal */}
       {editTarget && (
-        <Modal onClose={() => setEditTarget(null)} titleId="editar-lista-title" width={384}>
-          <div className="p-6 space-y-4">
-            <p id="editar-lista-title" className="text-base font-bold text-navy font-display">
-              Editar lista
-            </p>
-            <div className="space-y-3">
-              <div className="space-y-1.5">
-                <label htmlFor="nombre" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
-                  Nombre
-                </label>
-                <input id="nombre"
-                  autoFocus
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                  value={editName}
-                  onChange={e => setEditName(e.target.value)}
-                />
-              </div>
-              <div className="space-y-1.5">
-                <label htmlFor="tags-separados-por-coma" className="text-[13px] uppercase tracking-widest text-navy-light/80 font-display">
-                  Tags (separados por coma)
-                </label>
-                <input id="tags-separados-por-coma"
-                  className="w-full rounded-xl bg-surface-low px-3 py-2.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
-                  value={editTags}
-                  onChange={e => setEditTags(e.target.value)}
-                  placeholder="donantes, heredia..."
-                />
-              </div>
-            </div>
-            <div className="flex gap-2">
-              <button
-                onClick={() => setEditTarget(null)}
-                className="flex-1 rounded-xl border border-[var(--outline-variant)] py-2.5 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={saveEdit}
-                disabled={!editName.trim()}
-                className="flex-1 rounded-xl bg-navy py-2.5 text-sm text-white hover:bg-navy/80 transition-colors disabled:opacity-40 font-body"
-              >
-                Guardar
-              </button>
-            </div>
-          </div>
-        </Modal>
+        <EditarDatosDeListaModal list={editTarget} onClose={() => setEditTarget(null)} onSaved={() => void loadLists()} />
       )}
 
       {/* Overlay para cerrar menú */}

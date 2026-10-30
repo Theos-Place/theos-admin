@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { requireRoles } from '@/lib/auth/guard'
 import { recomputeMemberList } from '@/lib/supabase/queries/member-lists'
 import { reportarError } from '@/lib/observabilidad'
+import { ROLES_QUE_GESTIONAN_LISTAS } from '@/lib/members/editar-lista'
 
 // POST: vuelve a correr los filtros guardados de la lista y reescribe su
 // membresía. Lo usan el botón "Actualizar" de las listas snapshot y la pantalla
@@ -9,7 +10,7 @@ import { reportarError } from '@/lib/observabilidad'
 //
 // Escribe, así que pide los mismos roles que editar una lista.
 export async function POST(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireRoles('comunicaciones', 'direccion', 'editor_perfiles', 'coordinador_estudios')
+  const auth = await requireRoles(...ROLES_QUE_GESTIONAN_LISTAS)
   if (auth.res) return auth.res
   try {
     const { id } = await params

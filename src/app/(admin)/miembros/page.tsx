@@ -24,7 +24,13 @@ import { ExportButton } from '@/components/shared/ExportButton'
 import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
-import { calcAge } from '@/lib/format'
+import { calcAge, formatDateTime } from '@/lib/format'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
+import type { MemberList } from '@/types/member-list'
+import { avisoDeImpacto, type EnvioQueUsaLaLista } from '@/lib/members/editar-lista'
+import { mensajeRecalculo } from '@/lib/members/list-refresh'
+import Link from 'next/link'
+import { useToast } from '@/components/shared/Toast'
 import {
   initials, DirigenteLink, avatarColor, QUICK_CHIPS, MEMBER_COLUMNS, buildSegmentLabel, AccountBadge,
 } from './_members-columns'
@@ -144,6 +150,38 @@ function MiembrosContent() {
   const [saveListTags,    setSaveListTags]    = useState('')
   const [saveListDynamic, setSaveListDynamic] = useState(true)
   const [savingList,      setSavingList]      = useState(false)
+  const avisar = useToast()
+
+  // PAR-9 · ?lista=<id>: se llegó desde «Editar filtros» de una lista. La
+  // búsqueda ya viene puesta en la URL; acá solo se trae la lista (para
+  // ofrecer «Actualizar» con su nombre) y los envíos programados que la usan.
+  const [urlLista, setUrlLista] = useUrlFilter('lista')
+  const { datos: edicion } = useCargaRemota<{ list: MemberList; envios: EnvioQueUsaLaLista[] } | null>(
+    `lista-en-edicion:${urlLista}`,
+    async () => {
+      const r = await fetch(`/api/member-lists/${urlLista}`)
+      if (!r.ok) return null
+      const list = (await r.json()) as MemberList
+      const e = await fetch(`/api/member-lists/${urlLista}/scheduled-broadcasts`)
+      const envios = e.ok ? ((await e.json()).items ?? []) as EnvioQueUsaLaLista[] : []
+      return { list, envios }
+    },
+    { activo: !!urlLista },
+  )
+  const listaEnEdicion = urlLista ? edicion?.list ?? null : null
+  const [modoGuardado, setModoGuardado] = useState<'actualizar' | 'nueva'>('actualizar')
+  const [impactoConfirmado, setImpactoConfirmado] = useState(false)
+  function abrirGuardar() {
+    if (listaEnEdicion) {
+      setSaveListName(listaEnEdicion.name)
+      setSaveListDesc(listaEnEdicion.description ?? '')
+      setSaveListTags(listaEnEdicion.tags.join(', '))
+      setSaveListDynamic(listaEnEdicion.is_dynamic)
+      setModoGuardado('actualizar')
+      setImpactoConfirmado(false)
+    }
+    setSaveListOpen(true)
+  }
   const [toast,           setToast]           = useState('')
 
   // Querystring con los filtros activos (búsqueda + chips) para acciones sobre todo el filtro.
@@ -190,10 +228,51 @@ function MiembrosContent() {
     router.push(`/comunicaciones/nueva?mode=manual&members=${ids}`)
   }
 
+  /** El filtro COMPLETO, lo mismo que manda filterQS() para traer los ids.
+   *  Guardar solo `conditions` era el bug: los chips, la búsqueda y el filtro
+   *  de asistencia quedaban afuera, y recalcular la lista después daba un
+   *  grupo mucho más grande. `v: 2` marca que el filtro está completo. */
+  function filtroCompletoActual() {
+    return {
+      v: 2 as const,
+      conditions: filters.conditions, groups: filters.groups,
+      topLevelOps: Object.keys(filters.topLevelOps).length ? filters.topLevelOps : undefined,
+      is_donor: showDonors || undefined,
+      is_server: showServers || undefined,
+      active_attendance: showStudyAttendance ? 'estudios' as const : showActive ? true : undefined,
+      search: searchActive ? debouncedSearch.trim() : undefined,
+    }
+  }
+
   async function handleSaveList() {
     if (!saveListName.trim() || savingList) return
     setSavingList(true)
     try {
+      if (listaEnEdicion && modoGuardado === 'actualizar') {
+        // PAR-9 · Misma lista: mismo id, así que sigue sirviendo en
+        // comunicaciones. La membresía la recalcula el servidor.
+        const r = await fetch(`/api/member-lists/${listaEnEdicion.id}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            action: 'actualizar_filtros',
+            filters: filtroCompletoActual(),
+            segment_label: buildSegmentLabel(filters.conditions, showDonors, showServers),
+            is_dynamic: saveListDynamic,
+            name: saveListName.trim(),
+            description: saveListDesc.trim() || null,
+            tags: saveListTags.split(',').map(t => t.trim()).filter(Boolean),
+          }),
+        })
+        if (!r.ok) throw new Error()
+        const d = await r.json().catch(() => ({}))
+        setSaveListOpen(false)
+        avisar(d.antes === d.despues
+          ? `Lista actualizada. Sigue con ${Number(d.despues ?? 0).toLocaleString('es-CR')} personas.`
+          : mensajeRecalculo(d.antes ?? 0, d.despues ?? 0), 'success')
+        router.push(`/miembros/listas/${listaEnEdicion.id}`)
+        return
+      }
       // Trae TODOS los ids que coinciden con el filtro (no solo los cargados en pantalla).
       let ids: string[] = displayMembers.map(m => m.id)
       let total = ids.length
@@ -210,20 +289,7 @@ function MiembrosContent() {
         body: JSON.stringify({
           name: saveListName.trim(),
           description: saveListDesc.trim() || null,
-          // El filtro COMPLETO, lo mismo que manda filterQS() unas líneas más
-          // arriba para traer los ids. Guardar solo `conditions` era el bug:
-          // los chips, la búsqueda y el filtro de asistencia quedaban afuera, y
-          // recalcular la lista después daba un grupo mucho más grande.
-          // `v: 2` marca que el filtro está completo (ver FilterState).
-          filters: {
-            v: 2 as const,
-            conditions: filters.conditions, groups: filters.groups,
-            topLevelOps: Object.keys(filters.topLevelOps).length ? filters.topLevelOps : undefined,
-            is_donor: showDonors || undefined,
-            is_server: showServers || undefined,
-            active_attendance: showStudyAttendance ? 'estudios' as const : showActive ? true : undefined,
-            search: searchActive ? debouncedSearch.trim() : undefined,
-          },
+          filters: filtroCompletoActual(),
           segment_label: segLabel,
           member_ids: ids,
           member_count: total,
@@ -232,6 +298,9 @@ function MiembrosContent() {
         }),
       })
       if (!res.ok) throw new Error()
+      // «Guardar como nueva» desde una edición: la original no se toca y la
+      // pantalla deja de estar «editando».
+      if (listaEnEdicion) setUrlLista('')
       setSaveListOpen(false)
       setSaveListName('')
       setSaveListDesc('')
@@ -332,13 +401,13 @@ function MiembrosContent() {
              del POST /api/member-lists, que ya acepta ese rol. */}
           {(can('miembros', 'export') || can('comunicaciones', 'create')) && (
             <button
-              onClick={() => hasAnyFilter ? setSaveListOpen(true) : undefined}
+              onClick={() => hasAnyFilter ? abrirGuardar() : undefined}
               disabled={!hasAnyFilter}
               title={!hasAnyFilter ? 'Aplicá filtros primero para guardar una lista' : ''}
               className="flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors disabled:opacity-40 disabled:cursor-not-allowed font-body"
             >
               <Bookmark size={13} strokeWidth={1.75} />
-              Guardar lista
+              {listaEnEdicion ? 'Guardar cambios' : 'Guardar lista'}
             </button>
           )}
           {can('comunicaciones', 'create') && (
@@ -361,6 +430,22 @@ function MiembrosContent() {
           )}
         </div>
       </div>
+
+      {/* PAR-9 · Editando los filtros de una lista guardada. */}
+      {listaEnEdicion && (
+        <div className="rounded-2xl px-5 py-3.5 flex flex-wrap items-center justify-between gap-3 bg-teal-soft/20 border border-teal/30">
+          <p className="text-[13px] text-teal-ink font-body">
+            Estás editando los filtros de <strong>«{listaEnEdicion.name}»</strong> ({listaEnEdicion.member_count.toLocaleString('es-CR')} personas hoy).
+            Ajustá la búsqueda y tocá «Guardar cambios».
+          </p>
+          <Link
+            href={`/miembros/listas/${listaEnEdicion.id}`}
+            className="text-[13px] text-teal-ink underline hover:no-underline font-body"
+          >
+            Cancelar y volver a la lista
+          </Link>
+        </div>
+      )}
 
       {/* ── Quick chips + Search ── */}
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
@@ -834,6 +919,20 @@ function MiembrosContent() {
           summaryLabel={buildSegmentLabel(filters.conditions, showDonors, showServers)}
           onClose={() => setSaveListOpen(false)}
           onSave={handleSaveList}
+          edicion={listaEnEdicion ? {
+            nombreOriginal: listaEnEdicion.name,
+            antes: listaEnEdicion.member_count,
+            aviso: avisoDeImpacto(edicion?.envios ?? [], formatDateTime),
+            modo: modoGuardado,
+            onModo: m => {
+              setModoGuardado(m)
+              // Dos listas con el mismo nombre se confunden en comunicaciones.
+              const copia = `${listaEnEdicion.name} (copia)`
+              if (m === 'nueva' && saveListName === listaEnEdicion.name) setSaveListName(copia)
+              if (m === 'actualizar' && saveListName === copia) setSaveListName(listaEnEdicion.name)
+            },
+            confirmado: impactoConfirmado, onConfirmado: setImpactoConfirmado,
+          } : undefined}
         />
       )}
 

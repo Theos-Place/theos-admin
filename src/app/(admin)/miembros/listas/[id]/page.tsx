@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import { useCargaRemota } from '@/hooks/useCargaRemota'
-import { useParams, useRouter } from 'next/navigation'
+import { useParams, useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 import type { MemberList } from '@/types/member-list'
 import { type Member } from '@/types/member'
@@ -12,12 +12,23 @@ import { SortableHeader } from '@/components/shared/SortableHeader'
 import { useSortableTable } from '@/hooks/useSortableTable'
 import { cn } from '@/lib/utils'
 import {
-  ChevronLeft, MessageCircle, ArrowRight, RefreshCw, ExternalLink, Users, AlertTriangle,
+  ChevronLeft, MessageCircle, ArrowRight, RefreshCw, Users, AlertTriangle,
+  SlidersHorizontal, UserPlus, Edit2, X, Lock,
 } from 'lucide-react'
+import { MemberCombobox } from '@/components/shared/MemberCombobox'
+import { EditarDatosDeListaModal, useAbrirEdicionDeFiltros } from '@/components/members/EdicionDeLista'
+import { tieneFiltroEditable } from '@/lib/members/editar-lista'
 import { EmptyState } from '@/components/shared/EmptyState'
 import { useToast } from '@/components/shared/Toast'
-import { calcAge, formatDate, initialsFromParts } from '@/lib/format'
+import { calcAge, formatDate, formatDateTime, initialsFromParts } from '@/lib/format'
 import { mensajeRecalculo, motivoNoRecalculable } from '@/lib/members/list-refresh'
+
+/** Lo que agrega el GET de una lista (PAR-9). */
+type ListaConAutoria = MemberList & {
+  creada_por?: string | null
+  ultima_edicion?: { por: string | null; cuando: string } | null
+  puede_editar?: boolean
+}
 
 /** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
 const SIN_MIEMBROS: Member[] = []
@@ -99,13 +110,19 @@ export default function ListaDetailPage() {
   /** Va acá arriba con el resto de los hooks: abajo caía después de los
    *  early returns de carga y de "lista no encontrada". */
   const [refrescando, setRefrescando] = useState(false)
+  // PAR-9 · ?personas=1 (desde el menú del listado) abre directo el modo de
+  // agregar o quitar personas de una lista fija.
+  const [editandoPersonas, setEditandoPersonas] = useState(useSearchParams().get('personas') === '1')
+  const [editandoDatos, setEditandoDatos] = useState(false)
+  const [cambiandoPersonas, setCambiandoPersonas] = useState(false)
+  const abrirEdicionDeFiltros = useAbrirEdicionDeFiltros()
   // LINT-1 · la lista y sus miembros son UNA carga (useCargaRemota): el
   // segundo fetch depende del primero, y «cargando» se deriva del sello.
-  const { datos, cargando: loading } = useCargaRemota<{ list: MemberList | null; members: Member[] }>(
+  const { datos, cargando: loading, recargar } = useCargaRemota<{ list: ListaConAutoria | null; members: Member[] }>(
     id,
     async () => {
       const r = await fetch(`/api/member-lists/${id}`)
-      const l: MemberList | null = r.ok ? await r.json() : null
+      const l: ListaConAutoria | null = r.ok ? await r.json() : null
       if (!l || l.member_ids.length === 0) return { list: l, members: [] }
       const res = await fetch('/api/members/by-ids', {
         method: 'POST',
@@ -165,6 +182,29 @@ export default function ListaDetailPage() {
     } finally { setRefrescando(false) }
   }
 
+  /** PAR-9 · Listas FIJAS: agregar o quitar personas a mano. */
+  async function cambiarPersonas(action: 'agregar_personas' | 'quitar_personas', ids: string[], nombre: string) {
+    if (cambiandoPersonas) return
+    setCambiandoPersonas(true)
+    try {
+      const res = await fetch(`/api/member-lists/${list!.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, member_ids: ids }),
+      })
+      const d = await res.json().catch(() => ({}))
+      if (!res.ok) { toast(d.error ?? 'No se pudo cambiar la lista.', 'error'); return }
+      if (d.antes === d.despues) toast(action === 'agregar_personas' ? `${nombre} ya estaba en la lista.` : `${nombre} no estaba en la lista.`, 'info')
+      else toast(action === 'agregar_personas' ? `${nombre} agregada a la lista.` : `${nombre} quitada de la lista.`, 'success')
+      await recargar()
+    } catch {
+      toast('No se pudo cambiar la lista.', 'error')
+    } finally { setCambiandoPersonas(false) }
+  }
+
+  const conFiltro = tieneFiltroEditable(list.filters)
+  const puedeEditar = list.puede_editar !== false
+
   function handleComunicar() {
     const ids = list!.member_ids.join(',')
     const label = encodeURIComponent(list!.name)
@@ -217,17 +257,45 @@ export default function ListaDetailPage() {
               </p>
             )}
             <p className="text-[13px] text-navy-light/80 font-body">
-              Creada por {list.created_by} · {formatDate(list.created_at)}
+              Creada {list.creada_por ? `por ${list.creada_por} ` : ''}el {formatDate(list.created_at)}
+              {list.ultima_edicion && (
+                <> · Última edición {list.ultima_edicion.por ? `de ${list.ultima_edicion.por} ` : ''}el {formatDateTime(list.ultima_edicion.cuando)}</>
+              )}
             </p>
           </div>
           <div className="flex items-center gap-2 flex-wrap">
-            <Link
-              href="/miembros"
-              className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
-            >
-              <ExternalLink size={14} />
-              Abrir en búsqueda
-            </Link>
+            {puedeEditar && (
+              <button
+                type="button"
+                onClick={() => setEditandoDatos(true)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                <Edit2 size={14} aria-hidden />
+                Nombre y descripción
+              </button>
+            )}
+            {/* PAR-9 · Con filtro: se reabre en Miembros con la búsqueda exacta.
+                Fija: no hay filtro que editar, se agregan o quitan personas. */}
+            {puedeEditar && (conFiltro ? (
+              <button
+                type="button"
+                onClick={() => abrirEdicionDeFiltros(list)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                <SlidersHorizontal size={14} aria-hidden />
+                Editar filtros
+              </button>
+            ) : (
+              <button
+                type="button"
+                aria-pressed={editandoPersonas}
+                onClick={() => setEditandoPersonas(v => !v)}
+                className="inline-flex items-center gap-1.5 rounded-xl border border-[var(--outline-variant)] px-3.5 py-2 text-sm text-navy-light hover:bg-surface-low transition-colors font-body"
+              >
+                <UserPlus size={14} aria-hidden />
+                {editandoPersonas ? 'Listo' : 'Agregar o quitar personas'}
+              </button>
+            ))}
             <button
               onClick={handleComunicar}
               className="inline-flex items-center gap-1.5 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] px-4 py-2 text-sm text-white hover:bg-coral-deep transition-all font-body"
@@ -242,7 +310,28 @@ export default function ListaDetailPage() {
 
       {/* Aviso de filtro incompleto: va ARRIBA del banner de tipo porque cambia
           lo que ese banner promete. */}
-      {motivoNoRecalculable(list.filters) && (
+      {!conFiltro && (
+        <div className="rounded-2xl px-5 py-3.5 flex items-start gap-3 bg-surface-low border border-[var(--outline-variant)]">
+          <Lock size={14} className="text-navy-light/80 shrink-0 mt-0.5" aria-hidden />
+          <p className="text-[13px] text-navy-light/80 font-body">
+            <strong className="text-navy">Esta lista es fija:</strong> se armó con personas específicas y no
+            tiene un filtro que se pueda editar. Para cambiar quién está, usá «Agregar o quitar personas».
+          </p>
+        </div>
+      )}
+      {editandoPersonas && !conFiltro && (
+        <div className="rounded-2xl px-5 py-4 space-y-2 bg-surface-card shadow-[var(--shadow-md)]">
+          <p className="text-[11px] uppercase tracking-widest text-navy-light/80 font-display">Agregar a la lista</p>
+          <MemberCombobox
+            dropdown
+            placeholder="Buscar por nombre o cédula…"
+            excludeIds={list.member_ids}
+            onSelect={m => void cambiarPersonas('agregar_personas', [m.id], `${m.first_name} ${m.last_name}`)}
+          />
+          <p className="text-[13px] text-navy-light/80 font-body">Para quitar a alguien, usá la × de su fila.</p>
+        </div>
+      )}
+      {list.filters?.conditions?.length > 0 && motivoNoRecalculable(list.filters) && (
         <div className="rounded-2xl px-5 py-3.5 flex items-start gap-3 bg-amber-50 border border-amber-200">
           <AlertTriangle size={14} className="text-amber-700 shrink-0 mt-0.5" aria-hidden />
           <p className="text-[13px] text-amber-800 font-body">{motivoNoRecalculable(list.filters)}</p>
@@ -313,7 +402,7 @@ export default function ListaDetailPage() {
           <p className="text-[13px] text-navy-light/80 font-body">
             <strong className="text-navy">{listMembers.length}</strong> miembros en esta lista
             {list.member_count > listMembers.length && (
-              <span className="ml-1 text-navy-light/80">(mock: mostrando {listMembers.length} de {list.member_count.toLocaleString('es-CR')})</span>
+              <span className="ml-1 text-navy-light/80">(mostrando {listMembers.length} de {list.member_count.toLocaleString('es-CR')})</span>
             )}
           </p>
           <div className="flex items-center gap-2">
@@ -337,10 +426,10 @@ export default function ListaDetailPage() {
             <EmptyState icon={Users} title="No hay miembros en esta lista" />
           ) : (
             sorted.map(member => (
+              <div key={member.id} className="flex items-center">
               <button
-                key={member.id}
                 onClick={() => router.push(`/miembros/${member.id}`)}
-                className="flex w-full items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-low"
+                className="flex flex-1 min-w-0 items-center gap-3 px-4 py-3.5 text-left transition-colors hover:bg-surface-low"
               >
                 <div className={cn('flex h-9 w-9 shrink-0 items-center justify-center rounded-full text-xs font-display font-extrabold', avatarColor(member.id))}>
                   {initials(member)}
@@ -357,6 +446,16 @@ export default function ListaDetailPage() {
                 </span>
                 <ArrowRight size={15} className="shrink-0 text-navy-light/80" strokeWidth={1.75} />
               </button>
+              {editandoPersonas && !conFiltro && (
+                <button aria-label={`Quitar a ${member.first_name} ${member.last_name} de la lista`}
+                  disabled={cambiandoPersonas}
+                  onClick={() => void cambiarPersonas('quitar_personas', [member.id], `${member.first_name} ${member.last_name}`)}
+                  className="mr-3 rounded-lg p-2 text-navy-light/80 hover:bg-coral/10 hover:text-coral-deep disabled:opacity-40"
+                >
+                  <X size={16} strokeWidth={1.75} />
+                </button>
+              )}
+              </div>
             ))
           )}
         </div>
@@ -456,7 +555,16 @@ export default function ListaDetailPage() {
                         }
                       }
                     })}
-                    <td className="px-4 py-3.5 text-right">
+                    <td className="px-4 py-3.5 text-right whitespace-nowrap">
+                      {editandoPersonas && !conFiltro && (
+                        <button aria-label={`Quitar a ${member.first_name} ${member.last_name} de la lista`}
+                          disabled={cambiandoPersonas}
+                          onClick={e => { e.stopPropagation(); void cambiarPersonas('quitar_personas', [member.id], `${member.first_name} ${member.last_name}`) }}
+                          className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-coral/10 hover:text-coral-deep disabled:opacity-40"
+                        >
+                          <X size={16} strokeWidth={1.75} />
+                        </button>
+                      )}
                       <button aria-label={`Ver ficha de ${member.first_name} ${member.last_name}`}
                         onClick={e => { e.stopPropagation(); router.push(`/miembros/${member.id}`) }}
                         className="rounded-lg p-1.5 text-navy-light/80 transition-all hover:bg-surface-low hover:text-coral-deep"
@@ -471,6 +579,9 @@ export default function ListaDetailPage() {
           </table>
         </div>
       </div>
+      {editandoDatos && (
+        <EditarDatosDeListaModal list={list} onClose={() => setEditandoDatos(false)} onSaved={() => void recargar()} />
+      )}
     </div>
   )
 }

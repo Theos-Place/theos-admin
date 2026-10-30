@@ -96,7 +96,7 @@ async function nombresDeLasReferencias(
  * `resolverNombresDeQuienCancelo` en las becas. Una cuenta sin ficha queda sin
  * nombre y la pantalla la muestra como "el sistema".
  */
-async function nombresDeLosActores(ids: readonly (string | null)[]): Promise<Map<string, string>> {
+export async function nombresDeLosActores(ids: readonly (string | null)[]): Promise<Map<string, string>> {
   const unicos = [...new Set(ids.filter((v): v is string => !!v))]
   const nombres = new Map<string, string>()
   if (!unicos.length) return nombres

@@ -2,6 +2,9 @@ import { createAdminClient, type Insertable, type Updatable } from '@/lib/supaba
 import type { MemberList } from '@/types/member-list'
 import type { FilterState } from '@/types/filters'
 import { motivoNoRecalculable } from '@/lib/members/list-refresh'
+import type { EnvioQueUsaLaLista } from '@/lib/members/editar-lista'
+import { SCHEDULED_STATUS } from '@/lib/communications/schedule'
+import { nombresDeLosActores } from './audit'
 
 type DbRow = {
   id: string
@@ -138,4 +141,55 @@ export async function deleteMemberList(id: string): Promise<void> {
   const supabase = createAdminClient()
   const { error } = await supabase.from('member_lists').delete().eq('id', id)
   if (error) throw error
+}
+
+/**
+ * PAR-9 · Los comunicados PROGRAMADOS que salen a esta lista. El cron recalcula
+ * la lista al enviarlos (ver `procesarProgramados`), así que cambiarle el
+ * filtro cambia a quién le llega: la pantalla lo avisa antes de guardar.
+ */
+export async function enviosProgramadosConLaLista(id: string): Promise<EnvioQueUsaLaLista[]> {
+  const supabase = createAdminClient()
+  const { data, error } = await supabase
+    .from('message_broadcasts')
+    .select('id, subject, channel, scheduled_at')
+    .eq('status', SCHEDULED_STATUS)
+    .eq('recipient_filter->>list_id', id)
+    .order('scheduled_at')
+  if (error) throw error
+  return (data ?? []) as EnvioQueUsaLaLista[]
+}
+
+/** PAR-9 · Quién y cuándo la tocó por última vez (de la bitácora), y el
+ *  nombre de quien la creó. */
+export async function autoriaDeLaLista(lista: Pick<MemberList, 'id' | 'created_by'>): Promise<{
+  creada_por: string | null
+  ultima_edicion: { por: string | null; cuando: string } | null
+}> {
+  const supabase = createAdminClient()
+  const [{ data: edicion }, { data: creador }] = await Promise.all([
+    supabase.from('audit_log').select('actor_id, created_at')
+      .eq('entity_type', 'member_lists').eq('entity_id', lista.id).eq('action', 'UPDATE')
+      .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    lista.created_by
+      ? supabase.from('members').select('first_name, last_name').eq('id', lista.created_by).maybeSingle()
+      : Promise.resolve({ data: null }),
+  ])
+  const fila = edicion as { actor_id: string | null; created_at: string } | null
+  const nombres = fila?.actor_id ? await nombresDeLosActores([fila.actor_id]) : new Map<string, string>()
+  const c = creador as { first_name: string | null; last_name: string | null } | null
+  return {
+    creada_por: c ? `${c.first_name ?? ''} ${c.last_name ?? ''}`.trim() || null : null,
+    ultima_edicion: fila ? { por: fila.actor_id ? nombres.get(fila.actor_id) ?? null : null, cuando: fila.created_at } : null,
+  }
+}
+
+/** PAR-9 · De los ids pedidos, los que son fichas que existen (para no meter
+ *  basura en una lista fija). */
+export async function fichasExistentes(ids: readonly string[]): Promise<string[]> {
+  if (ids.length === 0) return []
+  const supabase = createAdminClient()
+  const { data, error } = await supabase.from('members').select('id').in('id', [...ids])
+  if (error) throw error
+  return (data ?? []).map(r => (r as { id: string }).id)
 }
