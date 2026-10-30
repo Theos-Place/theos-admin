@@ -537,6 +537,12 @@ function NuevaComunicacionContent() {
           channel={channel}
           recipients={recipients}
           sending={sending}
+          // Programado: el modal dice CUÁNDO sale y no «Enviar» (30-oct-2026:
+          // decía «Enviar a 3.646 personas» con el envío programado al 2-nov).
+          programadoPara={scheduled ? (() => {
+            const r = resolveScheduledAt(scheduledAt, timezone)
+            return r.ok ? scheduleSummary(r.iso, timezone) : null
+          })() : null}
           onConfirm={() => { setShowConfirmModal(false); handleSend() }}
           onClose={() => setShowConfirmModal(false)}
         />

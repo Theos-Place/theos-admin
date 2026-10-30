@@ -173,6 +173,8 @@ type ConfirmModalProps = {
   channel: CommunicationChannel
   recipients: RecipientState
   sending: boolean
+  /** Si está programado: «2 de noviembre, 10:00 a. m. (Costa Rica)». */
+  programadoPara?: string | null
   onConfirm: () => void
   onClose: () => void
 }
@@ -181,6 +183,7 @@ export function ConfirmModal({
   channel,
   recipients,
   sending,
+  programadoPara,
   onConfirm,
   onClose,
 }: ConfirmModalProps) {
@@ -188,7 +191,7 @@ export function ConfirmModal({
     <Modal onClose={onClose} titleId="confirmar-envio" width={448}>
       <div>
         <div className="px-6 py-5 border-b border-[var(--outline-variant)]">
-          <p id="confirmar-envio" className="text-base font-bold text-navy font-display">¿Confirmar envío?</p>
+          <p id="confirmar-envio" className="text-base font-bold text-navy font-display">{programadoPara ? '¿Confirmar programación?' : '¿Confirmar envío?'}</p>
         </div>
         <div className="px-6 py-5 space-y-4">
           <div className="space-y-2">
@@ -208,11 +211,17 @@ export function ConfirmModal({
             )}
           </div>
 
+          {programadoPara && (
+            <div className="flex items-center justify-between text-[13px] gap-4 font-body rounded-xl bg-teal-soft/20 px-3 py-2.5">
+              <span className="text-teal-ink shrink-0">Sale el</span>
+              <span className="font-semibold text-teal-ink text-right">{programadoPara}</span>
+            </div>
+          )}
           {recipients.count > 500 && (
             <div className="flex items-center gap-2 rounded-xl bg-amber-50 px-3 py-2.5">
               <AlertTriangle size={14} className="text-amber-600 shrink-0" />
               <p className="text-[13px] text-amber-700 font-body">
-                Envío masivo a más de {recipients.count.toLocaleString('es-CR')} personas.
+                Envío masivo a {recipients.count.toLocaleString('es-CR')} personas.
               </p>
             </div>
           )}
@@ -231,7 +240,9 @@ export function ConfirmModal({
             className="flex-1 flex items-center justify-center gap-2 rounded-full bg-coral shadow-[var(--shadow-pulse-sm)] py-2.5 text-sm text-white hover:bg-coral-deep transition-colors font-body"
           >
             <Send size={14} />
-            {sending ? 'Enviando...' : `Enviar a ${recipients.count.toLocaleString('es-CR')} persona${recipients.count !== 1 ? 's' : ''}`}
+            {sending
+              ? (programadoPara ? 'Programando...' : 'Enviando...')
+              : `${programadoPara ? 'Programar para' : 'Enviar a'} ${recipients.count.toLocaleString('es-CR')} persona${recipients.count !== 1 ? 's' : ''}`}
           </button>
         </div>
       </div>

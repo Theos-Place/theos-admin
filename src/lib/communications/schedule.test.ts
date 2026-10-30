@@ -204,3 +204,14 @@ describe('escoger día y hora en cualquier orden', () => {
     expect(src).not.toMatch(/const \{ dia, hora \} = partesDeLaProgramacion\(scheduledAt\)/)
   })
 })
+
+describe('el modal de confirmación de un envío PROGRAMADO (30-oct-2026)', () => {
+  // Decía «Enviar a 3.646 personas» con el envío programado al 2-nov.
+  it('dice cuándo sale y «Programar para», no «Enviar a»', () => {
+    const modal = readFileSync('src/app/(admin)/comunicaciones/nueva/_components/Modals.tsx', 'utf8')
+    const page = readFileSync('src/app/(admin)/comunicaciones/nueva/page.tsx', 'utf8')
+    expect(modal).toContain("programadoPara ? 'Programar para' : 'Enviar a'")
+    expect(modal).toContain("programadoPara ? '¿Confirmar programación?' : '¿Confirmar envío?'")
+    expect(page).toMatch(/programadoPara=\{scheduled \?/)
+  })
+})
