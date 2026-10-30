@@ -6,6 +6,7 @@ import {
   updateFinanceRequestStatus, assignFinanceRequest, ofrecerArregloEnLugarDeBeca,
 } from '@/lib/supabase/queries/finance-requests'
 import { MIN_INSTALLMENTS, MAX_INSTALLMENTS, FREQUENCIES } from '@/lib/finance/installments'
+import { ERRORES_DE_LIMITES } from '@/lib/finance/limites-de-arreglo'
 import { logAudit } from '@/lib/audit'
 import { necesitaAprobacionPropia, validarAprobacion } from '@/lib/finance/aprobacion-de-beca'
 import { approveScholarshipRequest } from '@/lib/supabase/queries/scholarships'
@@ -29,6 +30,8 @@ const arregloSchema = z.object({
   installments: z.number().int().min(MIN_INSTALLMENTS).max(MAX_INSTALLMENTS),
   frequency: z.enum(FREQUENCIES).optional(),
   first_due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha en formato YYYY-MM-DD'),
+  // FIN-15 · Con frecuencia 'personalizada': una fecha por tracto, en orden.
+  due_dates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).max(MAX_INSTALLMENTS).optional(),
   review_notes: z.string().trim().max(500).optional(),
 }).strict()
 
@@ -45,6 +48,8 @@ const ERRORES_ARREGLO: Record<string, { error: string; status: number }> = {
   PAGO_SIN_OBJETO: { error: 'El cobro no está ligado a una matrícula ni a una inscripción.', status: 409 },
   TRACTOS_INVALIDOS: { error: `La cantidad de tractos debe estar entre ${MIN_INSTALLMENTS} y ${MAX_INSTALLMENTS}.`, status: 400 },
   MONTO_INSUFICIENTE: { error: 'El monto es muy chico para repartirlo en esa cantidad de tractos.', status: 400 },
+  // FIN-13/FIN-15 · Sin esto, un arreglo que rompía un límite respondía 500.
+  ...ERRORES_DE_LIMITES,
 }
 
 // PATCH: { action: 'take' | 'resolve' | 'reject', review_notes? } — finanzas/admin.
@@ -91,6 +96,7 @@ export async function PATCH(
           installments: parsed.data.installments,
           firstDue: parsed.data.first_due,
           frequency: parsed.data.frequency,
+          fechas: parsed.data.due_dates,
           notes: parsed.data.review_notes ?? null,
         }, auth.ctx.memberId)
         await logAudit({
@@ -105,7 +111,7 @@ export async function PATCH(
         const known = e instanceof Error ? ERRORES_ARREGLO[e.message] : undefined
         if (known) {
           return NextResponse.json(
-            { error: known.error, code: (e as Error).message.toLowerCase() },
+            { error: (e as Error & { detalle?: string }).detalle ?? known.error, code: (e as Error).message.toLowerCase() },
             { status: known.status },
           )
         }

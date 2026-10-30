@@ -16,11 +16,12 @@ import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/shared/Button'
-import { formatMoney, formatDate } from '@/lib/format'
+import { formatMoney, formatDate, ymdCR } from '@/lib/format'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
 import { DatePicker } from '@/components/events/DatePicker'
+import { FechasDeTractos, fechasParaTractos } from '@/components/finance/FechasDeTractos'
 import {
-  planInstallments, FREQUENCIES, FREQUENCY_LABEL, type PlanFrequency,
+  planInstallments, FREQUENCIES, FREQUENCY_LABEL, motivoFechasPersonalizadas, type PlanFrequency,
 } from '@/lib/finance/installments'
 /** Vacío con identidad estable: `datos ?? []` sería un array nuevo por render. */
 const SIN_DATOS: QueueRow[] = []
@@ -99,6 +100,8 @@ type PaymentReviewQueueProps = {
 type PlanPanel = {
   installments: number; firstDue: string; notes: string
   frequency: PlanFrequency; busy: boolean
+  /** FIN-15 · Una fecha por tracto cuando la frecuencia es 'personalizada'. */
+  fechas: string[]
 }
 
 // BEC-1: estado del panel "Aplicar beca / cupón" dentro del detalle.
@@ -364,8 +367,9 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
         method: 'POST', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           installments: panel.installments,
-          first_due: panel.firstDue,
+          first_due: panel.frequency === 'personalizada' ? (panel.fechas[0] || panel.firstDue) : panel.firstDue,
           frequency: panel.frequency,
+          ...(panel.frequency === 'personalizada' ? { due_dates: fechasParaTractos(panel.fechas, panel.installments) } : {}),
           notes: panel.notes.trim() || undefined,
         }),
       })
@@ -782,7 +786,8 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       installments: 2,
                       // Por defecto el primer tracto vence hoy: finanzas suele
                       // acordar el arreglo con el primer pago en el momento.
-                      firstDue: new Date().toISOString().slice(0, 10),
+                      firstDue: ymdCR(),
+                      fechas: [],
                       notes: '',
                       // Mensual por defecto: es lo que había antes de FIN-8 y
                       // lo que se pacta casi siempre.
@@ -811,10 +816,12 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                           className="w-20 rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                         />
                       </div>
-                      <div className="space-y-1">
-                        <label htmlFor="plan-primer" className="block text-[13px] text-navy-light/80 font-display">Vence el primero</label>
-                        <DatePicker id="plan-primer" value={planPanel.firstDue} onChange={v => setPlanPanel(p => p ? { ...p, firstDue: v } : p)} className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
-                      </div>
+                      {planPanel.frequency !== 'personalizada' && (
+                        <div className="space-y-1">
+                          <label htmlFor="plan-primer" className="block text-[13px] text-navy-light/80 font-display">Vence el primero</label>
+                          <DatePicker id="plan-primer" value={planPanel.firstDue} onChange={v => setPlanPanel(p => p ? { ...p, firstDue: v } : p)} className="rounded-xl bg-surface-low px-3 py-1.5 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+                        </div>
+                      )}
                       <div className="space-y-1">
                         <label htmlFor="plan-frecuencia" className="block text-[13px] text-navy-light/80 font-display">Frecuencia</label>
                         <select
@@ -827,6 +834,14 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                         </select>
                       </div>
                     </div>
+                    {planPanel.frequency === 'personalizada' && (
+                      <FechasDeTractos
+                        idBase="plan-fecha"
+                        count={planPanel.installments}
+                        fechas={planPanel.fechas}
+                        onChange={fechas => setPlanPanel(p => p ? { ...p, fechas } : p)}
+                      />
+                    )}
                     {/* FIN-8 · Las fechas ANTES de confirmar. Sin esto hay que
                         crear el arreglo para enterarse de cuándo vence cada
                         tracto, y deshacerlo no es gratis: el primer tracto
@@ -841,12 +856,13 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                           total: detail.amount, count: planPanel.installments,
                           firstDue: planPanel.firstDue, currency: detail.currency,
                           frequency: planPanel.frequency,
+                          fechas: fechasParaTractos(planPanel.fechas, planPanel.installments),
                         // formatDate y NO el fmtDate de arriba: ese hace
                         // `new Date('2026-01-20')`, que es medianoche UTC y en
                         // Costa Rica (UTC-6) se pinta como el 19. Para una
                         // fecha sin hora hay que pasar por parseFlexibleDate.
                         }).map(t => `${formatDate(t.due_date)} · ${money(t.amount, detail.currency)}`).join('   ·   ')
-                          || 'Revisá el número de tractos y la fecha.'}
+                          || (planPanel.frequency === 'personalizada' ? 'Poné la fecha de cada tracto, en orden.' : 'Revisá el número de tractos y la fecha.')}
                       </p>
                     </div>
                     <div className="space-y-1">
@@ -862,7 +878,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                     <div className="flex gap-2">
                       <button
                         onClick={() => createPlan(detail, planPanel)}
-                        disabled={planPanel.busy || planPanel.installments < 2 || planPanel.installments > 24 || !planPanel.firstDue}
+                        disabled={planPanel.busy || planPanel.installments < 2 || planPanel.installments > 24 || (planPanel.frequency === 'personalizada' ? motivoFechasPersonalizadas(fechasParaTractos(planPanel.fechas, planPanel.installments), planPanel.installments) !== null : !planPanel.firstDue)}
                         className="rounded-full bg-navy px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
                       >
                         {planPanel.busy ? '…' : 'Crear arreglo'}
@@ -876,7 +892,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                       </button>
                     </div>
                     <p className="text-[13px] text-navy-light/80 font-body">
-                      Los siguientes tractos vencen mes a mes. Un tracto vencido impago le bloquea
+                      Los siguientes tractos vencen según la frecuencia. Un tracto vencido impago le bloquea
                       matricularse y inscribirse a eventos pagos.
                     </p>
                   </>

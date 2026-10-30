@@ -3,14 +3,17 @@ import {
   motivoParaRechazarArreglo, ultimoVencimiento, limiteDeEstudio, opcionesPermitidas,
   MAX_TRACTOS_EVENTO,
 } from '@/lib/finance/limites-de-arreglo'
-import { planInstallments, MAX_INSTALLMENTS } from '@/lib/finance/installments'
+import { planInstallments, motivoFechasPersonalizadas, MAX_INSTALLMENTS } from '@/lib/finance/installments'
 
 /** Arma la propuesta como la arma el servidor, con los vencimientos reales. */
-const propuesta = (installments: number, frequency: 'mensual' | 'quincenal', firstDue: string) => ({
+const propuesta = (installments: number, frequency: 'mensual' | 'quincenal' | 'personalizada', firstDue: string) => ({
   installments, frequency,
   vencimientos: planInstallments({ total: 20000, count: installments, firstDue, frequency })
     .map(t => t.due_date),
 })
+
+/** El día en que se pacta en estas pruebas. */
+const HOY = '2026-10-05'
 
 const evento = (limite: string | null) =>
   ({ tipo: 'evento' as const, limite, origenDelLimite: 'inicio_actividad' as const })
@@ -19,26 +22,26 @@ const estudio = (limite: string | null) =>
 
 describe('FIN-13 · arreglos de ACTIVIDADES', () => {
   it('tres tractos se rechazan: el máximo son dos', () => {
-    const m = motivoParaRechazarArreglo(propuesta(3, 'quincenal', '2026-10-05'), evento('2026-12-01'))
+    const m = motivoParaRechazarArreglo(propuesta(3, 'quincenal', '2026-10-05'), evento('2026-12-01'), HOY)
     expect(m?.code).toBe('DEMASIADOS_TRACTOS')
     expect(m?.error).toContain('2 tractos')
   })
 
   it('dos tractos se aceptan', () => {
-    expect(motivoParaRechazarArreglo(propuesta(2, 'quincenal', '2026-10-05'), evento('2026-12-01')))
+    expect(motivoParaRechazarArreglo(propuesta(2, 'quincenal', '2026-10-05'), evento('2026-12-01'), HOY))
       .toBeNull()
   })
 
   it('mensual se rechaza aunque sean dos tractos', () => {
     // No hay tiempo para cuotas mensuales: las actividades se anuncian con
     // cerca de un mes de anticipación.
-    const m = motivoParaRechazarArreglo(propuesta(2, 'mensual', '2026-10-05'), evento('2026-12-01'))
+    const m = motivoParaRechazarArreglo(propuesta(2, 'mensual', '2026-10-05'), evento('2026-12-01'), HOY)
     expect(m?.code).toBe('FRECUENCIA_NO_PERMITIDA')
   })
 
   it('un vencimiento DESPUÉS de la actividad se rechaza', () => {
     // Cobrar después del evento no es un arreglo de pago, es una deuda.
-    const m = motivoParaRechazarArreglo(propuesta(2, 'quincenal', '2026-10-05'), evento('2026-10-10'))
+    const m = motivoParaRechazarArreglo(propuesta(2, 'quincenal', '2026-10-05'), evento('2026-10-10'), HOY)
     expect(m?.code).toBe('VENCE_DESPUES_DE_LA_ACTIVIDAD')
     expect(m?.error).toContain('10/10/2026')
   })
@@ -46,35 +49,66 @@ describe('FIN-13 · arreglos de ACTIVIDADES', () => {
   it('y vencer EL MISMO DÍA de la actividad también: la plata entraría ese día', () => {
     const p = { installments: 2, frequency: 'quincenal' as const,
                 vencimientos: ['2026-10-05', '2026-10-15'] }
-    expect(motivoParaRechazarArreglo(p, evento('2026-10-15'))?.code)
+    expect(motivoParaRechazarArreglo(p, evento('2026-10-15'), HOY)?.code)
       .toBe('VENCE_DESPUES_DE_LA_ACTIVIDAD')
   })
 
   it('el error se queja primero de los tractos y no de la fecha', () => {
     // Quien lo lee está llenando un formulario: corregir los tractos cambia
     // los vencimientos, así que pedir las dos cosas a la vez confunde.
-    const m = motivoParaRechazarArreglo(propuesta(5, 'quincenal', '2026-10-05'), evento('2026-10-06'))
+    const m = motivoParaRechazarArreglo(propuesta(5, 'quincenal', '2026-10-05'), evento('2026-10-06'), HOY)
     expect(m?.code).toBe('DEMASIADOS_TRACTOS')
   })
 })
 
-describe('FIN-13 · arreglos de ESTUDIOS', () => {
-  it('se cierran dentro de la matrícula, no mientras dure el estudio', () => {
-    const m = motivoParaRechazarArreglo(propuesta(3, 'mensual', '2026-10-05'), estudio('2026-11-01'))
-    expect(m?.code).toBe('VENCE_DESPUES_DE_LA_MATRICULA')
-    expect(m?.error).toContain('matrícula')
+describe('FIN-15 · arreglos de ESTUDIOS: se PACTAN en la matrícula, los tractos pueden vencer después', () => {
+  it('pactado en matrícula con el último tracto DESPUÉS del cierre: se acepta', () => {
+    // La matrícula dura ~15 días: un arreglo que quepa entero ahí no sirve.
+    const p = propuesta(3, 'mensual', '2026-10-05') // vence 05/10, 05/11, 05/12
+    expect(motivoParaRechazarArreglo(p, estudio('2026-10-20'), '2026-10-05')).toBeNull()
   })
 
-  it('dentro de la ventana se aceptan, y sin obligar quincena', () => {
-    expect(motivoParaRechazarArreglo(propuesta(2, 'mensual', '2026-10-05'), estudio('2026-12-01')))
+  it('el día del cierre todavía se puede pactar', () => {
+    expect(motivoParaRechazarArreglo(propuesta(2, 'mensual', '2026-10-20'), estudio('2026-10-20'), '2026-10-20'))
       .toBeNull()
+  })
+
+  it('pactado DESPUÉS de que cerró la matrícula: se rechaza', () => {
+    const m = motivoParaRechazarArreglo(propuesta(2, 'mensual', '2026-10-21'), estudio('2026-10-20'), '2026-10-21')
+    expect(m?.code).toBe('FUERA_DE_MATRICULA')
+    expect(m?.error).toContain('20/10/2026')
+  })
+
+  it('si el tope es el inicio (no hay cierre), el mensaje lo dice así', () => {
+    const ctx = { tipo: 'estudio' as const, limite: '2026-10-20', origenDelLimite: 'inicio_estudio' as const }
+    expect(motivoParaRechazarArreglo(propuesta(2, 'mensual', '2026-11-01'), ctx, '2026-11-01')?.error)
+      .toContain('el estudio arrancó')
+  })
+
+  it('NIVELES no va por bloques: sin amarre de fechas aunque la matrícula haya cerrado', () => {
+    const ctx = { ...estudio('2026-10-20'), esNiveles: true }
+    expect(motivoParaRechazarArreglo(propuesta(4, 'mensual', '2026-12-01'), ctx, '2026-12-01')).toBeNull()
   })
 
   it('a un estudio NO se le topan los tractos en dos', () => {
-    // El tope lo pone la fecha, que ya es corta. Tres tractos que caben
-    // dentro de la matrícula son válidos.
-    expect(motivoParaRechazarArreglo(propuesta(3, 'quincenal', '2026-10-01'), estudio('2026-12-01')))
+    expect(motivoParaRechazarArreglo(propuesta(3, 'quincenal', '2026-10-01'), estudio('2026-12-01'), HOY))
       .toBeNull()
+  })
+
+  it('personalizada vale para estudios', () => {
+    const p = { installments: 2, frequency: 'personalizada' as const, vencimientos: ['2026-10-20', '2026-11-20'] }
+    expect(motivoParaRechazarArreglo(p, estudio('2026-10-20'), HOY)).toBeNull()
+  })
+})
+
+describe('FIN-15 · actividades siguen con FIN-13', () => {
+  it('un tracto posterior al inicio se rechaza', () => {
+    const p = { installments: 2, frequency: 'quincenal' as const, vencimientos: ['2026-10-05', '2026-10-30'] }
+    expect(motivoParaRechazarArreglo(p, evento('2026-10-20'), HOY)?.code).toBe('VENCE_DESPUES_DE_LA_ACTIVIDAD')
+  })
+  it('y no aceptan fechas a mano', () => {
+    const p = { installments: 2, frequency: 'personalizada' as const, vencimientos: ['2026-10-05', '2026-10-10'] }
+    expect(motivoParaRechazarArreglo(p, evento('2026-10-20'), HOY)?.code).toBe('FRECUENCIA_NO_PERMITIDA')
   })
 })
 
@@ -99,7 +133,7 @@ describe('FIN-13 · la fecha tope de un estudio', () => {
   })
 
   it('y sin tope la regla no bloquea', () => {
-    expect(motivoParaRechazarArreglo(propuesta(4, 'mensual', '2026-10-05'), estudio(null)))
+    expect(motivoParaRechazarArreglo(propuesta(4, 'mensual', '2026-10-05'), estudio(null), HOY))
       .toBeNull()
   })
 })
@@ -111,9 +145,9 @@ describe('FIN-13 · lo que la pantalla puede ofrecer', () => {
       .toEqual({ maxTractos: MAX_TRACTOS_EVENTO, frecuencias: ['quincenal'] })
   })
 
-  it('un estudio mantiene las dos frecuencias y el tope global', () => {
+  it('un estudio ofrece las tres frecuencias (con personalizada) y el tope global', () => {
     expect(opcionesPermitidas('estudio', MAX_INSTALLMENTS))
-      .toEqual({ maxTractos: MAX_INSTALLMENTS, frecuencias: ['mensual', 'quincenal'] })
+      .toEqual({ maxTractos: MAX_INSTALLMENTS, frecuencias: ['mensual', 'quincenal', 'personalizada'] })
   })
 })
 
@@ -125,5 +159,21 @@ describe('FIN-13 · el último vencimiento', () => {
   it('ignora lo que no es una fecha', () => {
     expect(ultimoVencimiento(['', 'mañana', '2026-10-30'])).toBe('2026-10-30')
     expect(ultimoVencimiento([])).toBeNull()
+  })
+})
+
+describe('FIN-15 · fechas personalizadas', () => {
+  it('guardan las fechas tal cual, una por tracto', () => {
+    const t = planInstallments({ total: 30000, count: 3, firstDue: '', frequency: 'personalizada', fechas: ['2026-10-20', '2026-11-20', '2026-12-20'] })
+    expect(t.map(x => x.due_date)).toEqual(['2026-10-20', '2026-11-20', '2026-12-20'])
+    expect(t.reduce((a, x) => a + x.amount, 0)).toBe(30000)
+  })
+  it('sin fechas, o con fechas fuera de orden, no hay tractos', () => {
+    expect(planInstallments({ total: 30000, count: 2, firstDue: '2026-10-20', frequency: 'personalizada' })).toEqual([])
+    expect(motivoFechasPersonalizadas(['2026-11-20', '2026-10-20'], 2)).toContain('tracto 2')
+    expect(motivoFechasPersonalizadas(['2026-10-20', '2026-10-20'], 2)).not.toBeNull()
+    expect(motivoFechasPersonalizadas(['2026-10-20'], 2)).toContain('2 fechas')
+    expect(motivoFechasPersonalizadas(['2026-10-20', ''], 2)).not.toBeNull()
+    expect(motivoFechasPersonalizadas(['2026-10-20', '2026-11-20'], 2)).toBeNull()
   })
 })

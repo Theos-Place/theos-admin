@@ -29,6 +29,15 @@
  * grupos no tienen ninguna de las dos: ahí no se puede acotar, y se dice —
  * inventar una fecha sería peor que no tener la regla.
  *
+ * FIN-15 · CORREGIDO EL 2026-10-21 (decisión con finanzas). La regla de
+ * estudios estaba al revés: pedía que el ÚLTIMO tracto venciera antes de que
+ * cerrara la matrícula, que dura unos 15 días — un arreglo que quepa entero
+ * ahí no tiene sentido (el de Floriana no se dejó crear). Lo que se cierra
+ * dentro de la matrícula es el PACTO: el arreglo se crea mientras la
+ * matrícula está abierta, y los tractos pueden vencer después. Y NIVELES no va
+ * por bloques ni tiene ese calendario: ahí no hay fecha que amarre.
+ * Para actividades no cambia nada: todo cobrado antes de arrancar.
+ *
  * Módulo PURO: decide. Quien lee la base es la query y quien responde el
  * error es la ruta.
  */
@@ -52,6 +61,8 @@ export type ContextoDelArreglo = {
   limite: string | null
   /** De dónde salió `limite`, para poder explicarlo en el mensaje. */
   origenDelLimite?: 'inicio_actividad' | 'cierre_matricula' | 'inicio_estudio' | null
+  /** FIN-15 · Estudio de NIVELES (`study_plans.level = 'niveles'`): sin amarre de fechas. */
+  esNiveles?: boolean
 }
 
 export type PropuestaDeArreglo = {
@@ -83,13 +94,15 @@ const fmt = (ymd: string): string => {
 export function motivoParaRechazarArreglo(
   propuesta: PropuestaDeArreglo,
   ctx: ContextoDelArreglo,
+  /** Día de Costa Rica en que se pacta (`YYYY-MM-DD`). Se inyecta para poder probarlo. */
+  hoy: string,
 ): MotivoDeRechazo | null {
   if (ctx.tipo === 'evento') {
     if (propuesta.frequency !== FRECUENCIA_OBLIGADA_EVENTO) {
       return {
         code: 'FRECUENCIA_NO_PERMITIDA',
         error: 'Los arreglos de actividades son solo quincenales: no hay tiempo para '
-          + 'cuotas mensuales antes de que arranque.',
+          + 'cuotas mensuales ni fechas a mano antes de que arranque.',
       }
     }
     if (propuesta.installments > MAX_TRACTOS_EVENTO) {
@@ -99,28 +112,63 @@ export function motivoParaRechazarArreglo(
           + `(se pidieron ${propuesta.installments}).`,
       }
     }
-  }
-
-  const ultimo = ultimoVencimiento(propuesta.vencimientos)
-  if (!ultimo || !ctx.limite) return null
-
-  // El último tracto tiene que estar COBRADO antes de la fecha tope, así que
-  // vencer el mismo día no sirve: la plata entraría el día del evento.
-  if (ultimo >= ctx.limite) {
-    return ctx.tipo === 'evento'
-      ? {
+    const ultimo = ultimoVencimiento(propuesta.vencimientos)
+    // El último tracto tiene que estar COBRADO antes de la fecha tope, así que
+    // vencer el mismo día no sirve: la plata entraría el día del evento.
+    if (ultimo && ctx.limite && ultimo >= ctx.limite) {
+      return {
         code: 'VENCE_DESPUES_DE_LA_ACTIVIDAD',
         error: `El último tracto vence el ${fmt(ultimo)} y la actividad arranca el `
           + `${fmt(ctx.limite)}. Todo el arreglo tiene que quedar cobrado antes.`,
       }
-      : {
-        code: 'VENCE_DESPUES_DE_LA_MATRICULA',
-        error: `El último tracto vence el ${fmt(ultimo)} y la matrícula cierra el `
-          + `${fmt(ctx.limite)}. El arreglo tiene que cerrarse dentro del período `
-          + `de matrícula.`,
-      }
+    }
+    return null
+  }
+
+  // ESTUDIOS (FIN-15). Niveles no tiene calendario de matrícula que amarre.
+  if (ctx.esNiveles || !ctx.limite) return null
+  // Lo que tiene que caer dentro de la matrícula es el PACTO, no el último
+  // tracto. El día del cierre todavía cuenta como dentro.
+  if (hoy > ctx.limite) {
+    const que = ctx.origenDelLimite === 'inicio_estudio' ? 'el estudio arrancó' : 'la matrícula cerró'
+    return {
+      code: 'FUERA_DE_MATRICULA',
+      error: `Un arreglo de estudio se pacta dentro del período de matrícula, y ${que} el `
+        + `${fmt(ctx.limite)}.`,
+    }
   }
   return null
+}
+
+/**
+ * Los rechazos de FIN-13/FIN-15 como respuesta HTTP. Van con 409 y no 400: el
+ * cuerpo está bien formado, lo que no se puede es ESTE arreglo sobre ESTE
+ * objeto. Viven acá para que las DOS rutas que crean arreglos (el cobro y la
+ * solicitud de beca) digan lo mismo; la de beca no los tenía y respondía 500.
+ */
+export const ERRORES_DE_LIMITES: Record<string, { error: string; status: number }> = {
+  FRECUENCIA_NO_PERMITIDA: {
+    error: 'Los arreglos de actividades son solo quincenales: no hay tiempo para cuotas '
+      + 'mensuales ni fechas a mano antes de que arranque.',
+    status: 409,
+  },
+  DEMASIADOS_TRACTOS: {
+    error: `Un arreglo de actividad admite como máximo ${MAX_TRACTOS_EVENTO} tractos.`,
+    status: 409,
+  },
+  VENCE_DESPUES_DE_LA_ACTIVIDAD: {
+    error: 'El último tracto vence después de que arranca la actividad. Todo el arreglo '
+      + 'tiene que quedar cobrado antes.',
+    status: 409,
+  },
+  FUERA_DE_MATRICULA: {
+    error: 'Un arreglo de estudio se pacta dentro del período de matrícula, y ya cerró.',
+    status: 409,
+  },
+  FECHAS_PERSONALIZADAS_INVALIDAS: {
+    error: 'Las fechas a mano tienen que ser una por tracto y en orden.',
+    status: 400,
+  },
 }
 
 /** El vencimiento más tardío. No asume que vengan ordenados. */
@@ -160,5 +208,5 @@ export function opcionesPermitidas(tipo: TipoDeObjeto, maxGlobal: number): {
 } {
   return tipo === 'evento'
     ? { maxTractos: MAX_TRACTOS_EVENTO, frecuencias: [FRECUENCIA_OBLIGADA_EVENTO] }
-    : { maxTractos: maxGlobal, frecuencias: ['mensual', 'quincenal'] }
+    : { maxTractos: maxGlobal, frecuencias: ['mensual', 'quincenal', 'personalizada'] }
 }

@@ -115,19 +115,53 @@ export function quincenalDueDates(firstDue: string, count: number): string[] {
   return out
 }
 
-/** Cada cuánto vencen los tractos. */
-export type PlanFrequency = 'mensual' | 'quincenal'
-export const FREQUENCIES: PlanFrequency[] = ['mensual', 'quincenal']
+/**
+ * Cada cuánto vencen los tractos.
+ *
+ * FIN-15 · 'personalizada': la fecha de CADA tracto se pone a mano. Es el caso
+ * de quien cobra en una fecha que no es quincena ni mes exacto («el 20 le
+ * pago»): con mensual/quincenal no había forma de pactarlo.
+ */
+export type PlanFrequency = 'mensual' | 'quincenal' | 'personalizada'
+export const FREQUENCIES = ['mensual', 'quincenal', 'personalizada'] as const satisfies readonly PlanFrequency[]
 export const FREQUENCY_LABEL: Record<PlanFrequency, string> = {
   mensual: 'Mensual',
   quincenal: 'Quincenal (15 y 30 de cada mes)',
+  personalizada: 'Personalizada (cada fecha a mano)',
 }
 
-/** Los vencimientos según la frecuencia. */
-export function dueDates(firstDue: string, count: number, frequency: PlanFrequency = 'mensual'): string[] {
+/**
+ * Los vencimientos según la frecuencia. 'personalizada' no se calcula: usa
+ * `fechas` tal cual (validadas con `motivoFechasPersonalizadas`), y sin ellas
+ * no hay vencimientos.
+ */
+export function dueDates(
+  firstDue: string, count: number, frequency: PlanFrequency = 'mensual', fechas?: readonly string[],
+): string[] {
+  if (frequency === 'personalizada') {
+    return fechas && motivoFechasPersonalizadas(fechas, count) === null ? [...fechas] : []
+  }
   return frequency === 'quincenal'
     ? quincenalDueDates(firstDue, count)
     : monthlyDueDates(firstDue, count)
+}
+
+/**
+ * FIN-15 · ¿Las fechas a mano sirven? null si sí, o el motivo en palabras.
+ * Una por tracto, todas válidas y en orden estrictamente creciente: dos
+ * tractos el mismo día son un solo pago, y el orden es el de los tractos.
+ */
+export function motivoFechasPersonalizadas(fechas: readonly string[], count: number): string | null {
+  if (fechas.length !== count) return `Hacen falta ${count} fechas, una por tracto.`
+  for (const f of fechas) {
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(f) || Number.isNaN(Date.parse(`${f}T00:00:00Z`))) {
+      return 'Falta la fecha de algún tracto.'
+    }
+  }
+  for (let i = 1; i < fechas.length; i++) {
+    if (fechas[i] <= fechas[i - 1]) return `El tracto ${i + 1} tiene que vencer después del tracto ${i}.`
+  }
+  return null
 }
 
 export type PlannedInstallment = { number: number; amount: number; due_date: string }
@@ -140,9 +174,11 @@ export function planInstallments(input: {
   currency?: string | null
   /** FIN-8. Default 'mensual' para no romper a quien ya llamaba sin esto. */
   frequency?: PlanFrequency
+  /** FIN-15 · Las fechas a mano, solo con frequency 'personalizada'. */
+  fechas?: readonly string[]
 }): PlannedInstallment[] {
   const amounts = splitAmount(input.total, input.count, input.currency ?? 'CRC')
-  const dates = dueDates(input.firstDue, input.count, input.frequency ?? 'mensual')
+  const dates = dueDates(input.firstDue, input.count, input.frequency ?? 'mensual', input.fechas)
   if (amounts.length !== input.count || dates.length !== input.count) return []
   return amounts.map((amount, i) => ({ number: i + 1, amount, due_date: dates[i] }))
 }

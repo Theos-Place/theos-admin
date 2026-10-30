@@ -18,12 +18,13 @@ import { Modal } from '@/components/shared/Modal'
 import { Button } from '@/components/shared/Button'
 import { useToast } from '@/components/shared/Toast'
 import {
-  MIN_INSTALLMENTS, MAX_INSTALLMENTS, FREQUENCY_LABEL, type PlanFrequency,
+  MIN_INSTALLMENTS, MAX_INSTALLMENTS, FREQUENCY_LABEL, motivoFechasPersonalizadas, type PlanFrequency,
 } from '@/lib/finance/installments'
 import { NOTA_DE_CONVERSION, sigueAbierta } from '@/lib/finance/solicitud-de-beca'
 import type { FinanceRequest } from '@/types/finance'
 
 import { DatePicker } from '@/components/events/DatePicker'
+import { FechasDeTractos, fechasParaTractos } from '@/components/finance/FechasDeTractos'
 export function OfrecerArregloButton({ req, onDone }: {
   req: FinanceRequest
   onDone: (actualizada: FinanceRequest) => void
@@ -33,6 +34,8 @@ export function OfrecerArregloButton({ req, onDone }: {
   const [tractos, setTractos] = useState(2)
   const [frecuencia, setFrecuencia] = useState<PlanFrequency>('mensual')
   const [primerVencimiento, setPrimerVencimiento] = useState('')
+  const [fechas, setFechas] = useState<string[]>([])
+  const personalizada = frecuencia === 'personalizada'
   const [notas, setNotas] = useState('')
   const [enviando, setEnviando] = useState(false)
 
@@ -41,7 +44,7 @@ export function OfrecerArregloButton({ req, onDone }: {
   if (req.request_type !== 'scholarship' || !sigueAbierta(req.status)) return null
 
   async function enviar() {
-    if (enviando || !primerVencimiento) return
+    if (enviando || (!personalizada && !primerVencimiento)) return
     setEnviando(true)
     try {
       const res = await fetch(`/api/finance/requests/${req.id}`, {
@@ -51,7 +54,8 @@ export function OfrecerArregloButton({ req, onDone }: {
           action: 'offer_plan',
           installments: tractos,
           frequency: frecuencia,
-          first_due: primerVencimiento,
+          first_due: personalizada ? (fechas[0] || primerVencimiento) : primerVencimiento,
+          ...(personalizada ? { due_dates: fechasParaTractos(fechas, tractos) } : {}),
           ...(notas.trim() ? { review_notes: notas.trim() } : {}),
         }),
       })
@@ -125,12 +129,16 @@ export function OfrecerArregloButton({ req, onDone }: {
               </div>
             </div>
 
-            <div className="space-y-1">
-              <label htmlFor="arreglo-primer-vencimiento" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
-                Vence el primer tracto
-              </label>
-              <DatePicker id="arreglo-primer-vencimiento" value={primerVencimiento} onChange={v => setPrimerVencimiento(v)} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
-            </div>
+            {personalizada ? (
+              <FechasDeTractos idBase="arreglo-fecha" count={tractos} fechas={fechas} onChange={setFechas} />
+            ) : (
+              <div className="space-y-1">
+                <label htmlFor="arreglo-primer-vencimiento" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+                  Vence el primer tracto
+                </label>
+                <DatePicker id="arreglo-primer-vencimiento" value={primerVencimiento} onChange={v => setPrimerVencimiento(v)} className="w-full rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" />
+              </div>
+            )}
 
             <div className="space-y-1">
               <label htmlFor="arreglo-notas" className="text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
@@ -151,7 +159,7 @@ export function OfrecerArregloButton({ req, onDone }: {
                 variante="navy"
                 ancho="flex"
                 onClick={enviar}
-                disabled={enviando || !primerVencimiento}
+                disabled={enviando || (personalizada ? motivoFechasPersonalizadas(fechasParaTractos(fechas, tractos), tractos) !== null : !primerVencimiento)}
               >
                 {enviando ? <><Loader2 size={15} className="animate-spin" /> Creando…</> : 'Crear el arreglo'}
               </Button>

@@ -18,7 +18,7 @@ describe('FIN-13 · los límites se aplican en el SERVIDOR', () => {
     // una regla: es una sugerencia.
     const src = sinComentarios(QUERY)
     expect(src).toContain('motivoParaRechazarArreglo(')
-    expect(src).toMatch(/throw new Error\(rechazo\.code\)/)
+    expect(src).toMatch(/if \(rechazo\) throw Object.assign\(new Error\(rechazo\.code\)/)
   })
 
   it('y el contexto sale del VÍNCULO del pago, no de entity_type', () => {
@@ -34,12 +34,14 @@ describe('FIN-13 · los límites se aplican en el SERVIDOR', () => {
     expect(sinComentarios(QUERY)).toMatch(/limite: starts \? diaCR\(starts\) : null/)
   })
 
-  it('la ruta traduce cada motivo a un mensaje y un 409', () => {
-    const src = sinComentarios(RUTA_PLAN)
+  it('las DOS rutas que crean arreglos traducen cada motivo (FIN-15: la de beca respondía 500)', () => {
+    const limites = readFileSync('src/lib/finance/limites-de-arreglo.ts', 'utf8')
     for (const code of [
       'FRECUENCIA_NO_PERMITIDA', 'DEMASIADOS_TRACTOS',
-      'VENCE_DESPUES_DE_LA_ACTIVIDAD', 'VENCE_DESPUES_DE_LA_MATRICULA',
-    ]) expect(src, code).toContain(code)
+      'VENCE_DESPUES_DE_LA_ACTIVIDAD', 'FUERA_DE_MATRICULA', 'FECHAS_PERSONALIZADAS_INVALIDAS',
+    ]) expect(limites, code).toMatch(new RegExp(`${code}: \\{`))
+    expect(sinComentarios(RUTA_PLAN)).toContain('...ERRORES_DE_LIMITES')
+    expect(sinComentarios('src/app/api/finance/requests/[id]/route.ts')).toContain('...ERRORES_DE_LIMITES')
   })
 })
 

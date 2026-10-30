@@ -7,7 +7,7 @@ import {
   createPaymentPlan, getPlanForPayment, getPlanInstallments, puedeAcogerseAlArreglo,
 } from '@/lib/supabase/queries/payment-plans'
 import { MIN_INSTALLMENTS, MAX_INSTALLMENTS, FREQUENCIES } from '@/lib/finance/installments'
-import { MAX_TRACTOS_EVENTO } from '@/lib/finance/limites-de-arreglo'
+import { ERRORES_DE_LIMITES } from '@/lib/finance/limites-de-arreglo'
 import { reportarError } from '@/lib/observabilidad'
 
 // Arreglo de pago en tractos sobre un pago PENDIENTE (FIN-4). Uso interno: solo
@@ -18,8 +18,10 @@ const bodySchema = z.object({
   installments: z.number().int().min(MIN_INSTALLMENTS).max(MAX_INSTALLMENTS),
   // FIN-8. Opcional: sin esto el arreglo sale mensual, como siempre.
   frequency: z.enum(FREQUENCIES).optional(),
-  // Vencimiento del primer tracto; los demás van mes a mes desde ahí.
+  // Vencimiento del primer tracto; los demás van según la frecuencia.
   first_due: z.string().regex(/^\d{4}-\d{2}-\d{2}$/, 'Fecha en formato YYYY-MM-DD'),
+  // FIN-15 · Con frecuencia 'personalizada': una fecha por tracto, en orden.
+  due_dates: z.array(z.string().regex(/^\d{4}-\d{2}-\d{2}$/)).max(MAX_INSTALLMENTS).optional(),
   notes: z.string().trim().max(500).optional(),
 }).strict()
 
@@ -30,28 +32,8 @@ const ERRORES: Record<string, { error: string; status: number }> = {
   PAGO_SIN_OBJETO:    { error: 'El pago no está ligado a una matrícula ni a una inscripción, así que no se puede partir.', status: 409 },
   TRACTOS_INVALIDOS:  { error: `La cantidad de tractos debe estar entre ${MIN_INSTALLMENTS} y ${MAX_INSTALLMENTS}.`, status: 400 },
   MONTO_INSUFICIENTE: { error: 'El monto es muy chico para repartirlo en esa cantidad de tractos.', status: 400 },
-  // FIN-13 · Los límites decididos con finanzas el 2026-09-29. Van con 409 y
-  // no 400: el cuerpo está bien formado, lo que no se puede es ESTE arreglo
-  // sobre ESTE objeto — es un conflicto con el estado, no un dato inválido.
-  FRECUENCIA_NO_PERMITIDA: {
-    error: 'Los arreglos de actividades son solo quincenales: no hay tiempo para cuotas '
-      + 'mensuales antes de que arranque.',
-    status: 409,
-  },
-  DEMASIADOS_TRACTOS: {
-    error: `Un arreglo de actividad admite como máximo ${MAX_TRACTOS_EVENTO} tractos.`,
-    status: 409,
-  },
-  VENCE_DESPUES_DE_LA_ACTIVIDAD: {
-    error: 'El último tracto vence después de que arranca la actividad. Todo el arreglo '
-      + 'tiene que quedar cobrado antes.',
-    status: 409,
-  },
-  VENCE_DESPUES_DE_LA_MATRICULA: {
-    error: 'El último tracto vence después de que cierra la matrícula. El arreglo tiene '
-      + 'que cerrarse dentro del período de matrícula.',
-    status: 409,
-  },
+  // FIN-13/FIN-15 · Los límites, con los mismos mensajes en las dos rutas.
+  ...ERRORES_DE_LIMITES,
 }
 
 // GET: el arreglo de este pago (si es un tracto) con todos sus tractos.
@@ -114,6 +96,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         firstDue: parsed.data.first_due,
         notes: parsed.data.notes ?? null,
         frequency: parsed.data.frequency,
+        fechas: parsed.data.due_dates,
       },
       auth.ctx.memberId,
     )
@@ -134,7 +117,10 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json(result, { status: 201 })
   } catch (error) {
     const known = error instanceof Error ? ERRORES[error.message] : undefined
-    if (known) return NextResponse.json({ error: known.error, code: error instanceof Error ? error.message.toLowerCase() : undefined }, { status: known.status })
+    if (known) {
+      const detalle = (error as Error & { detalle?: string }).detalle
+      return NextResponse.json({ error: detalle ?? known.error, code: (error as Error).message.toLowerCase() }, { status: known.status })
+    }
     reportarError('POST /api/payments/[id]/payment-plan:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }

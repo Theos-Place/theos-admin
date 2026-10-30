@@ -14,8 +14,9 @@
 
 import { createAdminClient } from '@/lib/supabase/admin'
 import {
-  planInstallments, MIN_INSTALLMENTS, MAX_INSTALLMENTS, type PlanFrequency,
+  planInstallments, motivoFechasPersonalizadas, MIN_INSTALLMENTS, MAX_INSTALLMENTS, type PlanFrequency,
 } from '@/lib/finance/installments'
+import { ymdCR } from '@/lib/format'
 import {
   motivoParaRechazarArreglo, limiteDeEstudio, type ContextoDelArreglo,
 } from '@/lib/finance/limites-de-arreglo'
@@ -66,11 +67,14 @@ async function contextoDelArreglo(
     }
     if (!groupId) return { tipo: 'estudio', limite: null, origenDelLimite: null }
     const { data: g } = await supabase
-      .from('study_groups').select('enrollment_end_date, starts_at').eq('id', groupId).maybeSingle()
-    const { limite, origenDelLimite } = limiteDeEstudio(
-      (g as { enrollment_end_date: string | null; starts_at: string | null } | null) ?? {},
-    )
-    return { tipo: 'estudio', limite, origenDelLimite }
+      .from('study_groups').select('enrollment_end_date, starts_at, study_plans(level)').eq('id', groupId).maybeSingle()
+    const grupo = (g as unknown as {
+      enrollment_end_date: string | null; starts_at: string | null
+      study_plans: { level: string | null } | null
+    } | null)
+    const { limite, origenDelLimite } = limiteDeEstudio(grupo ?? {})
+    // FIN-15 · Niveles no va por bloques: no tiene calendario de matrícula que amarre.
+    return { tipo: 'estudio', limite, origenDelLimite, esNiveles: grupo?.study_plans?.level === 'niveles' }
   }
 
   if (!p.event_id) return { tipo: 'evento', limite: null, origenDelLimite: null }
@@ -110,6 +114,8 @@ export async function createPaymentPlan(
     installments: number; firstDue: string; notes?: string | null
     /** FIN-8. Default 'mensual': los llamadores viejos no cambian. */
     frequency?: PlanFrequency
+    /** FIN-15 · Una fecha por tracto, solo con frequency 'personalizada'. */
+    fechas?: string[]
   },
   createdByMemberId: string | null,
 ): Promise<{ plan: PaymentPlan; installments: PaymentPlanInstallment[] }> {
@@ -145,8 +151,13 @@ export async function createPaymentPlan(
   const total = Number(p.amount)
   const currency = p.currency ?? 'CRC'
   const frequency: PlanFrequency = opts.frequency ?? 'mensual'
+  if (frequency === 'personalizada'
+    && motivoFechasPersonalizadas(opts.fechas ?? [], opts.installments) !== null) {
+    throw new Error('FECHAS_PERSONALIZADAS_INVALIDAS')
+  }
   const tractos = planInstallments({
-    total, count: opts.installments, firstDue: opts.firstDue, currency, frequency,
+    total, count: opts.installments, firstDue: opts.fechas?.[0] ?? opts.firstDue, currency, frequency,
+    fechas: frequency === 'personalizada' ? opts.fechas : undefined,
   })
   // Con montos muy chicos no se puede repartir (ej. ₡2 en 3 tractos).
   if (tractos.length !== opts.installments) throw new Error('MONTO_INSUFICIENTE')
@@ -163,8 +174,11 @@ export async function createPaymentPlan(
   const rechazo = motivoParaRechazarArreglo(
     { installments: opts.installments, frequency, vencimientos: tractos.map(t => t.due_date) },
     ctx,
+    ymdCR(),
   )
-  if (rechazo) throw new Error(rechazo.code)
+  // El mensaje con las fechas concretas viaja en `detalle`: la ruta lo prefiere
+  // al genérico, porque dice QUÉ fecha cambiar.
+  if (rechazo) throw Object.assign(new Error(rechazo.code), { detalle: rechazo.error })
 
   const { data: planRow, error: planErr } = await supabase
     .from('payment_plans')

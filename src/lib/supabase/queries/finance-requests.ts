@@ -564,7 +564,7 @@ export async function cambiarGrupoDeSolicitud(
  */
 export async function ofrecerArregloEnLugarDeBeca(
   id: string,
-  opts: { installments: number; firstDue: string; frequency?: PlanFrequency; notes?: string | null },
+  opts: { installments: number; firstDue: string; frequency?: PlanFrequency; fechas?: string[]; notes?: string | null },
   revisorMemberId: string,
 ): Promise<{ solicitud: FinanceRequest; payment_id: string; plan_id: string }> {
   const supabase = createAdminClient()
@@ -588,6 +588,7 @@ export async function ofrecerArregloEnLugarDeBeca(
     installments: opts.installments,
     firstDue: opts.firstDue,
     frequency: opts.frequency,
+    fechas: opts.fechas,
     notes: opts.notes ?? NOTA_DE_CONVERSION,
   }, revisorMemberId)
 
