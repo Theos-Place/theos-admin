@@ -1,9 +1,13 @@
 'use client'
 
-import { useState, useMemo, useEffect, Suspense } from 'react'
+import { useState, useMemo, useEffect, useRef, Suspense } from 'react'
 import { useRouter } from 'next/navigation'
 import { usePermissions } from '@/hooks/usePermissions'
 import { useUrlFilter, useUrlFlag } from '@/hooks/useUrlFilter'
+import {
+  codificarFiltros, leerFiltros, parametrosParaLaUrl, leerDeSesion, guardarEnSesion,
+  PREFIJO_SESION, CLAVE_ULTIMA_BUSQUEDA,
+} from '@/lib/members/filtros-en-url'
 import { MessageCircle, UserPlus, Search, ArrowRight, SlidersHorizontal, X, Bookmark, Check, Users, AlertTriangle } from 'lucide-react'
 import { ATTENDANCE_GENERAL_TOOLTIP, ATTENDANCE_ESTUDIOS_TOOLTIP } from '@/lib/attendance'
 import { EmptyState } from '@/components/shared/EmptyState'
@@ -75,7 +79,13 @@ function MiembrosContent() {
   // Los filtros avanzados también viajan al servidor (junto con búsqueda y chips,
   // combinados en AND): el filtrado client-side sobre campos del mock daba 0
   // con miembros reales de Supabase.
-  const filters = useMemberFilters([])
+  // PAR-8 · Las condiciones avanzadas también viven en la URL (?f=, o ?fk= con
+  // respaldo en la sesión si son muy largas): el «atrás» desde un perfil, un
+  // refresh o un enlace compartido restauran la búsqueda exacta.
+  const [urlF, setUrlF] = useUrlFilter('f')
+  const [urlFk, setUrlFk] = useUrlFilter('fk')
+  const [filtrosIniciales] = useState(() => leerFiltros({ f: urlF, fk: urlFk }, leerDeSesion))
+  const filters = useMemberFilters([], filtrosIniciales)
   const searchActive = debouncedSearch.trim().length >= 2
   // PAR-5b · «¿hay algo filtrado?» se calcula UNA vez y de un solo lugar. Vivía
   // en tres, y la copia de `exportConfirm` se había quedado sin las condiciones
@@ -90,6 +100,28 @@ function MiembrosContent() {
   }
   const shouldFetch  = hayFiltroActivo(filtrosPuestos)
   const conditionsKey = JSON.stringify([filters.conditions, filters.groups, filters.topLevelOps])
+  // Lo último que ESTA pantalla escribió en la URL. Si la URL cambia y no es
+  // eso, la cambió alguien de afuera (el menú, un enlace): se recarga de ahí.
+  const firmaEscrita = useRef(`${urlF}|${urlFk}`)
+  useEffect(() => {
+    const p = parametrosParaLaUrl(codificarFiltros({ conditions: filters.conditions, groups: filters.groups, topLevelOps: filters.topLevelOps }))
+    if (p.guardarEnSesion) guardarEnSesion(PREFIJO_SESION + p.fk, p.guardarEnSesion)
+    firmaEscrita.current = `${p.f}|${p.fk}`
+    setUrlF(p.f)
+    setUrlFk(p.fk)
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [conditionsKey])
+  useEffect(() => {
+    const firma = `${urlF}|${urlFk}`
+    if (firma === firmaEscrita.current) return
+    firmaEscrita.current = firma
+    filters.cargar(leerFiltros({ f: urlF, fk: urlFk }, leerDeSesion))
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [urlF, urlFk])
+  // Para el «Volver a los resultados» del perfil: la última URL de esta pantalla.
+  useEffect(() => {
+    guardarEnSesion(CLAVE_ULTIMA_BUSQUEDA, `${window.location.pathname}${window.location.search}`)
+  })
   const searchParams = useMemo(() => ({
     search: searchActive ? debouncedSearch.trim() : undefined,
     is_donor: showDonors || undefined,
@@ -470,7 +502,7 @@ function MiembrosContent() {
             className="flex items-center gap-1 text-sm text-coral-deep hover:underline transition-colors font-body"
           >
             <X size={12} strokeWidth={2} />
-            Limpiar todo
+            Limpiar filtros ({activeFilterCount})
           </button>
         </div>
       )}

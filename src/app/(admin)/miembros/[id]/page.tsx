@@ -2,6 +2,9 @@
 
 import { vencimientoDeLaReserva } from '@/lib/studies/enrollment-hold'
 import { useState, useMemo, useEffect, useRef } from 'react'
+import Link from 'next/link'
+import { ChevronLeft } from 'lucide-react'
+import { CLAVE_ULTIMA_BUSQUEDA, leerDeSesion } from '@/lib/members/filtros-en-url'
 import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { Tabs } from '@/components/shared/Tabs'
 import { useParams, useRouter, useSearchParams } from 'next/navigation'
@@ -76,6 +79,12 @@ export default function MiembroDetailPage() {
   const { member, loading, notFound: isNotFound, error, refetch } = useMember(id || undefined)
   // QA-1/N4 · Sin esto la pestaña dice solo el nombre del módulo, y en el
   // historial todas las pantallas del módulo se ven iguales.
+  // PAR-8 · La última búsqueda de /miembros (solo si tenía filtros).
+  const [volverABusqueda] = useState<string | null>(() => {
+    if (typeof window === 'undefined') return null
+    const u = leerDeSesion(CLAVE_ULTIMA_BUSQUEDA)
+    return u && u.startsWith('/miembros?') ? u : null
+  })
   useTituloDePantalla(member && `${member.first_name ?? ''} ${member.last_name ?? ''}`.trim(), 'Miembros')
   const { studyTypes } = useStudyPlans()
   const { hasRole, member: viewer, user } = useAuth()
@@ -355,6 +364,13 @@ export default function MiembroDetailPage() {
 
   return (
     <div className="space-y-4">
+      {/* PAR-8 · Volver a la búsqueda del padrón con los MISMOS filtros (además
+          del «atrás» del navegador). Solo si se llegó desde una búsqueda. */}
+      {volverABusqueda && (
+        <Link href={volverABusqueda} className="inline-flex items-center gap-1 text-sm text-navy-light/80 hover:text-navy transition-colors font-body">
+          <ChevronLeft size={15} aria-hidden /> Volver a los resultados
+        </Link>
+      )}
       {/* ── Header Card ── */}
       <MemberHeader
         member={member}

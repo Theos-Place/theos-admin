@@ -4,6 +4,7 @@ import { useState, useMemo, useRef, useCallback } from 'react'
 import type { Member } from '@/types/member'
 import { committeeInArea } from '@/lib/org'
 import type { FilterCondition, ConditionGroup, AddableCondition } from '@/types/filters'
+import { siguienteId, type FiltrosAvanzados } from '@/lib/members/filtros-en-url'
 import { buildUnits, type FilterUnit } from '@/lib/filter-units'
 
 export { buildUnits }
@@ -169,14 +170,18 @@ function applyFilters(
 
 // ─── hook ───────────────────────────────────────────────────────────────────
 
-export function useMemberFilters(members: Member[]) {
-  const [conditions, setConditions] = useState<FilterCondition[]>([])
-  const [groups, setGroups] = useState<ConditionGroup[]>([])
-  const [topLevelOps, setTopLevelOps] = useState<Record<string, 'AND' | 'OR'>>({})
+/**
+ * `inicial` (PAR-8): los filtros que trae la URL al montar. Sin ellos, al abrir
+ * un perfil y volver con «atrás» la búsqueda se perdía.
+ */
+export function useMemberFilters(members: Member[], inicial: FiltrosAvanzados | null = null) {
+  const [conditions, setConditions] = useState<FilterCondition[]>(inicial?.conditions ?? [])
+  const [groups, setGroups] = useState<ConditionGroup[]>(inicial?.groups ?? [])
+  const [topLevelOps, setTopLevelOps] = useState<Record<string, 'AND' | 'OR'>>(inicial?.topLevelOps ?? {})
   const [groupMode, setGroupMode] = useState(false)
   const [picked, setPicked] = useState<Set<number>>(new Set())
   const [newGroupOp, setNewGroupOp] = useState<'AND' | 'OR'>('AND')
-  const nextId = useRef(1)
+  const nextId = useRef(siguienteId(inicial))
 
   const addCondition = useCallback((partial: AddableCondition) => {
     const id = nextId.current++
@@ -285,6 +290,16 @@ export function useMemberFilters(members: Member[]) {
     setPicked(new Set())
   }, [])
 
+  /** PAR-8 · Reemplaza todo con lo que dice la URL (navegación de afuera). */
+  const cargar = useCallback((f: FiltrosAvanzados | null) => {
+    setConditions(f?.conditions ?? [])
+    setGroups(f?.groups ?? [])
+    setTopLevelOps(f?.topLevelOps ?? {})
+    setGroupMode(false)
+    setPicked(new Set())
+    nextId.current = Math.max(nextId.current, siguienteId(f))
+  }, [])
+
   const filteredMembers = useMemo(
     () => applyFilters(members, conditions, groups, topLevelOps),
     [members, conditions, groups, topLevelOps],
@@ -309,6 +324,7 @@ export function useMemberFilters(members: Member[]) {
     toggleOperator,
     toggleGroupOp,
     clearAll,
+    cargar,
     filteredMembers,
   }
 }

@@ -3676,7 +3676,17 @@ respuestas pueden tener roles distintos: el enlace solo se muestra si el usuario
 ver respuestas). Test: enlace presente con permiso, ausente sin él. tsc/lint.
 ```
 
-### [ ] PAR-8 · Búsqueda de miembros: los filtros sobreviven al "atrás" + botón limpiar (pedido 2026-10-30)
+### [x] PAR-8 · Búsqueda de miembros: los filtros sobreviven al "atrás" + botón limpiar (pedido 2026-10-30)
+
+**Hecho el 2026-10-30** (`lib/members/filtros-en-url.ts`). La búsqueda y los
+chips ya vivían en la URL; ahora también las condiciones avanzadas, grupos y
+operadores, en `?f=` (JSON en base64url). Si pasa de 1.800 caracteres va a
+sessionStorage y la URL lleva `?fk=` con una clave corta. El hook
+`useMemberFilters` se hidrata desde la URL; si la URL cambia desde afuera
+(menú, enlace) se recarga. El perfil muestra «Volver a los resultados» con la
+última URL de /miembros (además del «atrás»). «Limpiar todo» pasó a «Limpiar
+filtros (N)» y deja la URL limpia. Las listas guardadas no cambian: viven en
+/miembros/listas/[id], con su propia URL. Probado: atrás, refresh y limpiar.
 
 Caso: filtrás el padrón, abrís un perfil, volvés con "atrás" — y los filtros
 desaparecieron. Hay que rearmarlos cada vez.
@@ -3701,5 +3711,42 @@ FIX UX · /miembros: preservar los filtros al navegar + "Limpiar filtros"
    sesión; verificar que abrir una lista guardada siga funcionando y se refleje en la
    URL también.
 Tests: atrás restaura filtros, refresh conserva, limpiar vacía, lista guardada → URL.
+tsc/lint/vitest.
+```
+
+### [ ] PAR-9 · Listas guardadas: editar el filtro con el que se crearon (pedido 2026-10-30)
+
+Hoy una lista guardada no se puede ajustar: si el filtro necesita un cambio,
+hay que crearla de nuevo (y perder su nombre/uso en comunicaciones).
+
+Prompt para Claude Code:
+
+```
+FEATURE · Listas guardadas: editar sus filtros
+
+ETAPA 1 — DIAGNÓSTICO (reportar antes de construir):
+1. ¿Qué guarda hoy una lista guardada: la DEFINICIÓN del filtro (dinámica, se recalcula
+   al abrirla) o una FOTO de los miembros (estática)? ¿O hay de los dos tipos (ej. las
+   importadas desde Excel, como "Servidores — agosto 2026", son estáticas)?
+2. ¿Dónde se usan las listas? (audiencias de comunicaciones, envíos programados,
+   exports…) — censar consumidores.
+
+ETAPA 2 — EDITAR:
+1. Listas DINÁMICAS (con filtro): botón "Editar filtros" en la lista → abre /miembros con
+   sus condiciones cargadas (en la URL, patrón PAR-8), el usuario ajusta, y al guardar
+   elige "Actualizar esta lista" (mismo id, mismo nombre — sigue funcionando en todo lo
+   que la usa) o "Guardar como lista nueva". También renombrar y editar descripción.
+2. Listas ESTÁTICAS (foto de miembros): no tienen filtro que editar — ofrecer "Agregar o
+   quitar personas" manualmente (buscador de miembros) en lugar de editar filtros, y
+   dejarlo claro en la UI ("Esta lista es fija: se armó con personas específicas").
+3. AVISO DE IMPACTO al guardar cambios: si la lista es audiencia de un envío PROGRAMADO o
+   en uso, mostrar "Esta lista se usa en: [comunicación X programada para el …] — el
+   cambio afectará a quién le llega" y pedir confirmación.
+4. Mostrar en la lista: última edición (quién/cuándo) y el conteo actual de miembros
+   antes y después del cambio en la vista previa.
+5. Permisos: quien creó la lista + los roles que hoy gestionan listas; audit_log de
+   cada cambio de filtro.
+Tests: editar filtro conserva id y uso en comunicaciones, guardar como nueva no toca la
+original, estática ofrece agregar/quitar, aviso de impacto con envío programado.
 tsc/lint/vitest.
 ```
