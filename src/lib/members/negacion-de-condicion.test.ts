@@ -89,7 +89,9 @@ describe('el supuesto en el que se apoya la negación', () => {
     // comparten UNA rama con UN push (la unión ya viene armada en `set`),
     // `sirve_otros` un push con su unión, y `profesion` un push con el
     // ternario adentro.
-    expect(pushes, 'cambió la cantidad de push: revisá que ningún case aporte DOS sets en la MISMA rama').toBe(28)
+    // 28 → 29 con PAR-10 (2026-10-30): `sin_actividad` aporta UN set (la
+    // función SQL ya devuelve la unión), en su propia rama.
+    expect(pushes, 'cambió la cantidad de push: revisá que ningún case aporte DOS sets en la MISMA rama').toBe(29)
   })
 
   it('el resolver usa el helper y no una copia a mano', () => {

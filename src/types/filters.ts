@@ -77,6 +77,12 @@ export type FilterCondition = NegableCondition & (
   | { id: number; group: 'server'; type: 'server'; value: 'yes' | 'no' }
   | { id: number; group: 'marital'; type: 'marital'; value: string }
   /**
+   * PAR-10 · «Ya no es de Theos»: ficha de más de `anios` años sin charla,
+   * evento ni inscripción a un estudio en ese tiempo, y que no sirve hoy. La
+   * regla vive en SQL (`miembros_sin_actividad`). Negada = sí tuvo actividad.
+   */
+  | { id: number; group: 'attend'; type: 'sin_actividad'; anios: number }
+  /**
    * SRV-20 (etapa 4B) · El perfil S.I.R.V.E., de selección MÚLTIPLE (unión),
    * como los de dirigente. Dones busca en los del test Y en los de oración;
    * estilo, en el primario Y el secundario. Solo quien lee el perfil

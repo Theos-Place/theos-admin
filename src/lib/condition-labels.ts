@@ -20,7 +20,7 @@ import { ETIQUETA_SIRVE, resumenDeValores } from '@/lib/members/filtros-sirve'
 export function conditionLabel(c: FilterCondition): string {
   const base = etiquetaSinNegar(c)
   if (!c.negate) return base
-  if (c.type === 'attendance' || c.type === 'registration') return base
+  if (c.type === 'attendance' || c.type === 'registration' || c.type === 'sin_actividad') return base
   return `Excepto — ${base}`
 }
 
@@ -91,6 +91,10 @@ function etiquetaSinNegar(c: FilterCondition): string {
     case 'leader_available': return `Disponible para dar: ${resumenDeSeleccion(c.studies, etiquetaDeEstudio)}`
     case 'server': return c.value === 'yes' ? 'Sirve actualmente' : 'No sirve actualmente'
     case 'marital': return `Estado civil: ${c.value}`
+    // PAR-10 · Texto propio al negarse: «Excepto — ya no es de Theos» se lee peor.
+    case 'sin_actividad': return c.negate
+      ? `Con actividad en los últimos ${c.anios} años`
+      : `Ya no es de Theos (${c.anios}+ años sin actividad)`
     case 'sirve_don':
     case 'sirve_habilidad':
     case 'sirve_pasion':

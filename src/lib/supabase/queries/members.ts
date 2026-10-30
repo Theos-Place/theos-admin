@@ -792,6 +792,23 @@ export async function resolveAdvancedConditions(
         res.include.push(await pagedIds(q => q.eq('marital_status', c.value), 'members', 'member_id:id', 'id', scopeIds))
         break
       }
+      case 'sin_actividad': {
+        // PAR-10 · La regla entera vive en SQL: tres fuentes de actividad, la
+        // antigüedad de la ficha y el servicio activo, en ~0,2 s.
+        const ids = new Set<string>()
+        const alcance = scopeIds ? new Set(scopeIds) : null
+        for (let from = 0; ; from += 1000) {
+          const { data, error } = await supabase
+            .rpc('miembros_sin_actividad' as never, { p_anios: c.anios || 3 } as never)
+            .range(from, from + 999)
+          if (error) throw error
+          const filas = (data ?? []) as Array<{ member_id: string }>
+          for (const f of filas) if (!alcance || alcance.has(f.member_id)) ids.add(f.member_id)
+          if (filas.length < 1000) break
+        }
+        res.include.push(ids)
+        break
+      }
       /**
        * SRV-20 (etapa 4B) · Perfil S.I.R.V.E. Cada condición aporta UN set (la
        * unión de lo marcado), que es lo que `NegableCondition` necesita. Los

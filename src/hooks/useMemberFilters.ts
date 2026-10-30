@@ -21,6 +21,8 @@ function matchesCondition(m: Member, c: FilterCondition): boolean {
       if (c.status === 'not_taken') return !inCompleted && !inProgress
       return inCompleted || inProgress
     }
+    // PAR-10 · Se resuelve solo en el servidor (SQL): acá no se re-filtra.
+    case 'sin_actividad':
     case 'registration':
       // FIL-2: las inscripciones no viajan en el Member del padrón; el filtro
       // real es server-side (members.ts). Acá no se re-filtra.

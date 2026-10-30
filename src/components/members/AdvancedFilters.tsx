@@ -336,6 +336,35 @@ function useEventOptions(): ComboItem[] {
   return items
 }
 
+/**
+ * PAR-10 · «Ya no es de Theos», predefinido (Floriana, 2026-10-30): ficha de
+ * más de 3 años sin charla, evento ni inscripción a un estudio en ese tiempo,
+ * y que no sirve hoy. Fijo en 3 años; incluir o excluir.
+ */
+const ANIOS_SIN_ACTIVIDAD = 3
+function SinActividadPanel({ addCondition }: Pick<Props, 'addCondition'>) {
+  const [modo, setModo] = useState<'incluir' | 'excluir'>('incluir')
+  return (
+    <div className="space-y-3">
+      <p className="text-[13px] text-navy-light/80 font-body">
+        Fichas de más de {ANIOS_SIN_ACTIVIDAD} años sin charla, evento ni inscripción a un estudio en
+        los últimos {ANIOS_SIN_ACTIVIDAD} años. Quien sirve hoy en un puesto no entra.
+      </p>
+      <div>
+        <Label>Ya no es de Theos</Label>
+        <Sel label="Ya no es de Theos" value={modo} onChange={v => setModo(v as 'incluir' | 'excluir')}>
+          <option value="incluir">Incluir: solo los que ya no son de Theos</option>
+          <option value="excluir">Excluir: solo los que tuvieron actividad</option>
+        </Sel>
+      </div>
+      <AddBtn onClick={() => {
+        addCondition({ group: 'attend', type: 'sin_actividad', anios: ANIOS_SIN_ACTIVIDAD, negate: modo === 'excluir' })
+        setModo('incluir')
+      }} />
+    </div>
+  )
+}
+
 function AttendPanel({ addCondition }: Pick<Props, 'addCondition'>) {
   const { activeSedes: ACTIVE_SEDES, historicalSedes: HISTORICAL_SEDES } = useSedes()
   const eventTypes = useEventTypes() // catálogo real de la BD (id + nombre)
@@ -1303,7 +1332,7 @@ export function AdvancedFilters({ conditions, addCondition: agregarCruda, remove
 
   const conditionTypes: Record<Tab, FilterCondition['type'][]> = {
     study:   (['study'] as const).filter(permite),
-    attend:  (['attendance', 'registration'] as const).filter(permite),
+    attend:  (['attendance', 'registration', 'sin_actividad'] as const).filter(permite),
     service: (['service', 'server'] as const).filter(permite),
     form:    (['form'] as const).filter(permite),
     // PAR-7 · «Es dirigente» SE MUDÓ acá desde «Perfil». No queda en los dos
@@ -1391,6 +1420,12 @@ export function AdvancedFilters({ conditions, addCondition: agregarCruda, remove
                   Inscripción a evento
                 </p>
                 <RegistrationPanel addCondition={addCondition} />
+              </div>
+              <div className="border-t border-[var(--outline-variant)] pt-5">
+                <p className="mb-3 text-[11px] tracking-widest uppercase text-navy-light/80 font-display">
+                  Ya no es de Theos
+                </p>
+                <SinActividadPanel addCondition={addCondition} />
               </div>
             </div>
           )}

@@ -3742,6 +3742,16 @@ Tests: atrás restaura filtros, refresh conserva, limpiar vacía, lista guardada
 tsc/lint/vitest.
 ```
 
+### [x] PAR-10 · Filtro predefinido «Ya no es de Theos» (pedido 2026-10-30)
+
+**Hecho el 2026-10-30.** En Miembros → Filtros → Asistencia, sección «Ya no es
+de Theos», con incluir/excluir. Regla (decidida con Floriana): ficha creada
+hace más de 3 años, sin check-in a charla o evento, sin inscripción a evento y
+sin haber estado INSCRITO en un estudio (aunque no asistiera) en los últimos 3
+años; quien sirve hoy en un puesto nunca entra. Vive en SQL
+(`miembros_sin_actividad`, migración `20261030200000`, cerrada a la llave
+pública). Medido en producción: 14.213 de 24.058 fichas activas, 0,2 s.
+
 ### [x] PAR-9 · Listas guardadas: editar el filtro con el que se crearon (pedido 2026-10-30)
 
 **Hecho el 2026-10-30** (`lib/members/editar-lista.ts`). Diagnóstico en
@@ -3858,18 +3868,82 @@ Fuente: colección Postman oficial de Tilopay (API v1). Camino elegido:
 - ¿URL base del ambiente de pruebas y credenciales sandbox? ¿tarjetas de prueba?
 - ¿Webhooks disponibles para esta cuenta? ¿Activar OrderHash V2?
 - ¿SINPE Móvil aparece en la página hospedada por defecto?
-- ~~¿Comisión?~~ **DECIDIDO 2026-10-30: se SUMA al precio, siempre.** Ojo de
-  diseño: el método (tarjeta 4.25%+$0.35 vs SINPE 2%+$0.35) se elige DENTRO de
-  la página de Tilopay, después de que mandamos el monto — no sabemos de
-  antemano cuál comisión aplica. Propuesta: cargo por pago en línea calculado
-  con la tarifa de TARJETA (la mayor), mostrado desglosado antes de pagar
-  ("Matrícula ₡5.000 + cargo por pago en línea ₡392 = ₡5.392"); quien paga
-  por comprobante no paga cargo. Constante configurable. Confirmar con
-  Tilopay/Meli que cobrar recargo al cliente está permitido (algunas reglas
-  de marcas de tarjeta lo restringen).
+- ~~¿Comisión?~~ **DECIDIDO 2026-10-30 (corregido): el PRECIO PUBLICADO ya
+  incluye la comisión** — un solo precio, sin recargos ni desgloses al pagar
+  (ej.: lo que neto debe dejar ₡5.000 se publica a ₡5.500). Implicaciones:
+  · El sistema NO calcula recargos: el precio que se configura en el
+    estudio/evento ES el que se cobra, por Tilopay o por comprobante (quien
+    paga por comprobante paga el mismo precio — CONFIRMADO por Floriana
+    2026-10-30: un solo precio, siempre el mayor, para todos los métodos).
+  · Ayuda al configurar precios: junto al campo de precio, una calculadora
+    "para recibir neto ₡X, publicá ≥ ₡Y" con la fórmula
+    Y = (X + cargo fijo) / (1 − % tarjeta), usando la tarifa de tarjeta (la
+    mayor) y redondeando hacia arriba a ₡100/₡500 — sugerencia, no imposición.
+    Tarifas como constantes configurables.
+  · Revisar los precios ya publicados de estudios/eventos que vayan a
+    ofrecer Tilopay (decisión de finanzas cuáles se reajustan).
 - ~~¿Comprobante?~~ **DECIDIDO 2026-10-30: se mantiene por ahora**, y se
   vuelve CONFIGURABLE por estudio/grupo y por evento: al crearlo se elige
   "Métodos de pago: Tilopay · Comprobante · Ambos" (default: Ambos). La
   pantalla de pago solo ofrece lo habilitado. Va dentro de F1 (campo + UI) —
   así cada actividad decide, y el día que se quiera retirar el comprobante es
   cambiar el default.
+
+### [ ] FIN-17 · Calculadora de precio con recargo de Tilopay (pedido 2026-10-30)
+
+Complemento de FIN-5: quien pone precios (estudios, eventos) tiene una
+calculadora que sugiere el precio publicado para recibir el neto deseado.
+
+Prompt para Claude Code:
+
+```
+FEATURE · Calculadora de precio sugerido (comisión Tilopay incluida)
+
+1. FUNCIÓN PURA (lib/finance/precio-sugerido.ts): dado el NETO deseado y la moneda,
+   precio = (neto + cargo_fijo_en_moneda) / (1 − % comisión), con la tarifa de TARJETA
+   (la mayor) por defecto, y redondeo hacia ARRIBA configurable (₡100 / ₡500 / $1).
+   Tarifas (4.25% + $0.35 tarjeta; 2% + $0.35 SINPE) y tipo de cambio para el cargo
+   fijo como constantes/config de finanzas — NO hardcode disperso. Opción "IVA sobre la
+   comisión" (si Tilopay la cobra con IVA, se suma al cálculo) apagada por defecto hasta
+   confirmarlo.
+2. EN LOS FORMULARIOS DE PRECIO (estudio/plan/grupo y evento/tipo de inscripción):
+   junto al campo, enlace "Calcular precio con comisión" → mini panel: "Quiero recibir
+   neto: ₡____" → muestra precio sugerido, y debajo lo que Theos recibe en cada método
+   ("Con tarjeta recibís ₡5.0xx · con SINPE ₡5.2xx · con comprobante ₡5.500") — botón
+   "Usar este precio" que lo coloca en el campo. Solo sugiere: el campo sigue editable.
+3. VERSIÓN SUELTA en finanzas (/finanzas/calculadora): la misma calculadora para
+   simular sin crear nada.
+Tests de la función: ₡5.000 neto → precio que, descontando la comisión de tarjeta,
+deja ≥ ₡5.000; redondeo; moneda USD; IVA opcional. tsc/lint/vitest.
+```
+
+### [ ] FIN-18 · Reajuste de todos los precios publicados con la comisión incluida (decidido 2026-10-30)
+
+Decisión: TODOS los precios publicados cambian para incluir la comisión de
+Tilopay, y se cobra igual por Tilopay o por comprobante (siempre el precio
+mayor). Correr ANTES de encender Tilopay en producción (FIN-5 F5).
+
+Prompt para Claude Code:
+
+```
+DATOS · Reajuste masivo de precios con la comisión incluida
+
+1. INVENTARIO: listar TODOS los precios vigentes del sistema — planes/tipos de estudio
+   (y precios por grupo si existen), eventos con inscripción y sus tipos de inscripción
+   (incluida pareja), y cualquier otro concepto cobrable. Por cada uno: precio actual,
+   moneda y dónde se usa.
+2. PROPUESTA: calcular el precio nuevo con la función de FIN-17 (neto = precio actual,
+   tarifa de tarjeta, redondeo hacia arriba configurable — default ₡500 / $1) y generar
+   un XLSX "precio actual → precio nuevo" para que FINANZAS lo revise y ajuste a mano
+   antes de aplicar (pueden preferir otros redondeos o mantener alguno).
+3. APLICAR solo la lista aprobada (dry-run → aprobación → aplicar; audit_log).
+4. NO RETROACTIVO: los cobros ya generados, matrículas/inscripciones existentes y
+   arreglos de pago en curso CONSERVAN su monto original. El precio nuevo aplica solo a
+   matrículas/inscripciones creadas después de aplicar. Becas y cupones de porcentaje
+   se calculan sobre el precio nuevo; los de monto fijo no cambian (verificar y
+   reportar cómo queda cada beca/cupón vigente).
+5. Reportar qué textos visibles mencionan precios fijos (centro de ayuda, plantillas de
+   correo, infografías — ej. "N1+N2 por ₡5.000") para actualizarlos.
+Tests: cobros existentes intactos tras aplicar, nuevos cobros con precio nuevo,
+idempotente. tsc/lint/vitest.
+```
