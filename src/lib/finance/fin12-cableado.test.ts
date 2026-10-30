@@ -28,7 +28,7 @@ describe('FIN-12 · el alcance por sede es uno solo', () => {
     // La lista de puestos es UNA (position-roles): el rol y el alcance no
     // pueden desalinearse.
     expect(q).toContain("if (!esPuestoDeAdelantos(p?.title ?? '')) continue")
-    expect(sin('src/lib/servers/position-roles.ts')).toContain("new Set(['encargado logistica', 'coordinador comida'])")
+    expect(sin('src/lib/servers/position-roles.ts')).toContain("new Set(['encargado logistica', 'coordinador comida', 'coordinador bienvenida'])")
   })
 
   it('una sede ajena es 403, no una lista vacía', () => {
@@ -55,7 +55,7 @@ describe('FIN-12 · lo que es de finanzas, es de finanzas', () => {
     // Subirlo en noviembre no puede reescribir el saldo de octubre.
     const q = sin(Q)
     // FIN-16: se copia partido en depósito + saldo anterior, que suman el presupuesto.
-    expect(q).toContain('const deposito = Math.max(0, p.monto - saldoAnterior)')
+    expect(q).toContain('const deposito = depositoAlAbrir(p.monto, saldoAnterior)')
     expect(q).toContain('presupuesto: deposito + saldoAnterior')
     expect(q).toContain("Esta sede no tiene presupuesto fijado para ese tipo.")
   })

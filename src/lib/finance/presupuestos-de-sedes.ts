@@ -22,13 +22,21 @@ export type TipoDePresupuesto = {
 }
 
 /**
+ * Puestos de sede que ven TODOS los tipos de su sede. Floriana, 2026-10-30:
+ * «el encargado de logística puede ver todos los presupuestos de su sede».
+ */
+export const PUESTOS_QUE_VEN_TODO: ReadonlySet<string> = new Set(['encargado logistica'])
+
+/**
  * Qué tipos ve alguien de una sede, según sus puestos. `null` = finanzas, que
- * ve todos (incluidos los inactivos, para poder reactivarlos).
+ * ve todos (incluidos los inactivos, para poder reactivarlos). El Encargado
+ * Logística ve todos los activos; los demás, los de su área (catálogo).
  */
 export function tiposVisibles(catalogo: readonly TipoDePresupuesto[], puestos: readonly string[] | null): TipoDePresupuesto[] {
   const orden = [...catalogo].sort((a, b) => a.orden - b.orden || a.nombre.localeCompare(b.nombre))
   if (puestos === null) return orden
   const mios = new Set(puestos.map(normSinArticulos))
+  if ([...mios].some(p => PUESTOS_QUE_VEN_TODO.has(p))) return orden.filter(t => t.activo)
   return orden.filter(t => t.activo && (t.puestos.length === 0 || t.puestos.some(p => mios.has(normSinArticulos(p)))))
 }
 
@@ -44,12 +52,11 @@ export function codigoDeTipo(nombre: string): string {
 }
 
 /**
- * Lo que pasa del mes anterior al siguiente.
- *
- * Solo lo que SOBRÓ, y solo cuando el mes anterior está CERRADO: el saldo de
- * un mes abierto todavía cambia con cada factura, y arrastrarlo haría que el
- * mes siguiente mintiera. Un sobregiro no se arrastra: se resuelve con el
- * reintegro (reglamento de FIN-12), no restándoselo al mes que viene.
+ * Lo que pasa del mes anterior al siguiente: el saldo final de un mes CERRADO,
+ * sobre o falte. Decidido por Floriana el 2026-10-30: si sobró, el mes
+ * siguiente se deposita menos; si se pasó, el mes siguiente tiene eso de menos
+ * disponible. Con el mes anterior todavía abierto no hay arrastre: su saldo
+ * cambia con cada factura, y llega al cerrarlo.
  */
 export function arrastreDelMesAnterior(anterior: { estado: string; saldo_final: number | null } | null): {
   monto: number
@@ -58,7 +65,16 @@ export function arrastreDelMesAnterior(anterior: { estado: string; saldo_final: 
 } {
   if (!anterior) return { monto: 0, confirmado: true }
   if (anterior.estado !== 'cerrado' || anterior.saldo_final == null) return { monto: 0, confirmado: false }
-  return { monto: Math.max(0, Math.round(Number(anterior.saldo_final) * 100) / 100), confirmado: true }
+  return { monto: Math.round(Number(anterior.saldo_final) * 100) / 100 + 0, confirmado: true }
+}
+
+/**
+ * El depósito de un mes que se abre a mano: el presupuesto menos lo que
+ * SOBRÓ. Un sobregiro no se repone depositando de más: se deposita el
+ * presupuesto completo y el disponible queda menor (presupuesto − sobregiro).
+ */
+export function depositoAlAbrir(presupuestoMensual: number, saldoAnterior: number): number {
+  return Math.max(0, Math.round((presupuestoMensual - Math.max(0, saldoAnterior)) * 100) / 100)
 }
 
 export const mesAnterior = (m: string): string => {

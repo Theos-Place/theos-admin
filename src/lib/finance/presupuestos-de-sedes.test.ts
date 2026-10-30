@@ -1,7 +1,7 @@
 import { describe, it, expect } from 'vitest'
 import { readFileSync } from 'node:fs'
 import {
-  tiposVisibles, puestosDesdeTexto, codigoDeTipo, arrastreDelMesAnterior, mesesDelSelector,
+  tiposVisibles, puestosDesdeTexto, codigoDeTipo, arrastreDelMesAnterior, depositoAlAbrir, mesesDelSelector,
   montoDeCelda, filasDelExcel, emparejarSedes, type TipoDePresupuesto,
 } from './presupuestos-de-sedes'
 
@@ -13,9 +13,14 @@ describe('FIN-16 · tipos múltiples por sede y quién ve cuál', () => {
   it('finanzas ve todos, también los inactivos', () => {
     expect(tiposVisibles(catalogo, null).map(t => t.code)).toEqual(['comida', 'bienvenida', 'viejo'])
   })
-  it('el colaborador ve los de su puesto y los abiertos a todo el equipo, nunca los inactivos', () => {
-    expect(tiposVisibles(catalogo, ['Coordinador de Comida']).map(t => t.code)).toEqual(['comida', 'bienvenida'])
-    expect(tiposVisibles(catalogo, ['Encargado Logística']).map(t => t.code)).toEqual(['bienvenida'])
+  it('cada encargado de área ve su tipo y los abiertos al equipo, nunca los inactivos', () => {
+    const cat = [...catalogo, tipo('bienv2', ['coordinador bienvenida'], true, 4)]
+    expect(tiposVisibles(cat, ['Coordinador de Comida']).map(t => t.code)).toEqual(['comida', 'bienvenida'])
+    expect(tiposVisibles(cat, ['Coordinador Bienvenida']).map(t => t.code)).toEqual(['bienvenida', 'bienv2'])
+  })
+  it('el Encargado Logística ve TODOS los de su sede (Floriana, 2026-10-30)', () => {
+    const cat = [...catalogo, tipo('bienv2', ['coordinador bienvenida'], true, 4)]
+    expect(tiposVisibles(cat, ['Encargado de Logística']).map(t => t.code)).toEqual(['comida', 'bienvenida', 'bienv2'])
   })
   it('los puestos se escriben como se quiera y se comparan normalizados', () => {
     expect(puestosDesdeTexto('Coordinador de Comida, Encargado Logística,  ')).toEqual(['coordinador comida', 'encargado logistica'])
@@ -30,8 +35,14 @@ describe('FIN-16 · saldo arrastrado del mes anterior', () => {
   it('lo que sobró de un mes cerrado pasa al siguiente', () => {
     expect(arrastreDelMesAnterior({ estado: 'cerrado', saldo_final: 3500 })).toEqual({ monto: 3500, confirmado: true })
   })
-  it('un sobregiro no se arrastra: va por reintegro', () => {
-    expect(arrastreDelMesAnterior({ estado: 'cerrado', saldo_final: -2000 }).monto).toBe(0)
+  it('un sobregiro SÍ pasa: el mes siguiente tiene eso de menos (Floriana, 2026-10-30)', () => {
+    expect(arrastreDelMesAnterior({ estado: 'cerrado', saldo_final: -2000 })).toEqual({ monto: -2000, confirmado: true })
+  })
+  it('al abrir a mano: si sobró se deposita menos; si se pasó, el presupuesto completo', () => {
+    expect(depositoAlAbrir(50000, 15000)).toBe(35000)
+    expect(depositoAlAbrir(50000, -8000)).toBe(50000)
+    expect(depositoAlAbrir(50000, 0)).toBe(50000)
+    expect(depositoAlAbrir(10000, 15000)).toBe(0)
   })
   it('con el mes anterior abierto no hay arrastre todavía, y se dice', () => {
     expect(arrastreDelMesAnterior({ estado: 'abierto', saldo_final: null })).toEqual({ monto: 0, confirmado: false })

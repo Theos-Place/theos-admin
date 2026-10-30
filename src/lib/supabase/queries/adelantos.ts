@@ -15,7 +15,7 @@ import {
 } from '@/lib/finance/adelantos'
 import { sedesDeLasAreas, type SedeDelCatalogo } from '@/lib/finance/sede-del-area'
 import {
-  arrastreDelMesAnterior, mesAnterior, mesSiguiente, type TipoDePresupuesto,
+  arrastreDelMesAnterior, depositoAlAbrir, mesAnterior, mesSiguiente, type TipoDePresupuesto,
 } from '@/lib/finance/presupuestos-de-sedes'
 
 /** `database.ts` no conoce estas tablas (migración de hoy). Mismo camino que viáticos. */
@@ -239,10 +239,10 @@ export async function abrirMes(sedeCode: string, tipo: string, mes: string): Pro
   if (existe) return (await verAdelanto((existe as { id: string }).id))!
   const p = (await presupuestos())[`${sedeCode}:${tipo}`]
   if (!p) throw new PasoInvalido('Esta sede no tiene presupuesto fijado para ese tipo. Finanzas lo pone primero.')
-  // FIN-16 · Lo que sobró el mes pasado se resta del depósito: el total
-  // disponible queda igual al presupuesto, y se ve por qué se depositó menos.
+  // FIN-16 · Lo que sobró el mes pasado se resta del depósito (el disponible
+  // queda igual al presupuesto); un sobregiro se resta del disponible.
   const saldoAnterior = await arrastrePara(sedeCode, tipo, mes)
-  const deposito = Math.max(0, p.monto - saldoAnterior)
+  const deposito = depositoAlAbrir(p.monto, saldoAnterior)
   const { data, error } = await sb.from('sede_advances')
     .insert({ sede_code: sedeCode, tipo, mes, deposito, saldo_anterior: saldoAnterior, presupuesto: deposito + saldoAnterior, moneda: p.moneda })
     .select('id').single()

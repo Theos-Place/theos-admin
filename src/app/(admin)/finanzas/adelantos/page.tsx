@@ -345,8 +345,8 @@ function DetalleDelMes({ a, finanzas, onCambio }: { a: Adelanto; finanzas: boole
             <h2 className="text-lg font-bold text-navy font-display">{a.sede_name} · {a.tipo_nombre} · {nombreDelMes(a.mes)}</h2>
             {/* FIN-16 · Las dos líneas que pidió Andrés: así se ve por qué se depositó menos cuando sobró. */}
             <dl className="mt-1 grid grid-cols-[auto_auto] gap-x-4 gap-y-0.5 text-[13px] font-body w-fit">
-              <dt className="text-navy-light/80">Saldo del mes anterior</dt>
-              <dd className="text-right text-navy">{formatCRC(a.saldo_anterior)}{!a.arrastre_confirmado && <span className="text-navy-light/80"> (el mes anterior sigue abierto: se suma al cerrarlo)</span>}</dd>
+              <dt className="text-navy-light/80">{a.saldo_anterior < 0 ? 'Sobregiro del mes anterior' : 'Saldo del mes anterior'}</dt>
+              <dd className={cn('text-right', a.saldo_anterior < 0 ? 'text-coral-deep' : 'text-navy')}>{formatCRC(a.saldo_anterior)}{!a.arrastre_confirmado && <span className="text-navy-light/80"> (el mes anterior sigue abierto: se suma al cerrarlo)</span>}</dd>
               <dt className="text-navy-light/80">Depósito del mes</dt>
               <dd className="text-right text-navy">{formatCRC(a.deposito)}</dd>
               <dt className="font-semibold text-navy">Disponible</dt>

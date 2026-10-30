@@ -100,7 +100,10 @@ export function esComiteDeSede(ctx: PositionContext): boolean {
  * tiene «Encargado Comida»: el puesto real se llama «Coordinador Comida».
  * UNA lista para el rol y para el alcance por sede (queries/adelantos.ts).
  */
-export const TITULOS_DE_ADELANTOS: ReadonlySet<string> = new Set(['encargado logistica', 'coordinador comida'])
+// FIN-16 (2026-10-30): cada tipo de presupuesto lo ve el encargado de esa
+// área — bienvenida, el Coordinador Bienvenida —, así que su puesto también da
+// el acceso. Qué tipo ve cada uno lo dice el catálogo (sede_budget_types.puestos).
+export const TITULOS_DE_ADELANTOS: ReadonlySet<string> = new Set(['encargado logistica', 'coordinador comida', 'coordinador bienvenida'])
 export const esPuestoDeAdelantos = (title: string): boolean => TITULOS_DE_ADELANTOS.has(normSinArticulos(title))
 
 export const POSITION_ROLE_RULES: PositionRoleRule[] = [
