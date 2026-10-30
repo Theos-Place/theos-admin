@@ -173,3 +173,32 @@ export function referenciasRepetidas(
   for (const [ref, unidades] of porRef) if (unidades.size > 1) repes.add(ref)
   return repes
 }
+
+/**
+ * PAG-7 · Cómo se ve en la cola de finanzas un comprobante que cubre varios
+ * cobros: cuántos son y cuánto suman. Los cobros siguen siendo filas aparte
+ * (no se fusionan), pero finanzas los revisa como lo que son: UNA
+ * transferencia. Sin esto se aprobaba o devolvía uno y los otros quedaban
+ * colgando con el mismo comprobante.
+ *
+ * Un grupo de una sola fila no es compartido (no aparece). La moneda es la del
+ * grupo: `evaluarSeleccion` ya impide mezclar al subir.
+ */
+export type ComprobanteCompartido = { cobros: number; total: number; currency: string }
+
+export function resumenDeComprobantes(
+  filas: ReadonlyArray<{ comprobante_grupo: string | null; amount: number; currency: string | null }>,
+): Map<string, ComprobanteCompartido> {
+  const acc = new Map<string, ComprobanteCompartido>()
+  for (const f of filas) {
+    if (!f.comprobante_grupo) continue
+    const prev = acc.get(f.comprobante_grupo)
+    acc.set(f.comprobante_grupo, {
+      cobros: (prev?.cobros ?? 0) + 1,
+      total: (prev?.total ?? 0) + Number(f.amount ?? 0),
+      currency: prev?.currency ?? f.currency ?? 'CRC',
+    })
+  }
+  for (const [g, r] of acc) if (r.cobros < 2) acc.delete(g)
+  return acc
+}

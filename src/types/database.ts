@@ -3154,6 +3154,7 @@ export type Database = {
           reminder_exempt_until: string | null
           amount: number
           category_id: string | null
+          comprobante_grupo: string | null
           concept: string | null
           created_at: string | null
           currency: string | null
@@ -3194,6 +3195,7 @@ export type Database = {
           reminder_exempt_until?: string | null
           amount: number
           category_id?: string | null
+          comprobante_grupo?: string | null
           concept?: string | null
           created_at?: string | null
           currency?: string | null
@@ -3234,6 +3236,7 @@ export type Database = {
           reminder_exempt_until?: string | null
           amount?: number
           category_id?: string | null
+          comprobante_grupo?: string | null
           concept?: string | null
           created_at?: string | null
           currency?: string | null

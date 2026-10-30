@@ -16,7 +16,7 @@ import { useToast } from '@/components/shared/Toast'
 import Link from 'next/link'
 import { cn } from '@/lib/utils'
 import { Button } from '@/components/shared/Button'
-import { formatMoney, formatDate, ymdCR } from '@/lib/format'
+import { formatMoney, formatDate, formatDateTime, ymdCR } from '@/lib/format'
 import { CreditCard, Loader2, AlertTriangle, Image as ImageIcon } from 'lucide-react'
 import { DatePicker } from '@/components/events/DatePicker'
 import { FechasDeTractos, fechasParaTractos } from '@/components/finance/FechasDeTractos'
@@ -45,6 +45,38 @@ export type QueueRow = {
   duplicate_reference: boolean
   /** FIN-13 · Esta persona ya puede acogerse al arreglo sobre este cobro. */
   payment_plan_enabled: boolean
+  /** PAG-7 · Va en un comprobante que cubre varios cobros. */
+  comprobante_compartido?: { cobros: number; total: number; currency: string } | null
+}
+
+/** PAG-7 · En aprobar/rechazar: procesar el comprobante entero (por defecto). */
+function OpcionTodoElComprobante({ c, verbo, valor, onChange }: {
+  c: NonNullable<QueueRow['comprobante_compartido']>
+  verbo: 'Aprobar' | 'Devolver'
+  valor: boolean
+  onChange: (v: boolean) => void
+}) {
+  return (
+    <div className="rounded-xl bg-teal-soft/15 border border-teal/30 px-3 py-2.5 space-y-1.5">
+      <p className="text-[13px] text-teal-ink font-body">
+        Este comprobante cubre <strong>{c.cobros} cobros</strong> por <strong>{formatMoney(c.total, c.currency)}</strong>: es una sola transferencia.
+      </p>
+      <label className="flex items-center gap-2 text-[13px] text-navy font-body">
+        <input type="checkbox" checked={valor} onChange={e => onChange(e.target.checked)} />
+        {verbo} los {c.cobros} cobros juntos
+      </label>
+    </div>
+  )
+}
+
+/** PAG-7 · «1 comprobante · 3 cobros · ₡30.000». */
+function ChipDeComprobante({ c }: { c: NonNullable<QueueRow['comprobante_compartido']> }) {
+  return (
+    <span className="ml-2 inline-flex items-center gap-1 rounded-full bg-teal-soft/30 text-teal-ink px-2 py-0.5 text-[11px] font-semibold font-display align-middle"
+      title="Una sola transferencia que la persona declaró para varios cobros. Se aprueba o se devuelve entera.">
+      1 comprobante · {c.cobros} cobros · {formatMoney(c.total, c.currency)}
+    </span>
+  )
 }
 
 const CONCEPT_LABEL: Record<string, string> = { matricula: 'Matrícula', folletos: 'Folletos', evento: 'Evento' }
@@ -125,6 +157,8 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
   const [options, setOptions] = useState<{ plans: { id: string; name: string }[]; leaders: { id: string; name: string }[] }>({ plans: [], leaders: [] })
   const [busyId, setBusyId] = useState<string | null>(null)
   const [approveTarget, setApproveTarget] = useState<QueueRow | null>(null)
+  // PAG-7 · Con un comprobante compartido, por defecto se procesa entero.
+  const [todoElComprobante, setTodoElComprobante] = useState(true)
   const [reject, setReject] = useState<QueueRow | null>(null)
   const [reason, setReason] = useState('')
   const [receipt, setReceipt] = useState<{ row: QueueRow; url: string | null; loading: boolean } | null>(null)
@@ -211,10 +245,13 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
     try {
       const res = await fetch(`/api/payments/${row.id}/review`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'approve' }),
+        body: JSON.stringify({ action: 'approve', ...(row.comprobante_compartido && todoElComprobante ? { todo_el_comprobante: true } : {}) }),
       })
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo aprobar.')
-      toast(`Pago de ${row.member_name} aprobado.`, 'success')
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo aprobar.')
+      toast(data?.procesados
+        ? `${data.procesados} cobros de ${row.member_name} aprobados con un mismo comprobante.`
+        : `Pago de ${row.member_name} aprobado.`, 'success')
       setApproveTarget(null)
       mutated()
     } catch (e) {
@@ -228,10 +265,13 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
     try {
       const res = await fetch(`/api/payments/${reject.id}/review`, {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ action: 'reject', reason: reason.trim() }),
+        body: JSON.stringify({ action: 'reject', reason: reason.trim(), ...(reject.comprobante_compartido && todoElComprobante ? { todo_el_comprobante: true } : {}) }),
       })
-      if (!res.ok) throw new Error((await res.json().catch(() => null))?.error || 'No se pudo rechazar.')
-      toast(`Pago de ${reject.member_name} rechazado. Se avisó a la persona.`, 'success')
+      const data = await res.json().catch(() => null)
+      if (!res.ok) throw new Error(data?.error || 'No se pudo rechazar.')
+      toast(data?.procesados
+        ? `${data.procesados} cobros de ${reject.member_name} devueltos. Se le avisó una vez.`
+        : `Pago de ${reject.member_name} rechazado. Se avisó a la persona.`, 'success')
       setReject(null); setReason(''); mutated()
     } catch (e) {
       toast(e instanceof Error ? e.message : 'Error desconocido', 'error')
@@ -569,6 +609,7 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                             <AlertTriangle size={11} /> Referencia duplicada
                           </span>
                         )}
+                        {r.comprobante_compartido && <ChipDeComprobante c={r.comprobante_compartido} />}
                       </td>
                       <td className="px-4 py-3">
                         {/* Sin comprobante NO va un botón gris: se lee como que
@@ -594,14 +635,14 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                           {canReview && r.queue_status === 'en_revision' && (
                             <>
                               <button
-                                onClick={() => setApproveTarget(r)}
+                                onClick={() => { setTodoElComprobante(true); setApproveTarget(r) }}
                                 disabled={busyId === r.id}
                                 className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
                               >
                                 {busyId === r.id ? '…' : 'Aprobar'}
                               </button>
                               <button
-                                onClick={() => { setReject(r); setReason('') }}
+                                onClick={() => { setTodoElComprobante(true); setReject(r); setReason('') }}
                                 disabled={busyId === r.id}
                                 className="rounded-full border border-coral/40 text-coral-deep px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
                               >
@@ -651,13 +692,17 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
       {/* Detalle del tiquete + transiciones de estado (Fase 3b) */}
       {detail && (() => {
         const badge = QUEUE_STATUS_BADGE[detail.queue_status]
-        const fmtDate = (iso: string | null) => iso ? new Date(iso).toLocaleString('es-CR', { dateStyle: 'medium', timeStyle: 'short' }) : '—'
+        // Formato tico dd/mm/aaaa (2026-10-26), como el resto de las fechas.
+        const fmtDate = (iso: string | null) => iso ? formatDateTime(iso) : '—'
         const rows2: [string, string][] = [
           ['Persona', detail.member_name],
           ['Origen', detail.concept ? CONCEPT_LABEL[detail.concept] : 'Pago'],
           ['Descripción', detail.description],
           ['Monto esperado', money(detail.amount, detail.currency)],
           ['Referencia', detail.reference_code ?? '—'],
+          ...(detail.comprobante_compartido
+            ? [['Comprobante', `Cubre ${detail.comprobante_compartido.cobros} cobros por ${money(detail.comprobante_compartido.total, detail.comprobante_compartido.currency)}`] as [string, string]]
+            : []),
           ['Creado', fmtDate(detail.created_at)],
           ['Última gestión', fmtDate(detail.reviewed_at)],
         ]
@@ -924,14 +969,14 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
                 {detail.queue_status === 'en_revision' && (
                   <>
                     <button
-                      onClick={() => { const r = detail; setDetail(null); setApproveTarget(r) }}
+                      onClick={() => { const r = detail; setDetail(null); setTodoElComprobante(true); setApproveTarget(r) }}
                       disabled={busyId === detail.id}
                       className="rounded-full bg-teal-deep px-3.5 py-1.5 text-[13px] text-white hover:opacity-90 transition-opacity disabled:opacity-50 font-body"
                     >
                       Aprobar
                     </button>
                     <button
-                      onClick={() => { const r = detail; setDetail(null); setReject(r); setReason('') }}
+                      onClick={() => { const r = detail; setDetail(null); setTodoElComprobante(true); setReject(r); setReason('') }}
                       disabled={busyId === detail.id}
                       className="rounded-full border border-coral/40 text-coral-deep px-3.5 py-1.5 text-[13px] hover:bg-coral/5 transition-colors disabled:opacity-50 font-body"
                     >
@@ -1010,6 +1055,9 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
               {approveTarget.concept ? ` (${CONCEPT_LABEL[approveTarget.concept]})` : ''} por {money(approveTarget.amount, approveTarget.currency)}?
               El pago quedará como pagado y activará lo que corresponda (p. ej. la matrícula o la inscripción al evento).
             </p>
+            {approveTarget.comprobante_compartido && (
+              <OpcionTodoElComprobante c={approveTarget.comprobante_compartido} verbo="Aprobar" valor={todoElComprobante} onChange={setTodoElComprobante} />
+            )}
             <div className="flex gap-2 pt-1">
               <button
                 onClick={() => approve(approveTarget)}
@@ -1032,6 +1080,9 @@ export function PaymentReviewQueue({ visible, canReview, canApplyScholarship = f
             <p className="text-sm text-navy-light/80 font-body">
               Se avisará a <strong className="text-navy">{reject.member_name}</strong> con el motivo para que vuelva a subir el comprobante.
             </p>
+            {reject.comprobante_compartido && (
+              <OpcionTodoElComprobante c={reject.comprobante_compartido} verbo="Devolver" valor={todoElComprobante} onChange={setTodoElComprobante} />
+            )}
             <textarea
               autoFocus
               value={reason}

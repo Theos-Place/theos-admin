@@ -43,6 +43,10 @@ export type PaymentQueueRow = {
   /** FIN-13 · Finanzas ya habilitó a esta persona a acogerse a un arreglo
    *  sobre este cobro. No hay botón público: se habilita caso por caso. */
   payment_plan_enabled: boolean
+  /** PAG-7 · Si este cobro va en un comprobante que cubre varios: el grupo,
+   *  cuántos cobros son y cuánto suman (todos, no solo los de esta página). */
+  comprobante_grupo: string | null
+  comprobante_compartido: { cobros: number; total: number; currency: string } | null
 }
 
 /** Crea un pago por comprobante en estado de revisión. status='pending' (finanzas)
@@ -1020,7 +1024,7 @@ export async function getPendingPaymentsQueue(filters: {
     .from('payments')
     .select(`
       id, member_id, amount, currency, concept, reference_code, receipt_path, created_at,
-      status, review_status, reviewed_at, payment_plan_enabled_at,
+      status, review_status, reviewed_at, payment_plan_enabled_at, comprobante_grupo,
       member:members!payments_member_id_fkey(first_name, last_name),
       event_registration:event_registrations!payments_event_registration_id_fkey(event:events(title)),
       ${enrollmentSel}
@@ -1079,6 +1083,17 @@ export async function getPendingPaymentsQueue(filters: {
     dupSet = referenciasRepetidas((allRefs ?? []) as unknown as Array<{ reference_code: string | null; comprobante_grupo: string | null }>)
   }
 
+  // PAG-7 · Los grupos de comprobante de estas filas, contados con TODOS sus
+  // cobros: uno del grupo puede estar en otra página o ya cerrado.
+  const grupos = [...new Set(rows.map(r => r.comprobante_grupo as string | null).filter((g): g is string => !!g))]
+  let compartidos = new Map<string, { cobros: number; total: number; currency: string }>()
+  if (grupos.length) {
+    const { data: delGrupo } = await supabase
+      .from('payments').select('comprobante_grupo, amount, currency').in('comprobante_grupo', grupos)
+    const { resumenDeComprobantes } = await import('@/lib/finance/comprobante-multiple')
+    compartidos = resumenDeComprobantes((delGrupo ?? []) as unknown as Array<{ comprobante_grupo: string | null; amount: number; currency: string | null }>)
+  }
+
   return rows.map(r => {
     const m = Array.isArray(r.member) ? r.member[0] : r.member
     const mm = m as { first_name: string; last_name: string } | null
@@ -1119,8 +1134,28 @@ export async function getPendingPaymentsQueue(filters: {
       queue_status: computeQueueStatus(r.status as string, r.review_status as string | null),
       duplicate_reference: !!ref && dupSet.has(ref),
       payment_plan_enabled: !!r.payment_plan_enabled_at,
+      comprobante_grupo: (r.comprobante_grupo as string | null) ?? null,
+      comprobante_compartido: r.comprobante_grupo ? compartidos.get(r.comprobante_grupo as string) ?? null : null,
     }
   })
+}
+
+/**
+ * PAG-7 · Los cobros del mismo comprobante que `paymentId` (incluido él), de
+ * la MISMA persona. Si no va en un comprobante compartido, solo él.
+ */
+export async function pagosDelMismoComprobante(paymentId: string): Promise<string[]> {
+  const supabase = createAdminClient()
+  const { data: p } = await supabase
+    .from('payments').select('id, member_id, comprobante_grupo').eq('id', paymentId).maybeSingle()
+  const fila = p as unknown as { id: string; member_id: string | null; comprobante_grupo: string | null } | null
+  if (!fila) return []
+  if (!fila.comprobante_grupo) return [fila.id]
+  const { data } = await supabase
+    .from('payments').select('id').eq('comprobante_grupo', fila.comprobante_grupo).eq('member_id', fila.member_id ?? '')
+    .order('created_at')
+  const ids = ((data ?? []) as Array<{ id: string }>).map(r => r.id)
+  return ids.includes(fila.id) ? ids : [fila.id, ...ids]
 }
 
 /** Aprueba vía RPC TRANSACCIONAL (migración 113): pago → paid + matrícula

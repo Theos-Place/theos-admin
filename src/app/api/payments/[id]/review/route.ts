@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { z } from 'zod'
 import { requireModuleView } from '@/lib/auth/guard'
 import { logAudit } from '@/lib/audit'
-import { approvePayment, rejectPayment, revertPaymentApproval, transitionPaymentQueue } from '@/lib/supabase/queries/payments'
+import { approvePayment, rejectPayment, revertPaymentApproval, transitionPaymentQueue, pagosDelMismoComprobante } from '@/lib/supabase/queries/payments'
 import { createAdminClient } from '@/lib/supabase/admin'
 import { notifyRejection } from '@/lib/email/payment-rejection-notify'
 import { reportarError } from '@/lib/observabilidad'
@@ -17,6 +17,8 @@ import { reportarError } from '@/lib/observabilidad'
 const bodySchema = z.object({
   action: z.enum(['approve', 'reject', 'start_review', 'reopen', 'close']),
   reason: z.string().optional(),
+  /** PAG-7 · Aprobar o rechazar TODOS los cobros del mismo comprobante. */
+  todo_el_comprobante: z.boolean().optional(),
 })
 
 export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -31,7 +33,48 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         { status: 400 },
       )
     }
-    const { action, reason } = parsed.data
+    const { action, reason, todo_el_comprobante } = parsed.data
+
+    /**
+     * PAG-7 · Un comprobante que cubre varios cobros es UNA transferencia: se
+     * aprueba o se devuelve entero. Los cobros siguen siendo filas aparte, así
+     * que se procesa cada uno por el MISMO camino de siempre; lo que cambia es
+     * que la persona recibe UN aviso y no uno por cobro.
+     */
+    if (todo_el_comprobante && (action === 'approve' || action === 'reject')) {
+      const ids = await pagosDelMismoComprobante(id)
+      if (ids.length === 0) return NextResponse.json({ error: 'Pago no encontrado' }, { status: 404 })
+      const motivo = (reason ?? '').trim()
+      if (action === 'reject' && !motivo) return NextResponse.json({ error: 'El motivo de rechazo es obligatorio.' }, { status: 400 })
+      let procesados = 0
+      let aviso: { member_id: string; concept: never } | null = null
+      for (const pid of ids) {
+        if (action === 'approve') {
+          if (await approvePayment(pid, auth.ctx.memberId)) {
+            procesados++
+            await logAudit({ actorUserId: auth.ctx.userId, action: 'APPROVE', entityType: 'payments', entityId: pid, newData: { comprobante_compartido: ids.length } })
+          }
+          continue
+        }
+        let r = await rejectPayment(pid, auth.ctx.memberId, motivo)
+        let revirtio = false
+        if (!r && await revertPaymentApproval(pid, auth.ctx.memberId, motivo)) {
+          revirtio = true
+          const { data: p } = await createAdminClient().from('payments').select('member_id, concept').eq('id', pid).maybeSingle()
+          r = (p as { member_id: string; concept: never } | null) ?? null
+        }
+        if (r) {
+          procesados++
+          aviso = aviso ?? (r as { member_id: string; concept: never })
+          await logAudit({ actorUserId: auth.ctx.userId, action: 'REJECT', entityType: 'payments', entityId: pid, newData: { reason: motivo, comprobante_compartido: ids.length, ...(revirtio ? { revirtio_aprobacion: true } : {}) } })
+        }
+      }
+      if (procesados === 0) {
+        return NextResponse.json({ error: 'Ninguno de los cobros de este comprobante estaba en un estado que se pueda cambiar.' }, { status: 409 })
+      }
+      if (aviso) await notifyRejection(aviso.member_id, motivo, aviso.concept)
+      return NextResponse.json({ ok: true, procesados, total: ids.length })
+    }
 
     if (action === 'approve') {
       const approved = await approvePayment(id, auth.ctx.memberId)
