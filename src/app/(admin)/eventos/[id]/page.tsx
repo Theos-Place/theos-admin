@@ -4,6 +4,8 @@ import { use, useState, useMemo, useEffect } from 'react'
 import { useBusquedaDiferida } from '@/hooks/useBusquedaDiferida'
 import { useSearchParams, useRouter } from 'next/navigation'
 import { useEvent } from '@/hooks/useEvents'
+import { useCargaRemota } from '@/hooks/useCargaRemota'
+import { totalesDeInscripcion } from '@/lib/events/totales-de-inscripcion'
 
 import { toDomainMember } from '@/lib/members/adapter'
 import { CancellationModal } from '@/components/events/CancellationModal'
@@ -167,6 +169,13 @@ const TAB_LABELS: Record<Tab, string> = {
 export default function EventoDetailPage({ params }: { params: Promise<{ id: string }> }) {
   const { id } = use(params)
   const { event: rawEvent, loading, refetch } = useEvent(id)
+  // EVE-14 · Cuántos se inscribieron por el link público sin ficha (FRM-9 los
+  // vincula; mientras tanto cuentan en el total). Solo si hay formulario.
+  const { datos: sinFicha, recargar: recargarSinFicha } = useCargaRemota<number>(
+    rawEvent?.registration_form_id ?? '',
+    () => fetch(`/api/events/${id}/guest-responses`).then(r => (r.ok ? r.json() : { items: [] })).then(d => (Array.isArray(d?.items) ? d.items.length : 0)),
+    { activo: !!rawEvent?.registration_form_id },
+  )
   // Si venimos de una ocurrencia recurrente (?date=ISO), mostramos SU fecha, no
   // la del evento padre. Conserva la duración del evento (end - start).
   const occParam = useSearchParams().get('date')
@@ -347,6 +356,8 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
   }
 
   const registrationCount = event.registrations.length
+  // EVE-14 · Los totales reales: con ficha + por el link sin ficha, en personas.
+  const totales = totalesDeInscripcion({ conFicha: registrationCount, sinFicha: sinFicha ?? 0, personasPorInscripcion: event.personas_por_inscripcion })
   const checkinCount = event.checkins.length
   // La inscripción se decide en UN solo lugar (src/lib/events/inscripcion-visible.ts),
   // sobre el mismo campo que gobierna el botón público. Una charla no se
@@ -654,6 +665,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
         id={id}
         cancelled={cancelled}
         registrationCount={registrationCount}
+        totales={totales}
         showMenu={showMenu}
         onMenuToggle={() => setShowMenu(m => !m)}
         onCancelClick={() => { setShowMenu(false); setShowCancelModal(true) }}
@@ -737,6 +749,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
           event={event}
           eventId={id}
           registrationCount={registrationCount}
+          totales={totales}
           circumference={circumference}
           onSendMessage={canSendMessage ? () => setShowMessageModal(true) : undefined}
           onChanged={refetch}
@@ -744,7 +757,7 @@ export default function EventoDetailPage({ params }: { params: Promise<{ id: str
       )}
       {/* 2026-10-19 · Lo que llegó por el link público sin ficha: no son
           inscripciones, pero alguien tiene que verlas (Matrimonios). */}
-      {tabEfectivo === 'inscripciones' && event.registration_form_id && <InscritosSinFicha eventId={id} onVinculado={refetch} />}
+      {tabEfectivo === 'inscripciones' && event.registration_form_id && <InscritosSinFicha eventId={id} onVinculado={() => { void refetch(); void recargarSinFicha() }} />}
 
       {/* Tab: Check-in */}
       {tabEfectivo === 'checkin' && (

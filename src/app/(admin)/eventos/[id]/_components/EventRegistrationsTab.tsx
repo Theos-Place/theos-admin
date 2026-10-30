@@ -11,6 +11,7 @@ import { getInitials, formatCRC } from '@/lib/format'
 import { generateCSV } from '@/lib/export'
 import { usePermissions } from '@/hooks/usePermissions'
 import { formatDate } from '@/lib/format'
+import { ocupacion, textoDeSinFicha, textoDeTotales, totalesDeInscripcion, type TotalesDeInscripcion } from '@/lib/events/totales-de-inscripcion'
 
 type Event = AdminEvent
 type PaymentStatus = 'pending' | 'paid' | 'exempted'
@@ -56,13 +57,15 @@ type Props = {
   event: Event
   eventId: string
   registrationCount: number
+  /** EVE-14 · Totales reales (con ficha + por el link, en personas). */
+  totales?: TotalesDeInscripcion
   circumference: number
   /** Ausente cuando el usuario no tiene rol de comunicaciones (oculta el botón). */
   onSendMessage?: () => void
   onChanged: () => void
 }
 
-export function EventRegistrationsTab({ event, eventId, registrationCount, circumference, onSendMessage, onChanged }: Props) {
+export function EventRegistrationsTab({ event, eventId, registrationCount, totales, circumference, onSendMessage, onChanged }: Props) {
   const toast = useToast()
   const [showInscribir, setShowInscribir] = useState(false)
   const [busyMember, setBusyMember] = useState<string | null>(null)
@@ -127,6 +130,10 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
   }
 
   const cap = event.max_capacity ?? 0 // 0 = sin límite (no se calcula ocupación)
+  // EVE-14 · La ocupación se mide en PERSONAS (una inscripción por pareja son
+  // dos) y cuenta también a los inscritos por el link sin ficha.
+  const t = totales ?? totalesDeInscripcion({ conFicha: registrationCount, personasPorInscripcion: event.personas_por_inscripcion })
+  const ocup = ocupacion(t, cap)
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-2 gap-4 lg:grid-cols-4">
@@ -136,17 +143,17 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
             <circle
               cx="50" cy="50" r="40" fill="none" strokeWidth="8" stroke="#70BDC2"
               strokeDasharray={circumference}
-              strokeDashoffset={registrationCount > 0 && cap > 0 ? circumference * (1 - registrationCount / cap) : circumference}
+              strokeDashoffset={ocup.usado > 0 && ocup.cupo ? circumference * (1 - Math.min(1, ocup.usado / ocup.cupo)) : circumference}
               strokeLinecap="round"
               transform="rotate(-90 50 50)"
             />
             <text x="50" y="54" textAnchor="middle" fontSize="18" fontWeight="bold" fill="#161440" fontFamily="var(--font-display)">
-              {cap > 0 ? Math.round((registrationCount / cap) * 100) : 0}%
+              {ocup.porcentaje}%
             </text>
           </svg>
           <p className="text-[13px] text-navy-light/80 mt-1 font-body">Ocupación</p>
           <p className="text-sm font-medium text-navy font-display">
-            {registrationCount}/{cap || '∞'}
+            {ocup.usado}/{cap || '∞'}{t.personasPorInscripcion > 1 ? ' personas' : ''}
           </p>
         </div>
         {[
@@ -170,7 +177,7 @@ export function EventRegistrationsTab({ event, eventId, registrationCount, circu
 
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <p className="text-sm text-navy-light/80 font-body">
-          {registrationCount} inscritos
+          {textoDeTotales(t)}{textoDeSinFicha(t) ? ` (${textoDeSinFicha(t)})` : ''}
         </p>
         <div className="flex gap-2 flex-wrap">
           <button

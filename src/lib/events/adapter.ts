@@ -38,6 +38,7 @@ export function toDomainEvent(db: DbEventEnriched): AdminEvent {
     requires_registration: db.requires_registration,
     is_public: db.is_public ?? true,
     max_capacity: db.max_capacity, // null = sin límite
+    personas_por_inscripcion: db.personas_por_inscripcion ?? 1,
     requires_payment: db.requires_payment,
     payment_amount: db.payment_amount,
     currency: db.currency ?? 'CRC',

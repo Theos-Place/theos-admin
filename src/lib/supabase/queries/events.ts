@@ -27,6 +27,8 @@ export type DbEventEnriched = {
   recurrence_end: string | null
   parent_event_id: string | null
   max_capacity: number | null
+  /** EVE-14 · Cuántas personas cubre una inscripción (1 individual, 2 pareja). */
+  personas_por_inscripcion?: number
   flyer_url: string | null
   is_virtual: boolean
   virtual_url: string | null
@@ -432,7 +434,8 @@ export type EventWriteInput = {
   survey_offset_hours?: number | null
   survey_send_at?: string | null
   status?: EventStatus
-  cancellation_reason?: string | null
+  cancellation_reason?: string | null  /** EVE-14 */
+  personas_por_inscripcion?: number
 }
 
 type SubEventInput = { name: string; max_capacity: number; committee_id?: string | null }

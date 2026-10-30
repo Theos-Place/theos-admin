@@ -92,6 +92,8 @@ export type AdminEvent = {
   is_public: boolean
   /** null = sin límite de cupo (default). */
   max_capacity: number | null
+  /** EVE-14 · Cuántas personas cubre una inscripción (1 individual, 2 pareja…). */
+  personas_por_inscripcion: number
   requires_payment: boolean
   payment_amount: number | null
   /** INT-2: moneda de payment_amount/server_price (CRC/USD/EUR). */

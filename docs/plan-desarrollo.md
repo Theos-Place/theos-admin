@@ -3432,7 +3432,22 @@ arrastrado. tsc/lint/vitest.
   se lleva en Excel y "ya no podemos seguir así" (Meli). La reunión de alcance
   con dirección/Lucy sigue pendiente, pero estos dos van fijos.
 
-### [ ] EVE-14 · Inscripciones sin ficha: vincular a miembros existentes + totales reales — URGENTE (evento de matrimonios este sábado)
+### [x] EVE-14 · Inscripciones sin ficha: vincular a miembros existentes + totales reales — URGENTE (evento de matrimonios este sábado)
+
+**Hecho el 2026-10-30** (sobre FRM-9 y EVE-15 del 29): PARTE 1 — el candidato
+se propone por cédula exacta, correo exacto, teléfono (últimos 8 dígitos) y
+nombre exacto, en ese orden (`lib/forms/vinculo-de-respuesta.ts`; cédula y
+teléfono solo cuando el formulario los capturó en `personal_data` — el link
+público hoy guarda nombre y correo); «Buscar su ficha…» con el buscador de
+miembros; y «Crear ficha nueva» (`POST …/crear-ficha`): propone nombre y
+apellidos desde lo escrito, crea la ficha con el correo del link SIN correo de
+bienvenida, la vincula y crea la inscripción (si el correo ya es de alguien,
+vincula a esa ficha en vez de duplicar). PARTE 2 — `events.personas_por_inscripcion`
+(migración `20261030120000`, 1 por default, Matrimonios = 2) configurable en
+crear/editar evento; el encabezado y la pestaña dicen «X inscripciones · ~N·X
+asistentes (A con ficha + B por el link sin ficha)» y la ocupación se mide en
+personas. PARTE 3 (asociar desde el origen por correo/cédula sin revelar
+datos) queda para después.
 
 Caso en prod: 13 inscripciones con ficha y 39 "sin ficha" (gente que se
 inscribió sin loguearse), varias de personas que SÍ existen en el padrón. Y el
@@ -3637,4 +3652,47 @@ DISEÑO — "ranuras de imagen" en las plantillas:
 Permisos: los mismos que editan plantillas (comunicaciones/admin).
 Tests: reemplazo cambia solo el src, el resto del HTML byte-idéntico; plantilla sin
 ranuras no muestra el panel; upload validado. tsc/lint/vitest.
+```
+
+### [ ] FRM-8 · Editor de formularios: enlace a las respuestas (pedido 2026-10-30)
+
+Prompt para Claude Code:
+
+```
+MEJORA CHICA · Al editar un formulario, acceso directo a sus respuestas
+
+En la pantalla de edición de un formulario, agregar en el encabezado un enlace/botón
+"Ver respuestas (N)" — con el conteo — que lleve a la vista de respuestas de ESE
+formulario. Y verificar el camino inverso: desde las respuestas, volver a editar el
+formulario en un clic. Mismo gate de permisos que ya tiene cada vista (editar y ver
+respuestas pueden tener roles distintos: el enlace solo se muestra si el usuario puede
+ver respuestas). Test: enlace presente con permiso, ausente sin él. tsc/lint.
+```
+
+### [ ] PAR-8 · Búsqueda de miembros: los filtros sobreviven al "atrás" + botón limpiar (pedido 2026-10-30)
+
+Caso: filtrás el padrón, abrís un perfil, volvés con "atrás" — y los filtros
+desaparecieron. Hay que rearmarlos cada vez.
+
+Prompt para Claude Code:
+
+```
+FIX UX · /miembros: preservar los filtros al navegar + "Limpiar filtros"
+
+1. FILTROS EN LA URL: el estado completo de los filtros activos (condiciones, búsqueda,
+   columnas si aplica, página/orden) se serializa en query params de /miembros — el
+   patrón que ya usamos en reportes (?semana=, ?comite=): el "atrás" del navegador
+   restaura la búsqueda exacta, el enlace se puede compartir, y un refresh no pierde
+   nada. Si el set de condiciones es muy largo para la URL, usar una clave corta con el
+   estado en sessionStorage como respaldo — pero la URL es la opción preferida (los
+   enlaces compartibles valen oro con las listas guardadas).
+2. Al abrir un PERFIL desde los resultados, el link de regreso/breadcrumb vuelve a
+   /miembros con los mismos params (además del "atrás" nativo).
+3. BOTÓN "LIMPIAR FILTROS": visible cuando hay al menos un filtro activo, con el conteo
+   ("Limpiar filtros (3)") — un clic deja la búsqueda vacía (y la URL limpia).
+4. OJO: las listas guardadas existentes no cambian — esto es el estado efímero de la
+   sesión; verificar que abrir una lista guardada siga funcionando y se refleje en la
+   URL también.
+Tests: atrás restaura filtros, refresh conserva, limpiar vacía, lista guardada → URL.
+tsc/lint/vitest.
 ```

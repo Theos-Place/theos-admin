@@ -1131,6 +1131,7 @@ export type Database = {
           location: string | null
           location_url: string | null
           max_capacity: number | null
+          personas_por_inscripcion: number
           parent_event_id: string | null
           payment_amount: number | null
           recurrence_end: string | null
@@ -1172,6 +1173,7 @@ export type Database = {
           location?: string | null
           location_url?: string | null
           max_capacity?: number | null
+          personas_por_inscripcion?: number
           parent_event_id?: string | null
           payment_amount?: number | null
           recurrence_end?: string | null
@@ -1213,6 +1215,7 @@ export type Database = {
           location?: string | null
           location_url?: string | null
           max_capacity?: number | null
+          personas_por_inscripcion?: number
           parent_event_id?: string | null
           payment_amount?: number | null
           recurrence_end?: string | null

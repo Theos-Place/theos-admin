@@ -1119,8 +1119,27 @@ export type RespuestaSinFicha = {
   nombre: string
   email: string | null
   fecha: string
-  /** UNA ficha que coincide por correo o por nombre; null = búsqueda manual. */
+  /** UNA ficha que coincide (cédula, correo, teléfono o nombre); null = búsqueda manual. */
   candidato: { id: string; name: string; cedula: string | null; motivo: Candidato['motivo'] } | null
+  /** EVE-14 · Propuesta de nombre y apellidos para «crear ficha». */
+  propuesta: { first_name: string; last_name: string }
+}
+
+/**
+ * EVE-14 · Cédula y teléfono de una respuesta sin ficha, si el formulario los
+ * capturó (campo `personal_data` con JSON). Hoy el link público guarda solo
+ * nombre y correo, así que casi siempre vuelve vacío; queda listo para cuando
+ * el formulario los pida.
+ */
+function datosExtraDeRespuesta(valores: ReadonlyArray<{ response_id: string; value_json: unknown }>, responseId: string): { cedula: string | null; phone: string | null } {
+  for (const v of valores) {
+    if (v.response_id !== responseId || !v.value_json || typeof v.value_json !== 'object') continue
+    const j = v.value_json as Record<string, unknown>
+    const cedula = [j.cedula, j.documento, j.document].find(x => typeof x === 'string') as string | undefined
+    const phone = [j.phone, j.telefono, j.tel].find(x => typeof x === 'string') as string | undefined
+    if (cedula || phone) return { cedula: cedula ?? null, phone: phone ?? null }
+  }
+  return { cedula: null, phone: null }
 }
 
 /**
@@ -1141,15 +1160,31 @@ export async function respuestasSinFicha(formId: string): Promise<RespuestaSinFi
 
   const correos = [...new Set(filas.map(r => normalizarCorreo(r.guest_email)).filter(Boolean))]
   const nombres = [...new Set(filas.map(r => normalizarNombre(r.guest_name)).filter(Boolean))]
+  // EVE-14 · cédula/teléfono, si el formulario los guardó en un campo personal_data.
+  const { data: campoPersonal } = await supabase.from('form_fields').select('id').eq('form_id', formId).eq('field_type', 'personal_data').limit(1).maybeSingle()
+  const { nombreDesdeRespuesta } = await import('@/lib/forms/vinculo-de-respuesta')
+  let valoresPersonales: Array<{ response_id: string; value_json: unknown }> = []
+  if (campoPersonal) {
+    const { data: vals } = await supabase.from('form_response_values')
+      .select('response_id, value_json').eq('field_id', (campoPersonal as { id: string }).id).in('response_id', filas.map(r => r.id))
+    valoresPersonales = (vals ?? []) as Array<{ response_id: string; value_json: unknown }>
+  }
+  const extras = new Map(filas.map(r => [r.id, datosExtraDeRespuesta(valoresPersonales, r.id)]))
+  const cedulas = [...new Set([...extras.values()].map(e => e.cedula).filter((x): x is string => !!x))]
   const fichas = new Map<string, FichaCandidata>()
   const guardar = (rows: unknown[] | null) => {
     for (const r of (rows ?? []) as FichaCandidata[]) fichas.set(r.id, r)
+  }
+  if (cedulas.length) {
+    const { data: porCedula } = await supabase.from('members')
+      .select('id, first_name, last_name, email, cedula, phone').eq('is_active', true).in('cedula', cedulas)
+    guardar(porCedula)
   }
   if (correos.length) {
     // ilike con `in` no existe: se piden en minúsculas Y como vienen, y la
     // comparación real (normalizada) la hace la función pura.
     const { data: porCorreo } = await supabase.from('members')
-      .select('id, first_name, last_name, email, cedula')
+      .select('id, first_name, last_name, email, cedula, phone')
       .eq('is_active', true).in('email', [...correos, ...filas.map(r => (r.guest_email ?? '').trim()).filter(Boolean)])
     guardar(porCorreo)
   }
@@ -1158,20 +1193,22 @@ export async function respuestasSinFicha(formId: string): Promise<RespuestaSinFi
     // compara el nombre completo normalizado en memoria (sin tildes).
     const primeros = [...new Set(nombres.map(n => n.split(' ')[0]))]
     const { data: porNombre } = await supabase.from('members')
-      .select('id, first_name, last_name, email, cedula')
+      .select('id, first_name, last_name, email, cedula, phone')
       .eq('is_active', true).or(primeros.map(p => `first_name.ilike.${p.replace(/[,().]/g, '')}%`).join(','))
       .limit(2000)
     guardar(porNombre)
   }
   const lista = [...fichas.values()]
   return filas.map(r => {
-    const c = candidatoParaRespuesta(r, lista)
+    const extra = extras.get(r.id) ?? { cedula: null, phone: null }
+    const c = candidatoParaRespuesta({ ...r, guest_cedula: extra.cedula, guest_phone: extra.phone }, lista)
     return {
       id: r.id,
       nombre: r.guest_name ?? 'Sin nombre',
       email: r.guest_email,
       fecha: r.submitted_at,
       candidato: c ? { id: c.miembro.id, name: `${c.miembro.first_name} ${c.miembro.last_name}`.trim(), cedula: c.miembro.cedula, motivo: c.motivo } : null,
+      propuesta: nombreDesdeRespuesta(r.guest_name),
     }
   })
 }
@@ -1235,4 +1272,50 @@ export async function vincularRespuestaSinFicha(
     new_data: { member_id: memberId, op: 'vinculo_respuesta_a_ficha', form_id: formId, inscribe_a_eventos: inscribeAEventos },
   })
   return { inscribeAEventos }
+}
+
+/** EVE-14 · El correo de la respuesta ya es de una ficha: se vincula a esa, no se crea otra. */
+export class FichaDuplicadaError extends Error {
+  constructor(public readonly member: { id: string; name: string }) {
+    super(`Ese correo ya es de ${member.name}.`); this.name = 'FichaDuplicadaError'
+  }
+}
+
+/**
+ * EVE-14 · Crea la ficha a partir de una respuesta sin ficha y la vincula.
+ *
+ * Para que el sábado el check-in los encuentre como personas y no como
+ * invitados. Nombre y apellidos los confirma quien opera (la propuesta sale de
+ * nombreDesdeRespuesta); el correo es el del link. Si ese correo ya es de una
+ * ficha, no se duplica: se devuelve esa para vincular. SIN correo de
+ * bienvenida: la cuenta de acceso se crea después, si hace falta.
+ */
+export async function crearFichaDesdeRespuesta(
+  formId: string, responseId: string, nombre: { first_name: string; last_name: string }, actorUserId: string | null,
+): Promise<{ member_id: string; inscribeAEventos: boolean }> {
+  const supabase = createAdminClient()
+  const { data: r } = await supabase.from('form_responses')
+    .select('id, guest_email, member_id').eq('id', responseId).eq('form_id', formId).maybeSingle()
+  const resp = r as { id: string; guest_email: string | null; member_id: string | null } | null
+  if (!resp || resp.member_id) throw new RespuestaNoVinculableError()
+
+  const { normalizeEmail, findMemberByCedulaOrEmail, createMember, getMemberForLookupById } = await import('./members')
+  const email = resp.guest_email ? normalizeEmail(resp.guest_email) : null
+  if (email) {
+    const existente = await findMemberByCedulaOrEmail(null, email)
+    if (existente) {
+      const f = await getMemberForLookupById(existente.id)
+      throw new FichaDuplicadaError({ id: existente.id, name: f ? `${f.first_name} ${f.last_name}`.trim() : 'otra persona' })
+    }
+  }
+  const member = await createMember({
+    first_name: nombre.first_name.trim(), last_name: nombre.last_name.trim(),
+    cedula: null, document_type: 'cedula', email, phone: null, birth_date: null,
+  } as Parameters<typeof createMember>[0]) as { id: string }
+  await supabase.from('audit_log').insert({
+    action: 'INSERT', entity_type: 'members', entity_id: member.id, actor_id: actorUserId,
+    old_data: null, new_data: { op: 'ficha_desde_respuesta_sin_ficha', form_id: formId, response_id: responseId, email },
+  })
+  const { inscribeAEventos } = await vincularRespuestaSinFicha(formId, responseId, member.id, actorUserId)
+  return { member_id: member.id, inscribeAEventos }
 }

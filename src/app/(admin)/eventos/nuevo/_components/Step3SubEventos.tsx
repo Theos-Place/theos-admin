@@ -17,6 +17,8 @@ interface Step3Props {
   onNewSubComiteChange: (id: string | null) => void
   requires_registration: boolean
   max_capacity: string
+  /** EVE-14 · 1 = individual, 2 = pareja… */
+  personas_por_inscripcion: string
   has_satisfaction_survey: boolean
   onSetShowSubEventForm: (v: boolean) => void
   onNewSubNameChange: (v: string) => void
@@ -25,6 +27,7 @@ interface Step3Props {
   onRemoveSubEvent: (id: string) => void
   onToggleRegistration: () => void
   onMaxCapacityChange: (v: string) => void
+  onPersonasPorInscripcionChange: (v: string) => void
   onToggleSatisfactionSurvey: () => void
   /** EVE-4 · Formulario de inscripción del evento (null = sin formulario). */
   registration_form_id: string | null
@@ -45,6 +48,7 @@ export function Step3SubEventos({
   onNewSubComiteChange,
   requires_registration,
   max_capacity,
+  personas_por_inscripcion,
   has_satisfaction_survey,
   onSetShowSubEventForm,
   onNewSubNameChange,
@@ -53,6 +57,7 @@ export function Step3SubEventos({
   onRemoveSubEvent,
   onToggleRegistration,
   onMaxCapacityChange,
+  onPersonasPorInscripcionChange,
   onToggleSatisfactionSurvey,
   registration_form_id,
   onRegistrationFormChange,
@@ -180,6 +185,16 @@ export function Step3SubEventos({
                     value={max_capacity}
                     onChange={e => onMaxCapacityChange(e.target.value)}
                   />
+                </div>
+                <div>
+                  <FieldLabel>Personas por inscripción</FieldLabel>
+                  <input
+                    type="number" min={1} max={10}
+                    className={`${inputCls} font-body`}
+                    value={personas_por_inscripcion}
+                    onChange={e => onPersonasPorInscripcionChange(e.target.value)}
+                  />
+                  <p className="mt-1 text-[13px] text-navy-light/80 font-body">1 = individual · 2 = por pareja. El total de asistentes y la ocupación se cuentan en personas.</p>
                 </div>
                 {/* "Prerrequisito" se quitó: los eventos no tienen ese campo en
                     la BD y el valor se descartaba en silencio al publicar. */}

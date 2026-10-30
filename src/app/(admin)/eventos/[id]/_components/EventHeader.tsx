@@ -12,6 +12,7 @@ import { Repeat } from 'lucide-react'
 import { zonaValida, fechaLargaEnZona, horaEnZona, aclaracionDeZona } from '@/lib/events/timezone'
 import type { AdminEvent } from '@/data/event-config'
 import { mostrarInscripciones } from '@/lib/events/inscripcion-visible'
+import { textoDeTotales, type TotalesDeInscripcion } from '@/lib/events/totales-de-inscripcion'
 
 type Event = AdminEvent
 
@@ -54,6 +55,8 @@ type Props = {
   id: string
   cancelled: boolean
   registrationCount: number
+  /** EVE-14 · Totales reales (con ficha + por el link, en personas). */
+  totales?: TotalesDeInscripcion
   showMenu: boolean
   onMenuToggle: () => void
   onCancelClick: () => void
@@ -80,6 +83,7 @@ export function EventHeader({
   id,
   cancelled,
   registrationCount,
+  totales,
   showMenu,
   onMenuToggle,
   onCancelClick,
@@ -166,11 +170,11 @@ export function EventHeader({
                   como que no había dónde anotarse. */}
               {canManage && mostrarInscripciones({
                 requires_registration: event.requires_registration,
-                inscritos: registrationCount,
+                inscritos: totales?.inscripciones ?? registrationCount,
               }) && (
                 <span className="flex items-center gap-1.5">
                   <Users size={13} className="text-white/80" />
-                  {registrationCount} inscritos
+                  {totales ? textoDeTotales(totales) : `${registrationCount} inscritos`}
                 </span>
               )}
             </div>

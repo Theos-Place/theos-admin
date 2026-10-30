@@ -211,6 +211,8 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
   // que es lo que venían siendo.
   const [isPublic, setIsPublic] = useState(event?.is_public ?? true)
   const [maxCapacity, setMaxCapacity] = useState(event ? String(event.max_capacity ?? '') : '')
+  // EVE-14 · 1 = individual, 2 = pareja…
+  const [personasPorInscripcion, setPersonasPorInscripcion] = useState(event ? String(event.personas_por_inscripcion ?? 1) : '1')
   const [requiresPayment, setRequiresPayment] = useState(event?.requires_payment ?? false)
   const [paymentAmount, setPaymentAmount] = useState(event?.payment_amount ? String(event.payment_amount) : '')
   // INT-2: moneda del cobro del evento.
@@ -344,6 +346,7 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
       is_virtual: isVirtual, virtual_link: virtualLink, location,
       is_recurring: isRecurring, recurrence_rule: recurrenceRule, recurrence_end: recurrenceEnd,
       requires_registration: requiresRegistration, max_capacity: maxCapacity,
+      personas_por_inscripcion: personasPorInscripcion,
       is_public: isPublic,
       requires_payment: requiresPayment, payment_amount: paymentAmount, currency, sede_id: sedeId,
       server_price: serverPrice, servers_pay: serversPay,
@@ -696,6 +699,14 @@ export default function EditarEventoPage({ params }: { params: Promise<{ id: str
               <div className="space-y-1">
                 <label htmlFor="capacidad-maxima" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Capacidad máxima</label>
                 <input id="capacidad-maxima" type="number" className={cn(inputCls, 'font-body')} value={maxCapacity} onChange={e => setMaxCapacity(e.target.value)} />
+              </div>
+              {/* EVE-14 · Una inscripción puede cubrir a más de una persona
+                  (Matrimonios: la pareja). El resumen y la ocupación se
+                  calculan en personas. */}
+              <div className="space-y-1">
+                <label htmlFor="personas-por-inscripcion" className="text-[13px] tracking-widest uppercase text-navy-light/80 font-display">Personas por inscripción</label>
+                <input id="personas-por-inscripcion" type="number" min={1} max={10} className={cn(inputCls, 'font-body')} value={personasPorInscripcion} onChange={e => setPersonasPorInscripcion(e.target.value)} />
+                <p className="text-[13px] text-navy-light/80 font-body">1 = individual · 2 = por pareja. La capacidad y el total de asistentes se cuentan en personas.</p>
               </div>
               {/* "Prerrequisito" se quitó: los eventos no tienen ese campo en la
                   BD y el select no estaba conectado a nada. */}

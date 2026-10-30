@@ -45,6 +45,7 @@ interface FormData {
   sub_events: SubEventInput[]
   requires_registration: boolean
   max_capacity: string
+  personas_por_inscripcion: string
   prerequisite: string
   has_satisfaction_survey: boolean
   registration_form_id: string | null
@@ -139,6 +140,7 @@ function NuevoEventoForm() {
     sub_events: [],
     requires_registration: false,
     max_capacity: '',
+    personas_por_inscripcion: '1',
     prerequisite: '',
     has_satisfaction_survey: false,
     // EVE-4 · Formulario de inscripción y encuesta programada (opcionales).
@@ -435,6 +437,7 @@ function NuevoEventoForm() {
               onNewSubComiteChange={setNewSubComite}
               requires_registration={form.requires_registration}
               max_capacity={form.max_capacity}
+              personas_por_inscripcion={form.personas_por_inscripcion}
               has_satisfaction_survey={form.has_satisfaction_survey}
               onSetShowSubEventForm={setShowSubEventForm}
               onNewSubNameChange={setNewSubName}
@@ -443,6 +446,7 @@ function NuevoEventoForm() {
               onRemoveSubEvent={removeSubEvent}
               onToggleRegistration={() => set('requires_registration', !form.requires_registration)}
               onMaxCapacityChange={v => set('max_capacity', v)}
+              onPersonasPorInscripcionChange={v => set('personas_por_inscripcion', v)}
               onToggleSatisfactionSurvey={() => set('has_satisfaction_survey', !form.has_satisfaction_survey)}
               registration_form_id={form.registration_form_id}
               onRegistrationFormChange={v => set('registration_form_id', v)}

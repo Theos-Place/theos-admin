@@ -82,6 +82,8 @@ export function formToWriteInput(body: Record<string, unknown>): EventWriteInput
     // y lo que hacían todos los eventos hasta ahora.
     is_public: body.is_public === undefined ? true : Boolean(body.is_public),
     max_capacity: num(body.max_capacity),
+    // EVE-14: 1 = individual (default), 2 = pareja… tope 10, como el CHECK.
+    personas_por_inscripcion: Math.min(10, Math.max(1, Math.round(num(body.personas_por_inscripcion) ?? 1))),
     requires_payment: Boolean(body.requires_payment),
     payment_amount: num(body.payment_amount),
     // INT-2: moneda del costo; valores fuera del CHECK caen a CRC.
@@ -142,6 +144,7 @@ export function formToPartialWriteInput(body: Record<string, unknown>): Partial<
     virtual_link: 'virtual_url',
     is_recurring: 'is_recurring', recurrence_rule: 'recurrence_rule', recurrence_end: 'recurrence_end',
     requires_registration: 'requires_registration', max_capacity: 'max_capacity',
+    personas_por_inscripcion: 'personas_por_inscripcion',
     is_public: 'is_public',
     requires_payment: 'requires_payment', payment_amount: 'payment_amount',
     currency: 'currency', sede_id: 'sede_id', timezone: 'timezone',
