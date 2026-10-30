@@ -1,8 +1,9 @@
+import { useState } from 'react'
 import { cn } from '@/lib/utils'
 import { Clock } from 'lucide-react'
 import { DatePicker } from '@/components/events/DatePicker'
 import {
-  TICK_MINUTES, HORAS_EN_PUNTO, partesDeLaProgramacion, componerProgramacion,
+  TICK_MINUTES, HORAS_EN_PUNTO, partesDeLaProgramacion, cambiarParteDeLaProgramacion,
 } from '@/lib/communications/schedule'
 
 const SECTION_TITLE = 'text-[11px] uppercase tracking-widest text-navy-light/80 font-display'
@@ -32,9 +33,25 @@ export function ScheduleSection({
   timezone,
   setTimezone,
 }: Props) {
-  // El estado sigue siendo UN string ('YYYY-MM-DDTHH:00'): así el resto del
-  // formulario y la validación no se enteran de que la pantalla cambió.
-  const { dia, hora } = partesDeLaProgramacion(scheduledAt)
+  // El formulario recibe UN string ('YYYY-MM-DDTHH:00'), pero el día y la hora
+  // se guardan ACÁ por separado: ese string es '' mientras falte una parte, y
+  // si de él se sacaran las dos, escoger el día primero lo borraba y nunca se
+  // podía programar (30-oct-2026). Ver cambiarParteDeLaProgramacion.
+  const [partes, setPartes] = useState(() => partesDeLaProgramacion(scheduledAt))
+  const [ultimoValor, setUltimoValor] = useState(scheduledAt)
+  // Si el valor llega de afuera (un borrador cargado), manda ese. Un '' que
+  // escribimos nosotros por media selección no borra lo que ya se escogió.
+  if (scheduledAt !== ultimoValor) {
+    setUltimoValor(scheduledAt)
+    if (scheduledAt) setPartes(partesDeLaProgramacion(scheduledAt))
+  }
+  const { dia, hora } = partes
+  function cambiar(cambio: { dia: string } | { hora: string }) {
+    const r = cambiarParteDeLaProgramacion(partes, cambio)
+    setPartes({ dia: r.dia, hora: r.hora })
+    setUltimoValor(r.valor)
+    setScheduledAt(r.valor)
+  }
 
   return (
     <div className="rounded-2xl p-5 space-y-4 bg-surface-card shadow-[var(--shadow-md)]">
@@ -76,13 +93,13 @@ export function ScheduleSection({
                 Con una lista de 24 horas, el minuto no existe en la pantalla.
                 El servidor sigue validando aparte (minutos_no_cero). */}
             <div className="flex gap-2">
-              <DatePicker id="fecha-envio" ariaLabel="Día del envío" className="flex-1 min-w-0 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" value={dia} onChange={v => setScheduledAt(componerProgramacion(v, hora))} />
+              <DatePicker id="fecha-envio" ariaLabel="Día del envío" className="flex-1 min-w-0 rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body" value={dia} onChange={v => cambiar({ dia: v })} />
               <select
                 id="hora-envio"
                 aria-label="Hora del envío"
                 className="rounded-xl bg-surface-low px-3 py-2 text-sm text-navy outline-none focus:ring-1 focus:ring-coral/30 font-body"
                 value={hora}
-                onChange={e => setScheduledAt(componerProgramacion(dia, e.target.value))}
+                onChange={e => cambiar({ hora: e.target.value })}
               >
                 <option value="">Hora…</option>
                 {HORAS_EN_PUNTO.map(h => (

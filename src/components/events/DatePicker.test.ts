@@ -57,3 +57,12 @@ describe('el calendario se ve dentro de un modal (2026-10-29)', () => {
     expect(picker).not.toContain('theos-daypicker fixed z-[100] ')
   })
 })
+
+describe('una fecha puesta se puede quitar (30-oct-2026)', () => {
+  // El <input type="date"> nativo se vaciaba con borrar; el selector propio no.
+  it('el calendario ofrece «Borrar fecha», que manda vacío', () => {
+    const src = readFileSync('src/components/events/DatePicker.tsx', 'utf8')
+    expect(src).toContain('Borrar fecha')
+    expect(src).toMatch(/onChange\(''\)/)
+  })
+})

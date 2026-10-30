@@ -154,6 +154,25 @@ export function componerProgramacion(dia: string, hora: string): string {
   return `${dia}T${hora}:00`
 }
 
+/**
+ * Cambiar el día O la hora sin perder lo otro.
+ *
+ * El formulario guarda UN valor ('YYYY-MM-DDTHH:00'), y ese valor es '' mientras
+ * falte una de las dos partes. Si la pantalla sacara el día y la hora de ese
+ * valor, escoger el día primero lo borraba (todavía no había hora → '') y al
+ * escoger la hora ya no había día: NO SE PODÍA PROGRAMAR. Nadie logró hacerlo
+ * entre el 18-set y el 30-oct-2026. Por eso las dos partes viven aparte y el
+ * valor compuesto solo se calcula.
+ */
+export function cambiarParteDeLaProgramacion(
+  actual: { dia: string; hora: string },
+  cambio: { dia: string } | { hora: string },
+): { dia: string; hora: string; valor: string } {
+  const dia = 'dia' in cambio ? cambio.dia : actual.dia
+  const hora = 'hora' in cambio ? cambio.hora : actual.hora
+  return { dia, hora, valor: componerProgramacion(dia, hora) }
+}
+
 /** Las 24 horas en punto, etiquetadas como se dicen en Costa Rica. */
 export const HORAS_EN_PUNTO: ReadonlyArray<{ valor: string; etiqueta: string }> =
   Array.from({ length: 24 }, (_, h) => ({

@@ -187,6 +187,21 @@ export function DatePicker({ value, onChange, min, max, error, placeholder = 'dd
             disabled={[...(minDate ? [{ before: minDate }] : []), ...(maxDate ? [{ after: maxDate }] : [])]}
             onSelect={(d) => { if (d) { onChange(toYmdLocal(d)); setOpen(false) } }}
           />
+          {/* El <input type="date"> nativo se vaciaba con la tecla de borrar; el
+              selector propio (26-oct-2026) no tenía cómo, y una fecha opcional
+              puesta por error —bautizo, «pausa hasta», un filtro— ya no se
+              podía quitar. */}
+          {selected && !required && (
+            <div className="flex justify-end border-t border-[var(--outline-variant)] pt-2 mt-1">
+              <button
+                type="button"
+                onClick={() => { onChange(''); setOpen(false) }}
+                className="rounded-lg px-3 py-1.5 text-[13px] text-coral-deep hover:bg-coral/10 font-body"
+              >
+                Borrar fecha
+              </button>
+            </div>
+          )}
         </div>,
         document.body,
       )}

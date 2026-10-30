@@ -1,9 +1,10 @@
 // Programación de comunicados: la hora elegida es la de SU zona, no la del navegador.
 import { describe, it, expect } from 'vitest'
+import { readFileSync } from 'node:fs'
 import {
   zonedToUtc, resolveScheduledAt, isBroadcastDue, scheduleSummary, SCHEDULED_STATUS,
   SCHEDULE_MESSAGES, TICK_MINUTES, esHoraEnPunto,
-  partesDeLaProgramacion, componerProgramacion, HORAS_EN_PUNTO,
+  partesDeLaProgramacion, componerProgramacion, HORAS_EN_PUNTO, cambiarParteDeLaProgramacion,
 } from './schedule'
 
 describe('de hora local + zona a instante', () => {
@@ -172,5 +173,34 @@ describe('la pantalla solo ofrece horas en punto (2026-09-18)', () => {
   it('las etiquetas se leen en español', () => {
     expect(HORAS_EN_PUNTO[0].etiqueta).toMatch(/12:00/)
     expect(HORAS_EN_PUNTO[15].etiqueta).toMatch(/3:00/)
+  })
+})
+
+// 30-oct-2026: «no salva la fecha de la programación». El día se derivaba del
+// valor compuesto, que es '' mientras falte la hora: escoger el día lo borraba.
+describe('escoger día y hora en cualquier orden', () => {
+  const vacio = { dia: '', hora: '' }
+
+  it('primero el día, después la hora: queda programado', () => {
+    const a = cambiarParteDeLaProgramacion(vacio, { dia: '2026-11-02' })
+    expect(a).toEqual({ dia: '2026-11-02', hora: '', valor: '' })
+    const b = cambiarParteDeLaProgramacion(a, { hora: '09' })
+    expect(b.valor).toBe('2026-11-02T09:00')
+  })
+
+  it('primero la hora, después el día: igual', () => {
+    const a = cambiarParteDeLaProgramacion(vacio, { hora: '15' })
+    expect(cambiarParteDeLaProgramacion(a, { dia: '2026-11-02' }).valor).toBe('2026-11-02T15:00')
+  })
+
+  it('cambiar solo la hora conserva el día', () => {
+    const a = cambiarParteDeLaProgramacion({ dia: '2026-11-02', hora: '09' }, { hora: '10' })
+    expect(a.valor).toBe('2026-11-02T10:00')
+  })
+
+  it('la pantalla guarda día y hora aparte, no los saca del valor compuesto', () => {
+    const src = readFileSync('src/app/(admin)/comunicaciones/nueva/_components/ScheduleSection.tsx', 'utf8')
+    expect(src).toContain('cambiarParteDeLaProgramacion')
+    expect(src).not.toMatch(/const \{ dia, hora \} = partesDeLaProgramacion\(scheduledAt\)/)
   })
 })
