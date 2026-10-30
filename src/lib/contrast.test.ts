@@ -213,7 +213,7 @@ describe('UI-2 · el coral retirado no vuelve', () => {
   it('ningún archivo de public/ lo usa', () => {
     const salida = execSync(`grep -rl "${CORAL_RETIRADO.slice(1)}" public/ || true`, { encoding: 'utf8' })
     expect(salida.split('\n').filter(Boolean)).toEqual([])
-  })
+  }, 30_000) // grep sobre src/ y public/: con la suite completa en paralelo pasa de 5 s
 
   it('ni el código fuente, fuera de este test', () => {
     const salida = execSync(`grep -rl "${CORAL_RETIRADO.slice(1)}" src/ || true`, { encoding: 'utf8' })
@@ -237,7 +237,7 @@ describe('UI-2 · el coral retirado no vuelve', () => {
     const salida = execSync(
       `grep -rlE "${r}, ?${g}, ?${b}" src/ public/ || true`, { encoding: 'utf8' })
     expect(salida.split('\n').filter(Boolean).filter(f => !f.includes('contrast.test'))).toEqual([])
-  })
+  }, 30_000) // grep sobre src/ y public/: con la suite completa en paralelo pasa de 5 s
 })
 
 /**
