@@ -1,0 +1,34 @@
+{
+  "fecha": "2026-10-30T16:15:00.869Z",
+  "checkin_antes": {
+    "id": "fcd692ba-6c08-4a4b-b4a2-9a6fc6a85af1",
+    "event_id": "e4d1f741-158c-4b34-b400-0ac74be2324c",
+    "member_id": "397229b9-a03d-4f1b-afe0-6492a9d85b66",
+    "guest_name": null,
+    "checked_in_at": "2026-10-29T01:09:46.733Z",
+    "checked_in_by": "b1f3a19e-041a-45a6-b9fd-381fc4819bee",
+    "method": "manual",
+    "notes": null,
+    "sub_event_id": null,
+    "checked_in_as": "asistente",
+    "form_response_id": null,
+    "sin_inscripcion": false
+  },
+  "fichas_antes": [
+    {
+      "id": "0b9404e3-7b9b-4b59-8c65-07f0cc9ce9fb",
+      "n": "Carlos María Ugarte Ortega",
+      "birth_date": null
+    },
+    {
+      "id": "a96560d1-2319-4c7a-8ca5-df7bc27a5d5e",
+      "n": "Ana Sofía Apú Castrillo",
+      "birth_date": null
+    },
+    {
+      "id": "ba44f988-7b1c-47a7-94aa-5d01681dd510",
+      "n": "Stefanía Rodríguez Alemán",
+      "birth_date": null
+    }
+  ]
+}

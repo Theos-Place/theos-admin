@@ -35,3 +35,12 @@ describe('puertaDeServidor', () => {
     expect(ofreceServidor(puertaDeServidor({ hasCommittees: false, isServer: false }))).toBe(false)
   })
 })
+
+describe('CHK-10 · el modal de familia dice que verifica y por qué no (2026-10-30)', () => {
+  it('muestra el aviso de la puerta por persona y resuelve cada consulta apenas llega', async () => {
+    const { readFileSync } = await import('node:fs')
+    const page = readFileSync('src/app/(admin)/eventos/[id]/checkin/page.tsx', 'utf8')
+    expect(page).toContain('puertaDeServidor(puertas[p.member_id]).aviso')
+    expect(page).not.toContain('void Promise.all(everyone.map(async p => {')
+  })
+})

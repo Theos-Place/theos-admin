@@ -1484,11 +1484,19 @@ function FamilyCheckinModal({ eventId, member, family, subEvents, defaultSub, bu
   const [tipoPorPersona, setTipoPorPersona] = useState<Record<string, AttendanceType>>({})
   useEffect(() => {
     let vivo = true
-    void Promise.all(everyone.map(async p => {
-      const r = await fetch(`/api/events/${eventId}/server-check?member_id=${p.member_id}`).catch(() => null)
-      const d = r?.ok ? await r.json().catch(() => null) : null
-      return [p.member_id, d ? { hasCommittees: !!d.hasCommittees, isServer: !!d.isServer } : null] as const
-    })).then(pares => { if (vivo) setPuertas(Object.fromEntries(pares)) })
+    // Cada respuesta entra apenas llega (antes era un Promise.all y nadie veía
+    // nada hasta que respondiera la más lenta). CHK-10 (2026-10-30): Mariela
+    // Soto, Bienvenida de Liberia, quedó como asistente porque en el modal de
+    // familia la opción «Servidor» no apareció a tiempo y tampoco se decía
+    // que se estaba verificando.
+    for (const p of everyone) {
+      void fetch(`/api/events/${eventId}/server-check?member_id=${p.member_id}`)
+        .then(r => (r.ok ? r.json() : null)).catch(() => null)
+        .then(d => {
+          if (!vivo) return
+          setPuertas(prev => ({ ...prev, [p.member_id]: d ? { hasCommittees: !!d.hasCommittees, isServer: !!d.isServer } : { hasCommittees: false, isServer: false } }))
+        })
+    }
     return () => { vivo = false }
   }, [eventId, everyone])
 
@@ -1547,6 +1555,14 @@ function FamilyCheckinModal({ eventId, member, family, subEvents, defaultSub, bu
                     <p className="text-[13px] text-white/80">{p.relation}</p>
                   </div>
                 </div>
+                {/* CHK-10 · Lo que la tarjeta individual ya decía y el modal
+                    callaba: «verificando…» mientras viaja la consulta y por
+                    qué no puede marcarse como servidor cuando no puede. */}
+                {on && !ofreceServidor(puertaDeServidor(puertas[p.member_id])) && puertaDeServidor(puertas[p.member_id]).aviso && (
+                  <p className="mt-1.5 pl-7 text-[13px] text-white/80 font-body" aria-live="polite">
+                    {puertaDeServidor(puertas[p.member_id]).aviso}
+                  </p>
+                )}
                 {on && ofreceServidor(puertaDeServidor(puertas[p.member_id])) && (
                   <div className="mt-2 pl-7 flex flex-wrap gap-1.5" role="radiogroup" aria-label={`Cómo asiste ${p.name}`}>
                     {([['participant', 'Participante'], ['server', 'Servidor']] as const).map(([valor, texto]) => {

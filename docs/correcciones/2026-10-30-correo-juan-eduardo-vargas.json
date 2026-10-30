@@ -1,0 +1,20 @@
+{
+  "fecha": "2026-10-30T15:11:07.412Z",
+  "motivo": "Correo de Juan Eduardo estaba en la ficha de su mamá (Floriana, 2026-10-30)",
+  "antes": {
+    "gilda": {
+      "id": "f9c37d9c-caa1-4772-9f3d-bb9ddf8bb5d1",
+      "first_name": "Gilda",
+      "last_name": "Gonzalez",
+      "email": "juanedvargas@gmail.com",
+      "auth_user_id": null
+    },
+    "juan": {
+      "id": "5d8582e6-9194-456a-b31c-59630aed54fd",
+      "first_name": "Juan Eduardo",
+      "last_name": "Vargas Gonzalez",
+      "email": null,
+      "auth_user_id": null
+    }
+  }
+}
