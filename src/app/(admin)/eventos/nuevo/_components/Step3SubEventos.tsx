@@ -190,6 +190,7 @@ export function Step3SubEventos({
                   <FieldLabel>Personas por inscripción</FieldLabel>
                   <input
                     type="number" min={1} max={10}
+                    aria-label="Personas por inscripción"
                     className={`${inputCls} font-body`}
                     value={personas_por_inscripcion}
                     onChange={e => onPersonasPorInscripcionChange(e.target.value)}

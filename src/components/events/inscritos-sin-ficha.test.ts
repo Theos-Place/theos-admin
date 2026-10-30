@@ -15,6 +15,6 @@ describe('inscritos por el link público sin ficha (2026-10-19)', () => {
   })
   it('se muestra en la pestaña de inscripciones, y al vincular recarga el evento', () => {
     expect(readFileSync('src/app/(admin)/eventos/[id]/page.tsx', 'utf8'))
-      .toContain("tabEfectivo === 'inscripciones' && event.registration_form_id && <InscritosSinFicha eventId={id} onVinculado={refetch} />")
+      .toContain("tabEfectivo === 'inscripciones' && event.registration_form_id && <InscritosSinFicha eventId={id} onVinculado={() => { void refetch(); void recargarSinFicha() }} />")
   })
 })
