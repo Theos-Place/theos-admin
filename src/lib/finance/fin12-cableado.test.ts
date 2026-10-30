@@ -32,8 +32,9 @@ describe('FIN-12 · el alcance por sede es uno solo', () => {
   })
 
   it('una sede ajena es 403, no una lista vacía', () => {
-    expect(sin(API_ID)).toContain("Esa sede no es tuya.")
-    expect(sin(RECIBOS)).toContain("Esa sede no es tuya.")
+    // FIN-16: también el tipo entra en el alcance.
+    expect(sin(API_ID)).toContain("Esa sede o ese tipo no es tuyo.")
+    expect(sin(RECIBOS)).toContain("Esa sede o ese tipo no es tuyo.")
   })
 })
 
@@ -53,8 +54,10 @@ describe('FIN-12 · lo que es de finanzas, es de finanzas', () => {
   it('el presupuesto se COPIA al abrir el mes, no se lee en vivo', () => {
     // Subirlo en noviembre no puede reescribir el saldo de octubre.
     const q = sin(Q)
-    expect(q).toContain('presupuesto: p.monto')
-    expect(q).toContain("Esta sede no tiene presupuesto fijado.")
+    // FIN-16: se copia partido en depósito + saldo anterior, que suman el presupuesto.
+    expect(q).toContain('const deposito = Math.max(0, p.monto - saldoAnterior)')
+    expect(q).toContain('presupuesto: deposito + saldoAnterior')
+    expect(q).toContain("Esta sede no tiene presupuesto fijado para ese tipo.")
   })
 
   it('cerrar ESCRIBE el saldo final y exige que siga abierto', () => {

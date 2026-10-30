@@ -3335,7 +3335,19 @@ FEATURE · Reporte de transparencia (Hacienda): donantes y beneficiarios finales
 Tests + export verificado contra el ejemplo del año pasado. tsc/lint/vitest.
 ```
 
-### [ ] FIN-15 · Arreglos de pago: período de validez + fechas personalizadas
+### [x] FIN-15 · Arreglos de pago: período de validez + fechas personalizadas
+
+**Hecho el 2026-10-30** (`lib/finance/limites-de-arreglo.ts`). Estudios: lo
+que cae dentro de la matrícula es el PACTO (`FUERA_DE_MATRICULA` si ya cerró);
+los tractos pueden vencer después. Niveles (`study_plans.level = 'niveles'`)
+sin amarre de fechas. Actividades igual que FIN-13. Tercera frecuencia
+«personalizada» (una fecha por tracto, en orden; migración `20261030150000`),
+en la cola de pagos y en «Ofrecer arreglo» de becas. La ruta de becas no
+traducía los rechazos y respondía 500: ahora comparten `ERRORES_DE_LIMITES`.
+Caso Macy = Meysi Arias Ledezma: no es bug; comprobante 21-oct → aprobado
+23-oct → la solicitud pasa a «pendiente» = falta armar el grupo (el paso no
+queda en el historial de la solicitud: detalle menor, no tocado). Al
+2026-10-30 no hay ningún arreglo en producción.
 
 Dos hallazgos en vivo (el arreglo de Floriana no se dejó crear):
 
@@ -3362,7 +3374,12 @@ rechaza tracto posterior al inicio; personalizada guarda fechas; niveles sin blo
 tsc/lint/vitest.
 ```
 
-### [ ] PAG-7 · Pagar varios cobros de una vez — también con comprobante (antes de Tilopay)
+### [x] PAG-7 · Pagar varios cobros de una vez — también con comprobante (antes de Tilopay)
+
+**Hecho el 2026-10-30.** El lado de la persona ya existía desde PAG-5. Faltaba
+finanzas: la cola marca «1 comprobante · N cobros · ₡total» y aprobar o
+devolver ofrece (marcado por defecto) hacerlo con los N; un solo aviso a la
+persona. Tilopay (una transacción por la suma, por moneda) queda para FIN-5.
 
 Extiende PAG-5 (que era solo para Tilopay): la unificación se necesita YA con
 comprobantes.
@@ -3385,7 +3402,18 @@ Tests: un comprobante valida N cobros, aprobación conjunta, monedas separadas.
 tsc/lint/vitest.
 ```
 
-### [ ] FIN-16 · Presupuestos de sedes: generalizar los adelantos de comida + mejoras de la demo
+### [x] FIN-16 · Presupuestos de sedes: generalizar los adelantos de comida + mejoras de la demo
+
+**Hecho el 2026-10-30** (migración `20261030160000`, `lib/finance/presupuestos-de-sedes.ts`).
+Catálogo `sede_budget_types` (comida, bienvenida, desechables, ideas
+especiales) administrable por finanzas, con los puestos que ven cada tipo
+(vacío = todo el equipo de la sede). Presupuesto y mes por sede + tipo. Cada
+mes = saldo del mes anterior (solo lo que sobró de un mes CERRADO; un
+sobregiro no se arrastra) + depósito; al cerrar un mes, el siguiente abierto
+recibe el sobrante. «Cargar depósitos» desde el Excel/CSV de Andrés con
+dry-run (match exacto por nombre o código de sede; «Pedregal» solo no casa con
+nada). «Ver detalle» con la foto de la factura. Selector de mes y año. Excel
+con tipo, saldo anterior y depósito. Lo de producción quedó como «comida».
 
 FIN-12 quedó construido como piloto de comida. Decidido con Meli: se
 generaliza a "Presupuestos de sedes" con múltiples TIPOS de presupuesto.
@@ -3766,3 +3794,82 @@ Tests: editar filtro conserva id y uso en comunicaciones, guardar como nueva no 
 original, estática ofrece agregar/quitar, aviso de impacto con envío programado.
 tsc/lint/vitest.
 ```
+
+## FIN-5 · Tilopay — DISEÑO DE INTEGRACIÓN (2026-10-30, acceso ya obtenido)
+
+Fuente: colección Postman oficial de Tilopay (API v1). Camino elegido:
+**Hosted payment page** (ninguna tarjeta toca nuestro servidor).
+
+### Lo que dice la API (endpoints relevantes)
+- `POST {{url}}/api/v1/login` — apiuser + password (del panel
+  admin.tilopay.com/admin/checkout) → bearer token con `expires_in`.
+- `POST /api/v1/processPayment` — key, amount, currency, orderNumber,
+  capture=1, billTo*, `redirect` (nuestra URL de regreso, GET), `returnData`
+  (string base64 que nos devuelven tal cual), hashVersion (V1/V2),
+  subscription=0, platform → responde `type 100` + `url` de la página de pago
+  de Tilopay a la que redirigimos al usuario.
+- Regreso: Tilopay redirige por **GET** a nuestro `redirect` con
+  `code` (1 = aprobada), description, auth, order, tpt, OrderHash, returnData.
+- `POST /api/v1/consult` — key + orderNumber → monto procesado y estado REAL.
+- `POST /api/v1/processModification` — type 1 captura / **2 devolución** /
+  3 reversa, por orderNumber y monto.
+- `POST /api/v1/consultTransactions` — transacciones por rango de fechas.
+- (Tokenización, pagos recurrentes y planes existen — no se usan en fase 1;
+  candidatos futuros para donaciones mensuales.)
+- En esta colección NO aparecen webhooks (la doc nueva de developers sí los
+  menciona — preguntarle a Tilopay).
+
+### Principios de diseño (no negociables)
+1. **El regreso por GET NO es prueba de pago**: viaja por el navegador y se
+   puede falsificar. Al recibirlo, el SERVIDOR llama `consult` con el
+   orderNumber y solo marca el cobro como cancelado si Tilopay confirma
+   aprobado Y el monto coincide. (Además, pedir a Tilopay activar la
+   verificación de OrderHash V2 como segunda capa.)
+2. **Un intento = un orderNumber único** (tabla de intentos de pago que
+   referencia uno o varios cobros). Idempotente: el mismo regreso procesado
+   dos veces no aplica dos veces.
+3. **El que cierra el navegador**: cron de conciliación que toma los intentos
+   pendientes de más de N minutos y los resuelve con `consult` (y, si Tilopay
+   habilita webhooks, se suman como señal adicional — nunca única).
+4. **Credenciales solo en servidor** (Vercel Secret, Production; sandbox
+   aparte). Pruebas y producción comparten host: lo que distingue son las
+   credenciales — jamás mezclar.
+5. **Una moneda por transacción** (INT-3): el pago múltiple suma por moneda.
+
+### Fases (cada una un prompt)
+- **F1 — Núcleo en staging/sandbox**: cliente Tilopay (token con caché),
+  tabla de intentos, `processPayment` + redirect, endpoint de regreso con
+  verificación `consult`, aplicado a UN flujo: matrícula de estudios. Botón
+  "Pagar en línea" junto a "Subir comprobante".
+- **F2 — Robustez**: cron de conciliación de intentos abandonados, manejo de
+  errores (300/400/402/403) con mensajes humanos, reintentos, check de
+  Healthchecks del cron, logs/auditoría.
+- **F3 — Extender**: inscripciones a eventos, tractos de arreglos de pago,
+  pago múltiple (PAG-5/PAG-7 con un orderNumber por varios cobros).
+- **F4 — Devoluciones y conciliación**: `processModification` type 2 desde la
+  pantalla de devoluciones existente; reporte para Andrés con
+  `consultTransactions` por rango (cruce con PAG-6 y las liquidaciones de
+  Tilopay, que vienen netas de comisión y retenciones).
+- **F5 — Producción**: credenciales prod, prueba real de bajo monto,
+  decisión sobre el comprobante manual (convive o se retira), anuncio.
+  Meta: fiesta de Navidad.
+
+### Pendientes de decisión / preguntas a Tilopay
+- ¿URL base del ambiente de pruebas y credenciales sandbox? ¿tarjetas de prueba?
+- ¿Webhooks disponibles para esta cuenta? ¿Activar OrderHash V2?
+- ¿SINPE Móvil aparece en la página hospedada por defecto?
+- ~~¿Comisión?~~ **DECIDIDO 2026-10-30: se SUMA al precio, siempre.** Ojo de
+  diseño: el método (tarjeta 4.25%+$0.35 vs SINPE 2%+$0.35) se elige DENTRO de
+  la página de Tilopay, después de que mandamos el monto — no sabemos de
+  antemano cuál comisión aplica. Propuesta: cargo por pago en línea calculado
+  con la tarifa de TARJETA (la mayor), mostrado desglosado antes de pagar
+  ("Matrícula ₡5.000 + cargo por pago en línea ₡392 = ₡5.392"); quien paga
+  por comprobante no paga cargo. Constante configurable. Confirmar con
+  Tilopay/Meli que cobrar recargo al cliente está permitido (algunas reglas
+  de marcas de tarjeta lo restringen).
+- ~~¿Comprobante?~~ **DECIDIDO 2026-10-30: se mantiene por ahora**, y se
+  vuelve CONFIGURABLE por estudio/grupo y por evento: al crearlo se elige
+  "Métodos de pago: Tilopay · Comprobante · Ambos" (default: Ambos). La
+  pantalla de pago solo ofrece lo habilitado. Va dentro de F1 (campo + UI) —
+  así cada actividad decide, y el día que se quiera retirar el comprobante es
+  cambiar el default.

@@ -6,14 +6,14 @@ import { isUuid } from '@/lib/validate'
 import {
   verAdelanto, agregarFactura, editarFactura, quitarFactura, cerrarMes, DatosInvalidos, PasoInvalido,
 } from '@/lib/supabase/queries/adelantos'
-import { alcanceDeSedes } from '../route'
+import { alcanceDeSedes, dentroDelAlcance } from '../route'
 import { reportarError } from '@/lib/observabilidad'
 
 async function cargarSiPuede(id: string, ctx: { memberId: string | null; roles: string[] }) {
   const a = await verAdelanto(id)
   if (!a) return { error: NextResponse.json({ error: 'No se encontró el adelanto.' }, { status: 404 }) }
   const alcance = await alcanceDeSedes(ctx)
-  if (!alcance.todas && !alcance.sedes.includes(a.sede_code)) return { error: NextResponse.json({ error: 'Esa sede no es tuya.' }, { status: 403 }) }
+  if (!dentroDelAlcance(alcance, a.sede_code, a.tipo)) return { error: NextResponse.json({ error: 'Esa sede o ese tipo no es tuyo.' }, { status: 403 }) }
   return { a, finanzas: alcance.todas }
 }
 

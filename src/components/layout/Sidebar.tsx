@@ -74,7 +74,7 @@ const FINANZAS_SUB: SubItem[] = [
   { href: '/finanzas/saldos',      label: 'Saldos a favor', icon: Wallet        },
   { href: '/finanzas/cobros-sin-estudio', label: 'Cobros sin estudio', icon: Unlink },
   { href: '/finanzas/reportes',    label: 'Reportes',     icon: BarChart2       },
-  { href: '/finanzas/adelantos',   label: 'Adelantos de comida', icon: UtensilsCrossed },
+  { href: '/finanzas/adelantos',   label: 'Presupuestos de sedes', icon: UtensilsCrossed },
 ]
 
 const COMUNICACIONES_SUB: SubItem[] = [
@@ -269,7 +269,7 @@ export function Sidebar({ open, onClose }: SidebarProps) {
     ...(can('becas', 'view') ? [{ href: '/finanzas/becas', label: 'Becas', icon: GraduationCap }] : []),
     // FIN-12 · El Colaborador de Finanzas de una sede entra a Adelantos sin el
     // módulo finanzas: su permiso es `adelantos`, que le da el puesto.
-    ...(!can('finanzas', 'view') && can('adelantos', 'view') ? [{ href: '/finanzas/adelantos', label: 'Adelantos de comida', icon: UtensilsCrossed }] : []),
+    ...(!can('finanzas', 'view') && can('adelantos', 'view') ? [{ href: '/finanzas/adelantos', label: 'Presupuestos de sedes', icon: UtensilsCrossed }] : []),
     // REP-18 · Un puesto de dirección ve los REPORTES de finanzas, sin el
     // módulo (2026-10-20). Solo esa entrada: lo demás es gestión.
     ...(!can('finanzas', 'view') && user?.direccion_por_puesto === true ? [{ href: '/finanzas/reportes', label: 'Reportes', icon: BarChart2 }] : []),

@@ -3,8 +3,8 @@ import { requireRoles } from '@/lib/auth/guard'
 import { rateLimit } from '@/lib/rate-limit'
 import { isUuid } from '@/lib/validate'
 import { createAdminClient } from '@/lib/supabase/admin'
-import { verAdelanto } from '@/lib/supabase/queries/adelantos'
-import { alcanceDeSedes } from '../../route'
+import { verAdelanto, urlDeFoto } from '@/lib/supabase/queries/adelantos'
+import { alcanceDeSedes, dentroDelAlcance } from '../../route'
 import { PAYMENT_RECEIPTS_BUCKET } from '@/lib/supabase/queries/payments'
 import { reportarError, reportarFalla } from '@/lib/observabilidad'
 
@@ -20,7 +20,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     const a = await verAdelanto(id)
     if (!a) return NextResponse.json({ error: 'No se encontró el adelanto.' }, { status: 404 })
     const alcance = await alcanceDeSedes(auth.ctx)
-    if (!alcance.todas && !alcance.sedes.includes(a.sede_code)) return NextResponse.json({ error: 'Esa sede no es tuya.' }, { status: 403 })
+    if (!dentroDelAlcance(alcance, a.sede_code, a.tipo)) return NextResponse.json({ error: 'Esa sede o ese tipo no es tuyo.' }, { status: 403 })
     if (a.estado === 'cerrado') return NextResponse.json({ error: 'Este mes ya está cerrado.' }, { status: 409 })
     const form = await req.formData()
     const file = form.get('file')
@@ -34,6 +34,33 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     return NextResponse.json({ receipt_path: path }, { status: 201 })
   } catch (error) {
     reportarError('POST /api/adelantos/[id]/receipts:', error)
+    return NextResponse.json({ error: 'Error interno' }, { status: 500 })
+  }
+}
+
+/**
+ * FIN-16 · GET ?factura_id= — un link temporal a la foto de UNA factura, para
+ * el «ver detalle». Andrés dejaba de encontrar el número de factura en el
+ * correo: la foto queda junto a la factura.
+ */
+export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const auth = await requireRoles()
+  if (auth.res) return auth.res
+  try {
+    const { id } = await params
+    const facturaId = req.nextUrl.searchParams.get('factura_id') ?? ''
+    if (!isUuid(id) || !isUuid(facturaId)) return NextResponse.json({ error: 'Id inválido.' }, { status: 400 })
+    const a = await verAdelanto(id)
+    if (!a) return NextResponse.json({ error: 'No se encontró el presupuesto.' }, { status: 404 })
+    if (!dentroDelAlcance(await alcanceDeSedes(auth.ctx), a.sede_code, a.tipo)) return NextResponse.json({ error: 'Esa sede o ese tipo no es tuyo.' }, { status: 403 })
+    const f = a.facturas.find(x => x.id === facturaId)
+    if (!f) return NextResponse.json({ error: 'No se encontró la factura.' }, { status: 404 })
+    if (!f.receipt_path) return NextResponse.json({ error: 'Esta factura no tiene foto.' }, { status: 404 })
+    const url = await urlDeFoto(f.receipt_path)
+    if (!url) return NextResponse.json({ error: 'No se pudo abrir la foto.' }, { status: 502 })
+    return NextResponse.json({ url, es_pdf: /\.pdf$/i.test(f.receipt_path) })
+  } catch (error) {
+    reportarError('GET /api/adelantos/[id]/receipts:', error)
     return NextResponse.json({ error: 'Error interno' }, { status: 500 })
   }
 }
